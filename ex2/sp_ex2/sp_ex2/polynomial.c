@@ -455,7 +455,7 @@ void store_sum(char * dest_name, int dest_name_len,
 }
 
 //will sum the 2 variables. caller will print.
-poly * sum (	char * var1, int var1_len, 
+poly * sum_op (	char * var1, int var1_len, 
 				char * var2, int var2_len)
 {
 	//create new poly struct
@@ -467,6 +467,36 @@ poly * sum (	char * var1, int var1_len,
 	
 	return result;
 }
+
+
+//poly actions algorithms
+/////////////////////////
+//will recieve 2 polys, p1 and p2, and sum them. stores the result into p3.
+//caller is responsible for allocate p3.
+//if is_subtract is 1 - will substract, on 0 - will sum.
+//assumes all pointers are not null.
+void sum (poly * p1, poly * p2, poly * p3, int is_subtract)
+{
+	
+}
+
+//will recieve 2 polys, p1 and p2, and multiply them. stores the result into p3.
+//caller is responsible for allocate p3.
+//assumes all pointers are not null.
+void mult (poly * p1, poly * p2, poly * p3)
+{
+	
+}
+
+
+//will recieve 1 poly, p1, and compute its derivative. stores the result into p2.
+//caller is responsible for allocate p2.
+//assumes all pointers are not null.
+void derive (poly * p1, poly * p2)
+{
+	
+}
+
 
 int quit ()
 {
