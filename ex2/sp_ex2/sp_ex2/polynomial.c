@@ -6,12 +6,15 @@
 #define COMMAND_PRINT 0
 #define COMMAND_DEF 1
 #define COMMAND_SUM 2
-//....
-#define COMMAND_STORE_SUM	6
-#define COMMAND_STORE_SUB	7
-#define COMMAND_STORE_MULT	8
-#define COMMAND_STORE_DER	9
-#define COMMAND_QUIT 10
+#define COMMAND_SUBTRACT 3
+#define COMMAND_MULT	4
+#define COMMAND_DER		5
+#define COMMAND_EVAL	6
+#define COMMAND_STORE_SUM	7
+#define COMMAND_STORE_SUBTRACT	8
+#define COMMAND_STORE_MULT	9
+#define COMMAND_STORE_DER	10
+#define COMMAND_QUIT 11
 #define COMMAND_UNKNOWN 100
 //..
 
@@ -52,11 +55,12 @@ void RemoveSpaces(char* source)
 
 //for sort. 
 //compares between 2 terms
+//poly's terms will be sorted by EXP in DESCENDING order
 int compare_terms (const void * p1, const void * p2)
 {
 	const term * t1 = p1;
 	const term * t2 = p2;
-	return ((t1->exp) - (t2->exp));
+	return ((t2->exp) - (t1->exp));
 }
 
 
@@ -64,13 +68,14 @@ int compare_terms (const void * p1, const void * p2)
 // i.e. p3 = p1 + p2 is a "store" request
 //		p3 = x + 7 is a polynomial , not store request definition
 // the area checked above by "^" 
-int parse_req_store(char * command, 
+int ParseCommandStore(char * command, 
 	char ** part1, int * part1_len,
 	char ** part2, int * part2_len,
 	char ** part3, int * part3_len)
 {
 	char * p1;
 	char * p2;
+	char * p_end;
 
 	//find "="
 	p1 = strchr(command, '=');
@@ -118,7 +123,7 @@ int parse_req_store(char * command,
 
 //will get user string and return type of command
 // i.e. if sees "eval ..." will know it is of type COMMAND_EVAL
-int parse_req(char * command, 
+int ParseCommand(char * command, 
 								char ** part1, int * part1_len,
 								char ** part2, int * part2_len,
 								char ** part3, int * part3_len)
@@ -140,7 +145,7 @@ int parse_req(char * command,
 	{
 
 		//try to parse 2nd part as 'store' command.
-		command_type = parse_req_store(command, part1, part1_len, 
+		command_type = ParseCommandStore(command, part1, part1_len, 
 												part2, part2_len,
 												part3, part3_len);
 		if (command_type!=COMMAND_DEF)
@@ -169,11 +174,72 @@ int parse_req(char * command,
 			return COMMAND_DEF;
 
 		}
-
-
-
 	}
 
+	//there is not =. the specific command will be determined by unique chars.
+
+	//+  sum
+	if ((p1 = strchr(command, '+'))!=NULL)
+	{
+		RemoveSpaces(command);
+		p1 = strchr(command, '+');
+		p_end = strchr(command, 0);
+
+		//get 1st part (before "+")
+		*part1_len = (p1 - command);
+		*part1 = command;
+
+		//get 2nd part (after "+")
+		p1++;
+		*part2_len = (p_end - p1);
+		*part2 = p1;
+		return COMMAND_SUM;
+	}
+
+
+	//-
+	if ((p1 = strchr(command, '-'))!=NULL)
+	{
+		RemoveSpaces(command);
+		p1 = strchr(command, '-');
+		p_end = strchr(command, 0);
+
+		//get 1st part (before "-")
+		*part1_len = (p1 - command);
+		*part1 = command;
+
+		//get 2nd part (after "-")
+		p1++;
+		*part2_len = (p_end - p1);
+		*part2 = p1;
+		return COMMAND_SUBTRACT;
+	}
+
+
+	//*
+	if ((p1 = strchr(command, '*'))!=NULL)
+	{
+		RemoveSpaces(command);
+		p1 = strchr(command, '*');
+		p_end = strchr(command, 0);
+
+		//get 1st part (before "*")
+		*part1_len = (p1 - command);
+		*part1 = command;
+
+		//get 2nd part (after "*")
+		p1++;
+		*part2_len = (p_end - p1);
+		*part2 = p1;
+		return COMMAND_MULT;
+	}
+
+
+	//der
+
+	//eval
+
+	//otherwise, (only name of poly appears)
 	//assume print command  -- "  p1  "
 	RemoveSpaces(command);
 	p_end = strchr(command, 0);
@@ -357,7 +423,7 @@ void PrintPoly (poly * p1)
 
 }
 
-void print (char * name, int name_len)
+void command_print (char * name, int name_len)
 {
 	poly * found;
 	if ((found = FindPoly(name,name_len))==NULL)
@@ -429,63 +495,180 @@ void define (char * name, int name_len, char * poly_str, int poly_str_len)
 //define polynomial stored in poly1.
 void define2(char * name, int name_len, poly * poly1)
 {
-	(dest_name, dest_name_len, result)
+	//(dest_name, dest_name_len, result)
 }
 
-//will get names of 2 vars, will add them and store them in variable called dest_name.
-void store_sum(char * dest_name, int dest_name_len, 
-	char * var1, int var1_len, 
-	char * var2, int var2_len)
+
+//Init poly
+//will delete all memory associated with poly.
+void PolyInit (poly *p1)
+{
+	if (!p1)
+	{
+		return;
+	}
+
+	//free char pointer if exists.
+	if (p1->name)
+	{
+		//free(p1->name);
+	}
+	p1->name = NULL;
+
+	p1->numTerms = 0;
+
+	//free term pointer if exists.
+	if (p1->terms)
+	{
+		//free(p1->terms);
+	}
+	p1->terms = NULL;
+
+}
+
+
+//Copy poly
+//will copy all memory associated with poly (deep copy).
+//will return pointer to new poly.
+//caller is responsible to allocate p1_copy
+poly * PolyCopy (poly *p1, poly *p1_copy)
 {
 
-	//call the sum function
-	poly * result = sum (var1, var1_len, var2, var2_len) ;
+	int i=0;
+	int size_name ;
 
-	// return false if failed
-	if (result == NULL)
+	if (!p1)
 	{
-		//
+		return NULL;
 	}
-	else 
+
+	p1_copy = (poly *) malloc(sizeof(poly));
+	PolyInit(p1_copy);
+
+	//copy name data if exists.
+	if (p1->name)
 	{
-		//define poly under name
-		define2 (dest_name, dest_name_len, result);
+		size_name = strlen(p1->name);
+		p1_copy -> name = (char *) malloc (size_name);
+		strcpy(p1_copy->name, p1 -> name );
 	}
 	
+	//copy terms data, if they exist.
+	if (p1->terms)
+	{
+		p1_copy->terms = (term *) malloc (p1->numTerms * sizeof(term));
+		//copy each term.
+		for (i=0; i<p1->numTerms; i++)
+		{
+			//copy the whole term struct
+			p1_copy->terms[i] = p1->terms[i];
+			p1_copy->numTerms ++;
+		}
+	}
+
+	return p1_copy;
 }
 
-//will sum the 2 variables. caller will print.
-poly * sum_op (	char * var1, int var1_len, 
-				char * var2, int var2_len)
-{
-	//create new poly struct
-	poly * result = (poly *) malloc (sizeof(poly));
 
-	//find 2 polys by name, if failed return NULL
 
-	//do the summation...
-	
-	return result;
-}
 
+//Free poly.
+//
 
 //poly actions algorithms
 /////////////////////////
 //will recieve 2 polys, p1 and p2, and sum them. stores the result into p3.
-//caller is responsible for allocate p3.
+//caller is responsible for allocate&init p3.
 //if is_subtract is 1 - will substract, on 0 - will sum.
 //assumes all pointers are not null.
 void sum (poly * p1, poly * p2, poly * p3, int is_subtract)
 {
-	
+	int i=0, j=0;
+	int cnt_terms_p3 = 0;
+	float sign = (is_subtract) ? -1.0 : 1.0;
+
+	//p3 has already been Init. (0 terms)
+
+	while (i < p1->numTerms || j < p2->numTerms)
+	{
+
+		//allocate space for new term in p3
+		p3->terms = (term *) realloc (p3->terms, ((cnt_terms_p3 + 1) * sizeof (term)) );
+		//TODO write on fail.
+
+
+		//p1 exp is bigger.
+		if (p1->terms[i].exp > p2->terms[j].exp)
+		{
+			//write new value (copy the term from p1)
+			p3->terms[cnt_terms_p3] = p1->terms[i];
+
+			//increment i
+			i++;
+		}
+
+		//p2 exp is bigger.
+		else if (p1->terms[i].exp < p2->terms[j].exp)
+		{
+			//write new value (copy the term from p2)
+			p3->terms[cnt_terms_p3].exp = p2->terms[j].exp;
+			p3->terms[cnt_terms_p3].coeff = sign * p2->terms[j].coeff;
+
+			//increment j
+			j++;
+		}
+
+		//exp are equal
+		else
+		{
+			p3->terms[cnt_terms_p3].exp = p1->terms[i].exp;
+			p3->terms[cnt_terms_p3].coeff = p1->terms[i].coeff + sign * p2->terms[j].coeff;
+
+			//increment both
+			i++; 
+			j++;
+		}
+
+		p3->numTerms++;
+		cnt_terms_p3++;
+	}
 }
 
-//will recieve 2 polys, p1 and p2, and multiply them. stores the result into p3.
+//will receive 2 polys, p1 and p2, and multiply them. stores the result into p3.
 //caller is responsible for allocate p3.
 //assumes all pointers are not null.
 void mult (poly * p1, poly * p2, poly * p3)
 {
-	
+	int i=0, j=0;
+	poly pTemp; //will hold sum of 1 'row'
+	poly * p3_copy;
+
+	for (i=0; i < p1->numTerms; i ++)
+	{
+		PolyInit(&pTemp);
+
+		//allocate space for new terms on pTemp
+		//(there will be exactly as number of p2's terms)
+		pTemp.terms = (term *) malloc (p2->numTerms * sizeof (term)) ;
+
+		for (j=0; j < p2->numTerms; j++)
+		{
+			pTemp.terms[j].coeff = p1->terms[i].coeff * p2->terms[j].coeff;
+			pTemp.terms[j].exp = p1->terms[i].exp + p2->terms[j].exp;
+			pTemp.numTerms++;
+		}
+
+		if (p3->numTerms==0)
+		{
+			p3 = PolyCopy(&pTemp, p3);
+		}
+		else
+		{
+			p3_copy = PolyCopy(p3, p3_copy);
+			sum (p3_copy, &pTemp, p3, 0);
+		}
+	}
+
 }
 
 
@@ -496,6 +679,122 @@ void derive (poly * p1, poly * p2)
 {
 	
 }
+
+//will recieve 2 pointers for poly's. if 1 of them not found, will print error with its name.
+int PrintIfNotFound(poly * p1, poly * p2,
+					char * var1, int var1_len,
+					char * var2, int var2_len)
+{
+	//one of them not found
+	if (!p1)
+	{
+		printf("unknown polynomial %.*s\n", var1_len, var1);
+		return 0;
+	}
+	if (!p2)
+	{
+		printf("unknown polynomial %.*s\n", var2_len, var2);
+		return 0;
+	}
+	return 1;
+}
+
+
+
+//will get names of 2 vars.
+//1. will sums/substracts them
+//2. will store them in new variable called dest_name.
+//will first try to find them in system, if not exist will exit.
+//prints result at the end.
+//if is_subtract is 1 - will substract, on 0 - will sum.
+void command_store_sum(char * dest_name, int dest_name_len, 
+	char * var1, int var1_len, 
+	char * var2, int var2_len, int is_subtract)
+{
+
+	//create new poly on stack
+	poly result;
+
+	//find 2 polys by name, if failed return NULL
+	poly * p1 = FindPoly(var1, var1_len);
+	poly * p2 = FindPoly(var2, var2_len);
+
+	if (!PrintIfNotFound(p1, p2, var1, var1_len, var2, var2_len))
+	{
+		return;
+	}
+
+	//both of them are in system.
+	//do the summation, will be stored in "result".
+	sum (p1, p2, &result, is_subtract);
+
+	//add result
+	//AddUpdatePoly(dest_name, dest_name_len, result);
+}
+
+//recives names of 2 variables, and sums/substracts them.
+//will first try to find them in system, if not exist will exit.
+//prints result at the end.
+//if is_subtract is 1 - will substract, on 0 - will sum.
+void command_sum (	char * var1, int var1_len, 
+	char * var2, int var2_len, int is_subtract)
+{
+	//create new poly on stack, init it.
+	poly result;
+
+	//find 2 polys by name, if failed return NULL
+	poly * p1 = FindPoly(var1, var1_len);
+	poly * p2 = FindPoly(var2, var2_len);
+
+	//init result
+	PolyInit(&result);
+
+	if (!PrintIfNotFound(p1, p2, var1, var1_len, var2, var2_len))
+	{
+		return;
+	}
+
+	//both of them are in system.
+	//do the summation, will be stored in "result".
+	sum (p1, p2, &result, is_subtract);
+
+	//print result
+	PrintPoly(&result);
+
+
+}
+
+
+//recives names of 2 variables, and multiplies them.
+//will first try to find them in system, if not exist will exit.
+//prints result at the end.
+void command_mult (	char * var1, int var1_len, 
+						char * var2, int var2_len)
+{
+	//create new poly on stack, init it.
+	poly result;
+
+	//find 2 polys by name, if failed return NULL
+	poly * p1 = FindPoly(var1, var1_len);
+	poly * p2 = FindPoly(var2, var2_len);
+
+	//init result
+	PolyInit(&result);
+
+	if (!PrintIfNotFound(p1, p2, var1, var1_len, var2, var2_len))
+	{
+		return;
+	}
+
+	//both of them are in system.
+	//do the summation, will be stored in "result".
+	mult(p1, p2, &result);
+
+	//print result
+	PrintPoly(&result);
+
+}
+
 
 
 int quit ()
@@ -541,17 +840,27 @@ int main()
 		command[char_cnt] = '\0';
 
 		//do appropriate command
-		command_type = parse_req(command, &part1, &part1_len, &part2, &part2_len, &part3, &part3_len);
+		command_type = ParseCommand(command, &part1, &part1_len, &part2, &part2_len, &part3, &part3_len);
 		switch (command_type)
 		{
 		case COMMAND_DEF:
 			define(part1, part1_len, part2, part2_len);
 			break;
 		case COMMAND_PRINT:
-			print(part1, part1_len);
+			command_print(part1, part1_len);
+			break;
+		case COMMAND_SUM:
+			command_sum(part1, part1_len, part2, part2_len, 0);
+			break;
+		case COMMAND_SUBTRACT:
+			//just call "command_sum" with subtract flag
+			command_sum(part1, part1_len, part2, part2_len, 1);
+			break;
+		case COMMAND_MULT:
+			command_mult(part1, part1_len, part2, part2_len);
 			break;
 		case COMMAND_STORE_SUM:
-			store_sum(part1, part1_len, part2, part2_len, part3, part3_len);
+			command_store_sum(part1, part1_len, part2, part2_len, part3, part3_len, 0);
 		case COMMAND_QUIT:
 			quit();
 			return 0;
