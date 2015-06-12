@@ -36,11 +36,6 @@ typedef ELEMENT* LINK;
 
 
 
-//init list
-#define NULL 0
-
-
-
 //create a new link.
 //does not fill its data.
 LINK ListCreateNode (void * data, int elemSize);

@@ -11,7 +11,20 @@
 
 #include "ListNode.h"
 
-/***/
+
+/*************
+ * BASIC GAME DEFINITIONS
+ * ***********/
+#define BOARD_SIZE 10
+
+//pieces identities
+#define WHITE_M 'm'
+#define WHITE_K 'k'
+#define BLACK_M 'M'
+#define BLACK_K 'K'
+#define EMPTY ' '
+
+
 //differentiate two players (sides of the game)
 typedef enum
 {
@@ -51,13 +64,7 @@ typedef struct
 //position functions:
 
 //will build and return a position, based on x and y values.
-position_t Position (int x , int y)
-{
-	position_t pos;
-	pos.x = x;
-	pos.y = y;
-	return pos;
-}
+position_t Position (int x , int y);
 
 /**
  * return a position relative to base position.
@@ -94,10 +101,14 @@ typedef struct
 ************/
 
 // 	data structure that is used to represent the pieces on board.
-//	implementation: 2 lists of pieces on board: one for each side.
+//	implementation : matrix
+//	optional implementation: 2 lists of pieces on board: one for each side.
 //	pieces [PLAYER_WHITE] - white player's pieces.
 //	pieces [PLAYER_BLACK] - black player's pieces.
-typedef ListNode ** PIECES_INTERNAL_DATA;
+
+
+typedef char board_column[BOARD_SIZE];
+typedef board_column * PIECES_INTERNAL_DATA;
 
 
 //game_state_t: structure that encapsulates a given state of game.
@@ -120,6 +131,12 @@ char GetPiece (position_t pos, game_state_t * game);
 
 //returns a list of pieces on board that player has in current game.
 ListNode * GetPiecesOfPlayer (player_t player, game_state_t * game);
+
+//will initialize the game
+void GameInit (game_state_t * game, char ** board );
+
+//will initialize the game
+void GameDefaultLayout (game_state_t * game);
 
 
 /*************

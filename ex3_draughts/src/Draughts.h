@@ -3,20 +3,12 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include "Game.h"
 
 
 
 
-//pieces identities
-#define WHITE_M 'm'
-#define WHITE_K 'k'
-#define BLACK_M 'M'
-#define BLACK_K 'K'
-#define EMPTY ' '
 
-#define BOARD_SIZE 10
-
-typedef char** board_t;
 #define WELCOME_TO_DRAUGHTS "Welcome to Draughts!\n"
 #define ENTER_SETTINGS "Enter game settings:\n" 
 #define WRONG_MINIMAX_DEPTH "Wrong value for minimax depth. The value should be between 1 to 6\n"
@@ -31,8 +23,8 @@ typedef char** board_t;
 #define print_message(message) (printf("%s", message));
 
 
+//prints the board
+void PrintBoard(game_state_t * game);
 
-void print_board(char board[BOARD_SIZE][BOARD_SIZE]);
-void init_board(char board[BOARD_SIZE][BOARD_SIZE]);
 
 #endif  
