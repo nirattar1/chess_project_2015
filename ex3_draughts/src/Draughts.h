@@ -5,9 +5,7 @@
 #include <stdio.h>
 
 
-//differentiate two sides
-#define SIDE_WHITE 0
-#define SIDE_BLACK 1
+
 
 //pieces identities
 #define WHITE_M 'm'

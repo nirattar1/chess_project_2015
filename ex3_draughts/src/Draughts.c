@@ -1,6 +1,9 @@
 #include "Draughts.h"
 
-int main()
+
+
+
+int original_main()
 {
 	char board[BOARD_SIZE][BOARD_SIZE];
 	init_board(board);
