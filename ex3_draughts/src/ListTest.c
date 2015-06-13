@@ -28,7 +28,69 @@ void intlist_free( void * data )
 }
 
 
+
+
+
+#define NumbersListLen 7
+ListNode * CreateNumbersList ()
+{
+
+	int numbers [NumbersListLen]= {5, 6, 7, 8, 9, 10, 11};
+
+	ListNode * list = NULL;
+	//loop on array and add to list
+	for (int i=0; i<NumbersListLen; i++)
+	{
+		//copy data to new area
+		int * pi = (int *) mymalloc (sizeof (int));
+		*pi = numbers[i];
+
+		//create new node
+		ListNode * newnode = ListCreateNode( (void *) pi , sizeof (int));
+
+		if (!list)
+		{
+			//list is empty- make node head of list.
+			list = newnode;
+		}
+		else
+		{
+			//list is not empty- concat.
+			ListNode ** listp = &list;
+			ListConcat( listp, newnode);
+			list = *listp;
+		}
+	}
+
+	return list;
+}
+
+
+
 void ListTest ()
+{
+
+	ListNode * list = CreateNumbersList();
+
+
+	intlist_print(list);
+	printf ("num elements: %d\n", ListCount(list));
+
+	memory_print ();
+
+
+	ListFreeElements(list, intlist_free);
+	list = NULL;
+
+
+	memory_print ();
+
+
+}
+
+
+
+void SimpleList ()
 {
 
 	int * pi = (int *) mymalloc (sizeof (int));

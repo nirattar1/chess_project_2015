@@ -9,18 +9,23 @@
 
 
 
-int  ListTest ();
-int  GameTest();
+int ListTest ();
+int GameTest();
 int original_main();
 
 
 int main ()
 {
+
+	RulesInit();
+
 	//ListTest ();
 
 	GameTest ();
 
 	//original_main();
+
+	memory_print();
 
 	return 0;
 }

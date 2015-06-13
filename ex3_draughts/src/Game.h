@@ -18,6 +18,7 @@
 #define BOARD_SIZE 10
 
 //pieces identities
+#define MAX_IDENTITIES 4
 #define WHITE_M 'm'
 #define WHITE_K 'k'
 #define BLACK_M 'M'
@@ -40,23 +41,36 @@ typedef enum
 //(for chess: add more for horse)
 typedef enum
 {
-	UP,
-	DOWN,
-	RIGHT,
-	LEFT,
-	UP_RIGHT,
+	UP_RIGHT  = 1 ,
 	UP_LEFT,
 	DOWN_RIGHT,
 	DOWN_LEFT
+	//	UP,
+	//	DOWN,
+	//	RIGHT,
+	//	LEFT,
 
 } direction_t;
+
+
+//identities allowed directions.
+direction_t * all_allowed_directions [MAX_IDENTITIES];
+
+direction_t allowed_directions_whitem [3];
+direction_t allowed_directions_whitek [5];
+direction_t allowed_directions_blackm [3];
+direction_t allowed_directions_blackk [5];
+
+
+//just saved the directions.
+void RulesInit ();
 
 
 //struct for position (spot) on board.
 //has x and y coordinates for column and row respectively.
 typedef struct
 {
-	int x;		//column
+	char x;		//column
 	int y; 		//row
 } position_t;
 
@@ -64,7 +78,16 @@ typedef struct
 //position functions:
 
 //will build and return a position, based on x and y values.
-position_t Position (int x , int y);
+position_t Position (char x , int y);
+//translate between position and row/column numbers.
+
+//game language : row 2  (1-based).
+//matrix language: row 1 (0-based).
+int GetMatrixRow (position_t pos);
+
+//game language : column a
+//matrix language: column 0 (0-based).
+int GetMatrixCol (position_t pos);
 
 /**
  * return a position relative to base position.
@@ -125,9 +148,13 @@ typedef struct
 
 
 
-//returns piece that is located in given position
+//returns identity piece that is located in given position
 //i.e. GetPiece (<1,2>) == 'm' (white man)
 char GetPiece (position_t pos, game_state_t * game);
+
+//puts piece in place
+void SetPiece (position_t pos, char identity, game_state_t * game);
+
 
 //returns a list of pieces on board that player has in current game.
 ListNode * GetPiecesOfPlayer (player_t player, game_state_t * game);
@@ -147,15 +174,23 @@ void GameDefaultLayout (game_state_t * game);
 //the move can contain several destinations on the way (in case of successive captures)
 typedef struct
 {
-	piece_t 	src;			//source piece on board.
-	ListNode 	* dest;			//list of destination positions (more than 1 on successive captures).
+	position_t 	src;			//source piece on board.
+	position_t 	* dest;			//list of destination positions (more than 1 on successive captures).
 	int 		num_captures;	//the number of captures in this move
 } move_t;
 
+//frees a move
+void MoveFree( void * data );
+
+//will receive identity and return its allowed directions.
+direction_t * GetPieceDirections (char identity);
 
 
 //get possible moves for 1 piece in game.
-ListNode * GetMovesForPiece (piece_t piece, game_state_t * game) ;
+ListNode * GetMovesForPiece (game_state_t * game, piece_t piece,
+		int is_successive_captures, position_t * dest_history);
+
+ListNode * GetMovesForPieceDefault (game_state_t * game, piece_t piece) ;
 
 
 //get all the possible moves for player in game.
@@ -171,7 +206,7 @@ ListNode * GetMovesForPlayer (player_t player, game_state_t * game);
 //is responsible for updating the game state afterwards:
 //1. capturing opponents
 //2. promoting to king
-void DoMove (const move_t * move, game_state_t * game);
+void DoMove (move_t * move, game_state_t * game);
 
 
 #endif /* EX3_GAME_H_ */

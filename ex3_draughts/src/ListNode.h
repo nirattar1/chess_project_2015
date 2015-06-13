@@ -43,6 +43,10 @@ LINK ListCreateNode (void * data, int elemSize);
 //add next
 void ListInsertAfterLink(LINK l1, LINK l2);
 
+//concatenate
+void ListConcat( LINK *a, LINK b );
+
+
 //counts elements
 int ListCount( LINK head );
 

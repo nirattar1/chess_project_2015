@@ -29,6 +29,23 @@ void ListInsertAfterLink(LINK l1, LINK l2)
 	l1-> next = l2;
 }
 
+//concat
+void ListConcat( LINK *a, LINK b )
+{
+	if (*a == NULL)
+	{
+		*a = b;
+	}
+	else if ( (*a)->next == NULL )
+	{
+		(*a)->next = b;
+	}
+	else
+	{
+		ListConcat( &((*a)->next), b );
+	}
+}
+
 //counts elements
 int ListCount( LINK head )
 {
