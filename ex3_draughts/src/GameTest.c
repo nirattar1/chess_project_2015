@@ -7,10 +7,13 @@
 
 #include "Game.h"
 #include "Draughts.h"
+#include "Memory.h"
 
 void BasicTest (game_state_t * game);
 void MoveTest(game_state_t * game);
 void MoveListTest(game_state_t * game);
+void GetMovesBasicTest(game_state_t * game);
+
 
 void GameTest ()
 {
@@ -30,6 +33,9 @@ void GameTest ()
 
 	GameInit(&game, (char **)board);
 	MoveListTest(&game);
+
+	GameInit(&game, (char **)board);
+	GetMovesBasicTest(&game);
 }
 
 
@@ -80,9 +86,7 @@ void MoveTest(game_state_t * game)
 	move_t * move1 = (move_t *) mymalloc(sizeof (move_t));
 	move1->src = pos;
 	move1->num_captures = 0;
-	position_t dest[1];
-	dest[0] = Position('g',3);
-	move1->dest = dest;
+	move1->dest[0] = Position('g',3);
 
 
 	//do 1 move.
@@ -111,23 +115,17 @@ void MoveListTest(game_state_t * game)
 	moves[0] = (move_t *) mymalloc(sizeof (move_t));
 	moves[0]->src = pos;
 	moves[0]->num_captures = 0;
-	position_t * dest_a = (position_t *) mymalloc(sizeof (position_t));
-	dest_a[0] = Position('a',5);
-	moves[0]->dest = dest_a;
+	moves[0]->dest[0] = Position('a',5);
 
 	moves[1] = (move_t *) mymalloc(sizeof (move_t));
 	moves[1]->src = moves[0]->dest[0];
 	moves[1]->num_captures = 0;
-	position_t * dest_b = (position_t *) mymalloc(sizeof (position_t));
-	dest_b[0] = Position('b',6);
-	moves[1]->dest = dest_b;
+	moves[1]->dest[0] = Position('b',6);
 
 	moves[2] = (move_t *) mymalloc(sizeof (move_t));
 	moves[2]->src = moves[1]->dest[0];
 	moves[2]->num_captures = 0;
-	position_t * dest_c = (position_t *) mymalloc(sizeof (position_t));
-	dest_c[0] = Position('c',7);
-	moves[2]->dest = dest_c;
+	moves[2]->dest[0] = Position('c',7);
 
 
 	//prepare a list for the moves.
@@ -160,6 +158,70 @@ void MoveListTest(game_state_t * game)
 
 	ListFreeElements(list, MoveFree);
 
+}
+
+
+
+
+
+void GetMovesBasicTest(game_state_t * game)
+{
+
+	//put a piece in position
+	position_t pos;
+	char identity;
+
+	pos = Position ('d', 4);
+	identity = WHITE_M;
+	SetPiece(pos, identity, game);
+	piece_t piece1 ;
+	piece1.identity = identity;
+	piece1.position = pos;
+
+	pos = Position ('g', 3);
+	identity = WHITE_K;
+	SetPiece(pos, identity, game);
+	piece_t piece2 ;
+	piece2.identity = identity;
+	piece2.position = pos;
+
+
+	PrintBoard(game);
+
+
+
+	ListNode * list1 = GetMovesForPieceDefault(game, piece1);
+
+	ListNode * list2 = GetMovesForPieceDefault(game, piece2);
+
+	MovesListPrint( list1, game);
+
+	MovesListPrint( list2, game);
+
+	ListFreeElements(list1, MoveFree);
+
+	ListFreeElements(list2, MoveFree);
+}
+
+
+//prints moves one after the other
+void MovesListPrint( LINK head , game_state_t * game)
+{
+	for ( ; head !=0; head = head->next )
+	{
+
+		move_t * move = (move_t *) head->data;
+		//print move.
+		printf ("move source : (%c , %d) \n", move->src.x, move->src.y);
+
+		int num_dest = 1;
+		position_t * dest = move->dest;
+		printf ("move destinations: ");
+		printf ("(%c , %d) \n", dest[0].x, dest[0].y);
+		//TODO print multiple
+
+
+	}
 }
 
 

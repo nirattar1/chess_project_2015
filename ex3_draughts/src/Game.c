@@ -50,6 +50,35 @@ int GetMatrixCol (position_t pos)
 }
 
 
+position_t GetPositionRelative
+	(position_t source, direction_t direction, int numSteps)
+{
+
+	position_t dest;
+	if (direction == UP_RIGHT)
+	{
+		dest.x = source.x + numSteps;
+		dest.y = source.y + numSteps;
+	}
+	if (direction == UP_LEFT)
+	{
+		dest.x = source.x - numSteps;
+		dest.y = source.y + numSteps;
+	}
+	if (direction == DOWN_RIGHT)
+	{
+		dest.x = source.x + numSteps;
+		dest.y = source.y - numSteps;
+	}
+	if (direction == DOWN_LEFT)
+	{
+		dest.x = source.x - numSteps;
+		dest.y = source.y - numSteps;
+	}
+	return dest;
+}
+
+
 
 void GameInit (game_state_t * game, char ** board )
 {
@@ -122,21 +151,20 @@ direction_t * GetPieceDirections (char identity)
 }
 
 
-ListNode * GetMovesForPieceDefault (game_state_t * game, piece_t piece)
-{
-	GetMovesForPiece(game, piece, 0, NULL);
-}
 
-//get allowed moves for piece on board.
-//returns pointer to a list of moves.
+/**
+//* Get (generate) all the allowed moves for 1 piece on board.
+//@param game the game state.
+//@param piece piece to play.
+//@...
+//@return a pointer to a list of moves.
 //caller responsible to free the list.
-ListNode * GetMovesForPiece (game_state_t * game, piece_t piece,
-		int is_successive_captures, position_t * dest_history)
+ */
+ListNode * GetMovesForPiece (game_state_t * game, piece_t piece)
 {
 
-	//prepate list .
+	//prepare list .
 	ListNode * list = NULL;
-
 
 	//get possible directions.
 	direction_t * directions = GetPieceDirections(piece.identity);
@@ -147,50 +175,163 @@ ListNode * GetMovesForPiece (game_state_t * game, piece_t piece,
 	for (; *directions != 0; directions++)
 	{
 
-		//check all the allowed distances (if piece has them).
+		direction_t direction = *directions;
+
+		//loop through all the allowed distances (if piece has them).
 		for (int distance = 1; distance <= max_distance ; distance++)
 		{
-			direction_t direction = *directions;
 
-			position_t dest;// = GetPositionRelative(piece.position, direction, distance);
+			//get 1 possible destination position.
+			position_t dest = GetPositionRelative(piece.position, direction, distance);
 
-			//empty spot. can do move.
+			//position is empty. generate simple move.
 			if (GetPiece(dest, game) == EMPTY)
 			{
 				//generate new move.
-				move_t * newmove = (move_t *) mymalloc(sizeof (move_t));
-				newmove->src = piece.position;
-				newmove->num_captures = 0;
-				position_t * destinations = (position_t *) mymalloc(sizeof (position_t));
-				destinations[0] = dest;
-				newmove->dest = destinations;
+				move_t * newmove = MoveCreate(piece.position, dest);
 
 				//add move to the list.
-				//create new node
-				ListNode * newnode = ListCreateNode( (void *) newmove , sizeof (move_t));
+				ListNode ** listp = &list;
+				ListPushBackElement (listp, (void *) newmove, sizeof (move_t));
+				list = *listp;
 
-				if (!list)
-				{
-					//list is empty- make node head of list.
-					list = newnode;
-				}
-				else
-				{
-					//list is not empty- concat.
-					ListNode ** listp = &list;
-					ListConcat( listp, newnode);
-					list = *listp;
-				}
 			}
-			else //possible capture
+			//position is occupied.
+			//try generating capture moves from it.
+			else
 			{
 
+				//go 1 spot further in direction (loop for king)
+				position_t afterDest = GetPositionRelative(dest, direction, 1);
+
+				//TODO king check on each possible landing position
+
+				//check validity of capture.
+				if (IsValidCapture(game, piece.position, dest, afterDest))
+				{
+
+					//generate new capture move.
+					move_t * newmove = MoveCreate(piece.position, afterDest);
+					newmove->num_captures = 1;
+
+					//get list of successive capture moves starting from this move.
+					ListNode * captures = GetSuccessiveCapturesFromMove(game, newmove);
+
+					ListNode ** listp = &list;
+					//if call returned null - just add move to the main list.
+					if (!captures)
+					{
+						//add move to the list.
+						ListPushBackElement (listp, (void *) newmove, sizeof (move_t));
+					}
+					else
+					{
+						//if call returned a not null (list) - concat with main list
+						ListConcat(listp, list);
+					}
+					//update list pointer .
+					list = *listp;
+				}
 			}
 		}
 	}
 
 	return list;
 }
+
+
+
+//tells if the move represented by 3 positions, is a valid capture.
+//* note! assumes that the pieces aligned on same diagonal.
+//checks 3 conditions:
+//1. new dest. is in board boundaries.
+//2. piece in middle is not empty and has opposite color.
+//3. new dest. is empty
+//returns 1 if valid, return 0 if not valid.
+int IsValidCapture (game_state_t * game, position_t source, position_t middlePos, position_t newDest)
+{
+
+	return (PieceInBounds (newDest)
+			&& (GetPiece(middlePos, game) != EMPTY)
+			&& !SameColor(game, source, middlePos)
+			&& (GetPiece(newDest, game) == EMPTY));
+}
+
+
+//gets a capture move (move with num_captures > 0).
+//returns a list of ALL the capture moves, that are based on this move.
+//recursive function. it will try to generate routes until no more captures can be done.
+//(all these moves will have num_captures >= 1).
+ListNode * GetSuccessiveCapturesFromMove (game_state_t * game, move_t * baseMove)
+{
+	//get the last position from move.
+	position_t source = baseMove->dest [(baseMove->num_captures - 1)];
+
+	//build moves list.
+	ListNode * list = NULL;
+	int foundCaptures = 0;
+
+	//get possible directions
+	//ALL directions are valid in successive captures (equal to king).
+	//note: possible distances are only 1
+	direction_t * directions = GetPieceDirections(WHITE_K);
+
+	//generate moves.
+
+	//for each direction
+	for (; *directions != 0; directions++)
+	{
+
+		direction_t direction = *directions;
+
+		//get destination
+		position_t middlePos = GetPositionRelative(source, direction, 1);
+		position_t newDest = GetPositionRelative(source, direction, 2);
+		//if possible to eat:
+		if (IsValidCapture (game, source, middlePos, newDest))
+		{
+			//report found.
+			foundCaptures = 1;
+
+			//duplicate baseMove into newMove.
+			move_t * newMove = (move_t *) mymalloc(sizeof (move_t));
+			memcpy(newMove, baseMove, sizeof (move_t));
+
+			//add new_dest to destinations of newMove.
+			newMove->dest[newMove->num_captures];
+
+			//increment capture counts
+			newMove->num_captures++;
+
+			//call recursively with newMove.
+			ListNode * Captures = GetSuccessiveCapturesFromMove(game, newMove);
+
+
+			//if call returned null - create a list with one move (this destination) and return it.
+			ListNode ** listp = &list;
+			if (!Captures)
+			{
+				//add move to the list.
+				ListPushBackElement (listp, (void *) newMove, sizeof (move_t));
+			}
+			//if call returned a not null (list) - concat with main list
+			else
+			{
+				ListConcat(listp, list);
+			}
+			//update list pointer
+			list = *listp;
+		}
+	}
+	//if haven't found any successive capture - return null.
+	if (!foundCaptures)
+	{
+		return NULL;
+	}
+
+	return list;
+}
+
 
 //does the move, does not check validation.
 void DoMove (move_t * move, game_state_t * game)
@@ -221,16 +362,25 @@ void DoMove (move_t * move, game_state_t * game)
 
 }
 
+//generates a new move.
+//from position src to position dest.
+//(allocates and returns)
+move_t * MoveCreate (position_t src, position_t dest)
+{
+	move_t * newmove = (move_t *) mymalloc(sizeof (move_t));
+	newmove->src = src;
+	newmove->num_captures = 0;
+	newmove->dest[0] = dest;
+	return newmove;
+}
 
 //free memory of 1 move.
 void MoveFree( void * data )
 {
 	move_t * p = (move_t * ) data;
 
-	//free memory of destinations.
-	if (p->dest!=0)
-	{
-		myfree(p->dest);
-	}
+	//memory of destinations - static, no special handling.
+
 	myfree (p);
 }
+

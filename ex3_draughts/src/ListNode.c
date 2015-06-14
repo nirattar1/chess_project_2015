@@ -29,6 +29,25 @@ void ListInsertAfterLink(LINK l1, LINK l2)
 	l1-> next = l2;
 }
 
+void ListPushBackElement (LINK *head, void * data, size_t elem_size)
+{
+	//creates a new node around the data
+	ListNode * newnode = ListCreateNode( data , elem_size);
+
+	//if head points to null
+	if (!(*head))
+	{
+		//list is empty- make node head of list.
+		*head = newnode;
+	}
+	else
+	{
+		//list is not empty- concat.
+		ListConcat( head, newnode);
+	}
+
+}
+
 //concat
 void ListConcat( LINK *a, LINK b )
 {

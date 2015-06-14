@@ -37,23 +37,19 @@ typedef enum
 /*************
  * POSITIONS ON BOARD
  * ***********/
-//enum of the 8 directions you can walk on board.
-//(for chess: add more for horse)
+//enum of the 4 directions you can walk on board.
+//(for chess: add more: for horse, tower etc.)
 typedef enum
 {
 	UP_RIGHT  = 1 ,
 	UP_LEFT,
 	DOWN_RIGHT,
 	DOWN_LEFT
-	//	UP,
-	//	DOWN,
-	//	RIGHT,
-	//	LEFT,
-
 } direction_t;
 
 
 //identities allowed directions.
+//see RulesInit-  fills these values.
 direction_t * all_allowed_directions [MAX_IDENTITIES];
 
 direction_t allowed_directions_whitem [3];
@@ -62,7 +58,7 @@ direction_t allowed_directions_blackm [3];
 direction_t allowed_directions_blackk [5];
 
 
-//just saved the directions.
+//fills values of all_allowed_directions based on rules.
 void RulesInit ();
 
 
@@ -170,14 +166,28 @@ void GameDefaultLayout (game_state_t * game);
  * MOVES ON BOARD
 ************/
 
+int IsValidCapture (game_state_t * game, position_t source, position_t middlePos, position_t newDest);
+
+//maximum captures in 1 move (if eat all opponents).
+#define MAX_CAPTURES_MOVE 20
+
 //struct that holds information about one move of piece on board.
 //the move can contain several destinations on the way (in case of successive captures)
 typedef struct
 {
-	position_t 	src;			//source piece on board.
-	position_t 	* dest;			//list of destination positions (more than 1 on successive captures).
-	int 		num_captures;	//the number of captures in this move
+	//source piece on board.
+	position_t 	src;
+	//series of destination positions (1 on normal move, more on successive captures).
+	position_t 	dest [MAX_CAPTURES_MOVE];
+	//the number of captures in this move
+	int 		num_captures;
 } move_t;
+
+
+//generates a new move.
+//from position src to position dest.
+//(allocates and returns)
+move_t * MoveCreate (position_t src, position_t dest);
 
 //frees a move
 void MoveFree( void * data );
@@ -187,11 +197,9 @@ direction_t * GetPieceDirections (char identity);
 
 
 //get possible moves for 1 piece in game.
-ListNode * GetMovesForPiece (game_state_t * game, piece_t piece,
-		int is_successive_captures, position_t * dest_history);
+ListNode * GetMovesForPiece (game_state_t * game, piece_t piece);
 
-ListNode * GetMovesForPieceDefault (game_state_t * game, piece_t piece) ;
-
+ListNode * GetSuccessiveCapturesFromMove (game_state_t * game, move_t * baseMove);
 
 //get all the possible moves for player in game.
 //updates list moves.
