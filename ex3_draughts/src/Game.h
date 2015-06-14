@@ -26,12 +26,12 @@
 #define EMPTY ' '
 
 
-//differentiate two players (sides of the game)
+//differentiate two colors (sides of the game)
 typedef enum
 {
-	PLAYER_WHITE,
-	PLAYER_BLACK
-} 	player_t;
+	COLOR_WHITE = 1,
+	COLOR_BLACK
+} 	color_t;
 
 
 /*************
@@ -98,6 +98,11 @@ position_t GetPositionRelative
 	(position_t source, direction_t direction, int numSteps);
 
 
+//return whether position is inside board boundaries.
+//1 = true
+//0 = false
+int PositionInBounds (position_t pos);
+
 
 /*************
  * PIECE STRUCT
@@ -151,9 +156,17 @@ char GetPiece (position_t pos, game_state_t * game);
 //puts piece in place
 void SetPiece (position_t pos, char identity, game_state_t * game);
 
+//returns the color (black/white)
+//of piece in given position, or 0 if empty.
+color_t GetPieceColor (game_state_t * game, position_t pos);
+
+//returns whether pieces in 2 positions are in same color.
+//1 = both pieces in positions exist and same color
+//0 = different colors or at least one is empty.
+int SameColor(game_state_t * game, position_t pos1, position_t pos2);
 
 //returns a list of pieces on board that player has in current game.
-ListNode * GetPiecesOfPlayer (player_t player, game_state_t * game);
+ListNode * GetPiecesOfPlayer (color_t player, game_state_t * game);
 
 //will initialize the game
 void GameInit (game_state_t * game, char ** board );
@@ -207,7 +220,7 @@ ListNode * GetSuccessiveCapturesFromMove (game_state_t * game, move_t * baseMove
 //1. iterate on all pieces in game.
 //2. for each piece , run GetMovesForPiece and collect the moves.
 //3. optional - sort moves by number of captures.
-ListNode * GetMovesForPlayer (player_t player, game_state_t * game);
+ListNode * GetMovesForPlayer (color_t player, game_state_t * game);
 
 
 //will perform the move pointed by "move"

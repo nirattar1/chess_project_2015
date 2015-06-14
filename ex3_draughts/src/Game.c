@@ -79,13 +79,28 @@ position_t GetPositionRelative
 }
 
 
+int PositionInBounds (position_t pos)
+{
+	if (pos.x < 'a' || pos.x > ('a' + BOARD_SIZE - 1))
+	{
+		return 0;
+	}
+
+	if (pos.y < 1 || pos.y > BOARD_SIZE)
+	{
+			return 0;
+	}
+
+	return 1;
+}
+
 
 void GameInit (game_state_t * game, char ** board )
 {
 
 	//define counts
-	game->piecesCount[PLAYER_BLACK]  = 0;
-	game->piecesCount[PLAYER_WHITE]  = 0;
+	game->piecesCount[COLOR_BLACK]  = 0;
+	game->piecesCount[COLOR_WHITE]  = 0;
 
 	//save pointer to board - assume matrix.
 	game->pieces = (board_column *) board;
@@ -127,8 +142,8 @@ void GameDefaultLayout (game_state_t * game)
 	}
 
 	//define counts
-	game->piecesCount[PLAYER_BLACK]  = 20;
-	game->piecesCount[PLAYER_WHITE]  = 20;
+	game->piecesCount[COLOR_BLACK]  = 20;
+	game->piecesCount[COLOR_WHITE]  = 20;
 
 }
 
@@ -143,6 +158,33 @@ char GetPiece (position_t pos, game_state_t * game)
 	return game->pieces[GetMatrixCol(pos)][GetMatrixRow(pos)];
 }
 
+
+int SameColor(game_state_t * game, position_t pos1, position_t pos2)
+{
+	if (GetPiece(pos1, game)==EMPTY || GetPiece(pos2, game)==EMPTY)
+	{
+		return 0;
+	}
+	return (GetPieceColor(game, pos1) == GetPieceColor(game, pos2));
+
+}
+
+color_t GetPieceColor (game_state_t * game, position_t pos)
+{
+	char identity   = GetPiece(pos, game);
+	if (identity == WHITE_K || identity == WHITE_M)
+	{
+		return COLOR_WHITE;
+	}
+
+	if (identity ==	BLACK_K || identity == BLACK_M)
+	{
+		return COLOR_BLACK;
+	}
+
+	//if empty return 0.
+	return 0;
+}
 
 //will receive identity and return its allowed directions.
 direction_t * GetPieceDirections (char identity)
@@ -227,7 +269,7 @@ ListNode * GetMovesForPiece (game_state_t * game, piece_t piece)
 					else
 					{
 						//if call returned a not null (list) - concat with main list
-						ListConcat(listp, list);
+						ListConcat(listp, captures);
 					}
 					//update list pointer .
 					list = *listp;
@@ -251,7 +293,7 @@ ListNode * GetMovesForPiece (game_state_t * game, piece_t piece)
 int IsValidCapture (game_state_t * game, position_t source, position_t middlePos, position_t newDest)
 {
 
-	return (PieceInBounds (newDest)
+	return (PositionInBounds (newDest)
 			&& (GetPiece(middlePos, game) != EMPTY)
 			&& !SameColor(game, source, middlePos)
 			&& (GetPiece(newDest, game) == EMPTY));
@@ -288,6 +330,14 @@ ListNode * GetSuccessiveCapturesFromMove (game_state_t * game, move_t * baseMove
 		position_t middlePos = GetPositionRelative(source, direction, 1);
 		position_t newDest = GetPositionRelative(source, direction, 2);
 		//if possible to eat:
+
+		if (baseMove->num_captures>=2)
+		{
+			//check if moves are equal.
+			if (newDest.x == baseMove->dest [(baseMove->num_captures - 2)].x
+					&& newDest.y == baseMove->dest [(baseMove->num_captures - 2)].y)
+				continue;
+		}
 		if (IsValidCapture (game, source, middlePos, newDest))
 		{
 			//report found.
@@ -298,7 +348,7 @@ ListNode * GetSuccessiveCapturesFromMove (game_state_t * game, move_t * baseMove
 			memcpy(newMove, baseMove, sizeof (move_t));
 
 			//add new_dest to destinations of newMove.
-			newMove->dest[newMove->num_captures];
+			newMove->dest[newMove->num_captures] = newDest;
 
 			//increment capture counts
 			newMove->num_captures++;
@@ -317,7 +367,7 @@ ListNode * GetSuccessiveCapturesFromMove (game_state_t * game, move_t * baseMove
 			//if call returned a not null (list) - concat with main list
 			else
 			{
-				ListConcat(listp, list);
+				ListConcat(listp, Captures);
 			}
 			//update list pointer
 			list = *listp;
