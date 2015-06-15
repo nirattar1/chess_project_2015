@@ -21,7 +21,7 @@ int main ()
 	RulesInit();
 
 	ListTest ();
-
+d
 	GameTest ();
 
 	//original_main();
