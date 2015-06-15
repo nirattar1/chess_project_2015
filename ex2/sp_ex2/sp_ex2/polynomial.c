@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include <math.h> 
 
 #define COMMAND_PRINT 0
 #define COMMAND_DEF 1
@@ -97,11 +98,13 @@ int ParseCommandStore(char * command,
 
 		//now decide about 2nd part.
 		//on following chars:  -, number - it is not store command
-		if (**part2 == '-' || isdigit(**part2))
+		if (**part2 == '-' || isdigit(**part2) || !isalpha(**part2) || **part2 == 'x')
 		{
 			return COMMAND_DEF;
 		}
-		
+
+		//else, try to parse as store command.
+
 		//try to parse as store sum: p1 + p3
 		if ((p2 = strchr(p1, '+'))!=NULL)
 		{
@@ -115,9 +118,49 @@ int ParseCommandStore(char * command,
 			return COMMAND_STORE_SUM;
 		}
 
+		//- 
+		//try to parse as store sum: p1 - p3
+		if ((p2 = strchr(p1, '-'))!=NULL)
+		{
+			//update 2nd part length.
+			*part2_len = (p2-p1);
+			*part2 = p1;
+			//get 3rd part, after '-'
+			p2++;
+			*part3_len = (p_end - p2);
+			*part3 = p2;
+			return COMMAND_STORE_SUBTRACT;
+		}
+
+		// *
+		//try to parse as store command: p1 * p3
+		if ((p2 = strchr(p1, '*'))!=NULL)
+		{
+			//update 2nd part length.
+			*part2_len = (p2-p1);
+			*part2 = p1;
+			//get 3rd part, after '-'
+			p2++;
+			*part3_len = (p_end - p2);
+			*part3 = p2;
+			return COMMAND_STORE_MULT;
+		}
+
+		//der - format of command is "der    p1"
+		if ((p2 = strstr(command, "der"))!=NULL)
+		{
+			p2 = p2 + 3;
+			*part2_len = (p_end - p2);
+			*part2 = p2;
+			return COMMAND_STORE_DER;
+		}
+
+
 		//any other case , assume it is DEF command
 		return COMMAND_DEF;
 	}
+
+	return COMMAND_UNKNOWN;
 }
 
 
@@ -130,7 +173,8 @@ int ParseCommand(char * command,
 {
 	
 	char * p_end;
-	char *p1;
+	char * p1;
+	char * p2;
 	int command_type ;
 
 	//quit command
@@ -235,9 +279,60 @@ int ParseCommand(char * command,
 	}
 
 
-	//der
+	//der - format is "der    p1"
+	if ((p1 = strstr(command, "der"))!=NULL)
+	{
+		p1 = p1 + 3;
+		while (*p1 == ' ')
+		{
+			p1++;
+		}
+		p2 = p1;
+		while (*p2 != ' ' && *p2 != 0)
+		{
+			p2++;
+		}
 
-	//eval
+		//get 1st part (after der - is the name of the polynomial)
+		*part1_len = (p2 - p1);
+		*part1 = p1;
+		return COMMAND_DER;
+	}
+
+
+	//eval - format is "eval  p1  6.2"
+	if ((p1 = strstr(command, "eval"))!=NULL)
+	{
+
+		p1 = p1 + 4;
+		while (*p1 == ' ')
+		{
+			p1++;
+		}
+		p2 = p1;
+		while (*p2 != ' ')
+		{
+			p2++;
+		}
+
+		p_end = strchr(command, 0);
+
+		//get 1st part (after eval - is the name of the polynomial)
+		*part1_len = (p2 - p1);
+		*part1 = p1;
+
+		//get 2nd part (after name of polynomial)
+		while (*p2 == ' ')
+		{
+			p2++;
+		}
+		*part2_len = (p_end - p2);
+		*part2 = p2;
+		return COMMAND_EVAL;
+	}
+
+
+
 
 	//otherwise, (only name of poly appears)
 	//assume print command  -- "  p1  "
@@ -257,7 +352,10 @@ int ParseCommand(char * command,
 //sign of coefficient will be handled by 'float'
 void ParseTerm(char * str, term * t1)
 {
+	char * p_hat;
+
 	if (!t1) {return;};
+
 
 	//term doesn't contain x  (example '5')
 	if (strchr(str,'x')==NULL)
@@ -267,18 +365,38 @@ void ParseTerm(char * str, term * t1)
 		return;
 	}
 
-	//handle more cases
+	//handle more cases, term contains x
 
-	//term doesn't contain ^  (example '7x')
-	if (strchr(str,'x')==NULL)
+	//read exponent	
+	if ((p_hat = strchr(str,'^'))==NULL)
 	{
-		sscanf(str, "%f", &(t1->coeff));
-		t1->exp = 0;  //0 exponent (constant number)
+		t1->exp = 1;
+	}
+	else
+	{
+		//read exponent
+		sscanf (p_hat, "^%d", &(t1->exp));
+	}
+
+	// if x, +x = then parse as 1x
+	if ((strncmp(str, "+x", 2)==0)||(strncmp(str, "x", 1)==0))
+	{
+		t1->coeff = 1.0;
+		return;
+	}
+
+	// if -x  = then parse as -1x
+	if (strncmp(str, "-x", 2)==0)
+	{
+		t1->coeff = -1.0;
+		return;
 	}
 
 
+	//if ax or -ax
+	sscanf(str, "%f", &(t1->coeff));
+	return;
 	
-	sscanf (str, "%fx^%d", &(t1->coeff), &(t1->exp));
 
 }
 
@@ -295,10 +413,10 @@ void ParsePoly(char * poly_str, poly * poly1)
 
 	while( *p != 0)
 	{
-		printf ("read char: %c\n", *p);
+		//printf ("read char: %c\n", *p);
 
 		//reached end of term (and not at start)
-		if ((p!=poly_str)&&(*p=='-' || *p=='+' || *(p+1)==0))
+		if ((*p=='-' && (poly_str!=p) ) || *p=='+' || *(p+1)==0)
 		{
 			//special case - end of string, get last character.
 			if (*(p+1)==0)
@@ -311,26 +429,29 @@ void ParsePoly(char * poly_str, poly * poly1)
 
 
 			//process previous term
-
-			//create space for 1 new term.
-			newsize = (poly1->numTerms + 1) * sizeof(term);
-
-			poly1->terms = (term *) realloc ( poly1->terms, newsize);
-			if (!poly1->terms) 
+			if (term_len!=0)
 			{
-				return; 
-			};
-			ParseTerm(term_str, &(poly1->terms[poly1->numTerms]));
-			poly1->numTerms++;
+				//create space for 1 new term.
+				newsize = (poly1->numTerms + 1) * sizeof(term);
 
-			printf("term: %s\n", term_str);
+				poly1->terms = (term *) realloc ( poly1->terms, newsize);
+				if (!poly1->terms) 
+				{
+					return; 
+				};
+				ParseTerm(term_str, &(poly1->terms[poly1->numTerms]));
+				poly1->numTerms++;
 
+				//printf("term: %s\n", term_str);
 
-			//clear for new term
-			printf ("start new term\n");
-			//get sign for new term
-			term_str[0] = *p;
-			term_len = 1;
+				//clear for new term
+				//printf ("start new term\n");
+				//get sign for new term
+				term_str[0] = *p;
+				term_len = 1;
+
+			}
+
 		}
 		else
 		{
@@ -343,6 +464,101 @@ void ParsePoly(char * poly_str, poly * poly1)
 
 
 }
+
+
+//Init poly
+//will delete all memory associated with poly.
+void PolyInit (poly *p1)
+{
+	if (!p1)
+	{
+		return;
+	}
+
+	p1->name = NULL;
+
+	p1->numTerms = 0;
+
+
+	p1->terms = NULL;
+
+}
+
+//will free the data associated with poly p1.
+void PolyFreeData(poly *p1)
+{
+	if (!p1)
+	{
+		return;
+	}
+	//free char pointer if exists.
+	if (p1->name)
+	{
+		free(p1->name);
+	}
+
+	//free term pointer if exists.
+	if (p1->terms)
+	{
+		free(p1->terms);
+	}
+}
+
+
+//Copy poly
+//copy all data in p1 to p2.
+void PolyCopySimple (poly *p1, poly *p1_copy)
+{
+	*p1_copy = *p1;
+}
+
+//Copy poly
+//will copy all memory associated with poly (deep copy).
+//will return pointer to new poly.
+//caller is responsible to allocate p1_copy
+poly * PolyCopy (poly *p1, poly *p1_copy)
+{
+
+	int i=0;
+	int size_name ;
+
+	if (!p1)
+	{
+		return NULL;
+	}
+
+	p1_copy = (poly *) malloc(sizeof(poly));
+	PolyInit(p1_copy);
+
+	//copy name data if exists.
+	if (p1->name)
+	{
+		size_name = strlen(p1->name);
+		p1_copy -> name = (char *) malloc (size_name);
+		strcpy(p1_copy->name, p1 -> name );
+	}
+
+	//copy terms data, if they exist.
+	if (p1->terms)
+	{
+		p1_copy->terms = (term *) malloc (p1->numTerms * sizeof(term));
+		//copy each term.
+		for (i=0; i<p1->numTerms; i++)
+		{
+			//copy the whole term struct
+			p1_copy->terms[i] = p1->terms[i];
+			p1_copy->numTerms ++;
+		}
+	}
+
+	return p1_copy;
+}
+
+
+
+
+//Free poly.
+//
 
 //will return poly with given name.
 poly * FindPoly(char * name, int name_len)
@@ -368,7 +584,7 @@ void PrintPoly (poly * p1)
 	int exp;
 
 	//iterate poly's terms and print them.
-	for (i=0; i<p1->numTerms; i++)
+	for (i=(p1->numTerms-1); i>=0; i--)
 	{
 		coeff = p1->terms[i].coeff;
 		exp = p1->terms[i].exp;
@@ -376,7 +592,17 @@ void PrintPoly (poly * p1)
 		//print coefficient
 		if (coeff==1.0)
 		{
-			if (exp==0) {printf("1");}; //print coefficient 1 if only number.
+			if (i!=(p1->numTerms-1))
+			{
+				printf("+");
+			}
+
+			if (exp==0) 
+			{
+				printf("1");
+			}
+			
+			//print coefficient 1 if only number.
 		}
 		else if (coeff == -1.0)
 		{
@@ -389,10 +615,15 @@ void PrintPoly (poly * p1)
 				printf("-");
 			}
 		}
+		else if (coeff == 0)
+		{
+			//do not print terms with 0
+			continue;
+		}
 		else
 		{
 			//print + sign from second term onward
-			if (i>0)
+			if (i!=(p1->numTerms-1))
 			{
 				printf("%+.2f", coeff); //uses printf '+' flag
 			}
@@ -405,7 +636,7 @@ void PrintPoly (poly * p1)
 		//print x and its power
 		if (exp==0)
 		{
-			printf("");
+			//do nothing
 		}
 		else if (exp==1)
 		{
@@ -437,16 +668,21 @@ void command_print (char * name, int name_len)
 }
 
 
-void define (char * name, int name_len, char * poly_str, int poly_str_len)
+//will get pointer to poly, and its name. 
+//will add it to poly's array.
+//caller already allocated p1.
+void AddUpdatePoly (poly * p1, char * name, int name_len)
 {
-	
+
 	//check validity of name
 	//...
 
-	poly * found = NULL ;
+	poly * found = NULL;
 	poly * newPoly = 0;
 
-	//check if name exists.
+	//check if poly exists (by name).
+
+	//if not exist
 	if ((found = FindPoly(name,name_len))==NULL)
 	{
 		//poly doesn't exist, create space for it.
@@ -463,11 +699,65 @@ void define (char * name, int name_len, char * poly_str, int poly_str_len)
 
 		//increment number of polys in system
 		_num_polys++;
+	}
+	else 
+	{	//poly exists, update its values.
+		newPoly = found;
+		//clear previous terms.
+		free(newPoly->terms);
+		newPoly->terms = NULL;
+	}
+
+	PolyInit(newPoly);
+
+
+	//copy terms data from p1 to poly
+	PolyCopySimple (p1, newPoly);
+
+
+	//update new poly's name
+	newPoly->name = (char *) malloc(name_len+1);
+	strncpy( newPoly->name, name, name_len);
+	newPoly->name[name_len] = 0; //null terminate
+
+
+}
+
+void define (char * name, int name_len, char * poly_str, int poly_str_len)
+{
+	
+	//check validity of name
+	//...
+
+	poly * found = NULL ;
+	poly * newPoly = 0;
+	int update;
+	int newsize;
+
+	//check if name exists.
+	if ((found = FindPoly(name,name_len))==NULL)
+	{
+		update = 0;
+		//poly doesn't exist, create space for it.
+		//create 1 new poly.
+		//allocate space
+		newsize = (_num_polys + 1) * sizeof(poly);
+		_poly_arr = (poly *) realloc ( _poly_arr, newsize);
+		if (!_poly_arr) 
+		{
+			return; 
+		};
+
+		newPoly = &(_poly_arr[_num_polys]);
+
+		//increment number of polys in system
+		_num_polys++;
 
 	}
 	else 
 	{	//poly exists, update its values.
 		newPoly = found;
+		update = 1;
 		//clear previous terms.
 		free(newPoly->terms);
 		newPoly->terms = NULL;
@@ -490,90 +780,18 @@ void define (char * name, int name_len, char * poly_str, int poly_str_len)
 	//sort poly's terms array after insertion
 	qsort(newPoly->terms, newPoly->numTerms, sizeof(term), compare_terms);
 
-}
-
-//define polynomial stored in poly1.
-void define2(char * name, int name_len, poly * poly1)
-{
-	//(dest_name, dest_name_len, result)
-}
-
-
-//Init poly
-//will delete all memory associated with poly.
-void PolyInit (poly *p1)
-{
-	if (!p1)
+	if (update==0)
 	{
-		return;
+		printf("created %.*s\n" , name_len, name);
 	}
-
-	//free char pointer if exists.
-	if (p1->name)
+	else
 	{
-		//free(p1->name);
+		printf("updated %.*s\n" , name_len, name);
 	}
-	p1->name = NULL;
-
-	p1->numTerms = 0;
-
-	//free term pointer if exists.
-	if (p1->terms)
-	{
-		//free(p1->terms);
-	}
-	p1->terms = NULL;
 
 }
 
 
-//Copy poly
-//will copy all memory associated with poly (deep copy).
-//will return pointer to new poly.
-//caller is responsible to allocate p1_copy
-poly * PolyCopy (poly *p1, poly *p1_copy)
-{
-
-	int i=0;
-	int size_name ;
-
-	if (!p1)
-	{
-		return NULL;
-	}
-
-	p1_copy = (poly *) malloc(sizeof(poly));
-	PolyInit(p1_copy);
-
-	//copy name data if exists.
-	if (p1->name)
-	{
-		size_name = strlen(p1->name);
-		p1_copy -> name = (char *) malloc (size_name);
-		strcpy(p1_copy->name, p1 -> name );
-	}
-	
-	//copy terms data, if they exist.
-	if (p1->terms)
-	{
-		p1_copy->terms = (term *) malloc (p1->numTerms * sizeof(term));
-		//copy each term.
-		for (i=0; i<p1->numTerms; i++)
-		{
-			//copy the whole term struct
-			p1_copy->terms[i] = p1->terms[i];
-			p1_copy->numTerms ++;
-		}
-	}
-
-	return p1_copy;
-}
-
-
-
-
-//Free poly.
-//
 
 //poly actions algorithms
 /////////////////////////
@@ -677,7 +895,29 @@ void mult (poly * p1, poly * p2, poly * p3)
 //assumes all pointers are not null.
 void derive (poly * p1, poly * p2)
 {
-	
+
+	int i=0;
+	int cnt_terms_p2 = 0; 
+	term * curr_term = NULL;
+
+	for (i=0; i<p1->numTerms; i++)
+	{
+		curr_term = &(p1->terms[i]);
+		if (curr_term->exp == 0)
+		{
+			continue;
+		}
+
+		//allocate space for new term in p2
+		p2->terms = (term *) realloc (p2->terms, ((cnt_terms_p2 + 1) * sizeof (term)) );
+
+		//fill new term
+		p2->terms[cnt_terms_p2].coeff = (curr_term->coeff)*(curr_term->exp);
+		p2->terms[cnt_terms_p2].exp = curr_term->exp - 1;
+
+		p2->numTerms++;
+		cnt_terms_p2++;
+	}
 }
 
 //will recieve 2 pointers for poly's. if 1 of them not found, will print error with its name.
@@ -712,12 +952,15 @@ void command_store_sum(char * dest_name, int dest_name_len,
 	char * var2, int var2_len, int is_subtract)
 {
 
-	//create new poly on stack
+	//create new poly on heap
 	poly result;
 
 	//find 2 polys by name, if failed return NULL
 	poly * p1 = FindPoly(var1, var1_len);
 	poly * p2 = FindPoly(var2, var2_len);
+
+	//init result
+	PolyInit(&result);
 
 	if (!PrintIfNotFound(p1, p2, var1, var1_len, var2, var2_len))
 	{
@@ -729,7 +972,8 @@ void command_store_sum(char * dest_name, int dest_name_len,
 	sum (p1, p2, &result, is_subtract);
 
 	//add result
-	//AddUpdatePoly(dest_name, dest_name_len, result);
+	AddUpdatePoly(&result, dest_name, dest_name_len);
+
 }
 
 //recives names of 2 variables, and sums/substracts them.
@@ -765,6 +1009,97 @@ void command_sum (	char * var1, int var1_len,
 }
 
 
+//eval command
+void command_eval (	char * var1, int var1_len, 
+					char * var2, int var2_len)
+{
+
+	int i;
+	float t;
+	term * curr_term = NULL;
+	//find poly by name, if failed return NULL
+	poly * p1 = FindPoly(var1, var1_len);
+	float result;
+
+	if (!p1)
+	{
+		printf("unknown polynomial %.*s\n", var1_len, var1);
+		return;
+	}
+
+	//if here, poly is in system. 
+
+	//read value of 't' into float
+	sscanf(var2, "%f", &t);
+	result = 0;
+
+	for (i=0; i<p1->numTerms; i++)
+	{
+		curr_term = &(p1->terms[i]);
+		result += ((float) pow(t, curr_term->exp))*curr_term->coeff;
+	}
+	//print result
+	printf("%.2f\n", result);
+
+
+}
+
+
+
+//derive command
+void command_der ( char * var1, int var1_len )
+{	
+	//create new poly on stack, init it.
+	poly result;
+	poly * p1;
+	
+	//init result
+	PolyInit(&result);
+
+	//find poly by name, if failed return NULL
+	p1 = FindPoly(var1, var1_len);
+	if (!p1)
+	{
+		printf("unknown polynomial %.*s\n", var1_len, var1);
+		return;
+	}
+
+	//p1 is in the system.
+	//do the derivative, will be stored in "result".
+	derive(p1, &result);
+
+	//print result
+	PrintPoly(&result);
+}
+
+
+//derive store command : p2 = der p1
+void command_store_der ( char * dest_name, int dest_name_len,
+						char * var1, int var1_len )
+{	
+	//create new poly on stack, init it.
+	poly result;
+	poly * p1;
+
+	//init result
+	PolyInit(&result);
+
+	//find poly by name, if failed return NULL
+	p1 = FindPoly(var1, var1_len);
+	if (!p1)
+	{
+		printf("unknown polynomial %.*s\n", var1_len, var1);
+		return;
+	}
+
+	//p1 is in the system.
+	//do the derivative, will be stored in "result".
+	derive(p1, &result);
+
+	//add result
+	AddUpdatePoly(&result, dest_name, dest_name_len);
+}
+
 //recives names of 2 variables, and multiplies them.
 //will first try to find them in system, if not exist will exit.
 //prints result at the end.
@@ -797,9 +1132,22 @@ void command_mult (	char * var1, int var1_len,
 
 
 
-int quit ()
+void quit ()
 {
 	//free all memory.
+
+	int i;
+	for (i = 0; i < _num_polys ; i++)
+	{
+		//clear data asspciated with all polys
+		PolyFreeData(&(_poly_arr[i]));
+	}
+
+	//clear polys array
+	free(_poly_arr);
+
+	_poly_arr = NULL;
+	_num_polys = 0;
 }
 
 int main()
@@ -812,6 +1160,8 @@ int main()
 	int command_type = COMMAND_UNKNOWN;
 	char * part1, * part2, * part3;
 	int part1_len, part2_len, part3_len;
+
+	printf("Welcome to Polynomials!\n");
 
 	while (1)	//continue reading user inputs until end.
 	{
@@ -861,6 +1211,19 @@ int main()
 			break;
 		case COMMAND_STORE_SUM:
 			command_store_sum(part1, part1_len, part2, part2_len, part3, part3_len, 0);
+			break;
+		case COMMAND_STORE_SUBTRACT:
+			command_store_sum(part1, part1_len, part2, part2_len, part3, part3_len, 1);
+			break;
+		case COMMAND_EVAL:
+			command_eval(part1, part1_len, part2, part2_len);
+			break;
+		case COMMAND_DER:
+			command_der(part1, part1_len);
+			break;
+		case COMMAND_STORE_DER:
+			command_store_der(part1, part1_len, part2, part2_len);
+			break;
 		case COMMAND_QUIT:
 			quit();
 			return 0;
