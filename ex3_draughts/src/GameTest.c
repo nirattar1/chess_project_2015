@@ -14,6 +14,7 @@ void MoveTest(game_state_t * game);
 void MoveListTest(game_state_t * game);
 void GetMovesBasicTest(game_state_t * game);
 void GetMoves1Capture(game_state_t * game);
+void MovesListPrint( LINK head , game_state_t * game);
 
 void GameTest ()
 {
@@ -277,6 +278,10 @@ void GetMoves1SuccessiveCapture(game_state_t * game)
 	piece3.identity = identity;
 	piece3.position = pos;
 
+	//b,2
+	pos = Position ('b', 2);
+	identity = WHITE_M;
+	SetPiece(pos, identity, game);
 
 	PrintBoard(game);
 
@@ -284,20 +289,20 @@ void GetMoves1SuccessiveCapture(game_state_t * game)
 
 	ListNode * list2 = GetMovesForPiece(game, piece2);
 
-	//ListNode * list3 = GetMovesForPiece(game, piece3);
+	ListNode * list3 = GetMovesForPiece(game, piece3);
 
 
 	MovesListPrint( list1, game);
 
 	MovesListPrint( list2, game);
 
-	//MovesListPrint( list3, game);
+	MovesListPrint( list3, game);
 
 	ListFreeElements(list1, MoveFree);
 
 	ListFreeElements(list2, MoveFree);
 
-	//ListFreeElements(list3, MoveFree);
+	ListFreeElements(list3, MoveFree);
 
 
 }
@@ -313,7 +318,6 @@ void MovesListPrint( LINK head , game_state_t * game)
 		//print move.
 		printf ("move: source : (%c , %d) ", move->src.x, move->src.y);
 
-		int num_dest = 1;
 		position_t * dest = move->dest;
 		printf ("destinations: ");
 		printf ("(%c , %d) ", dest[0].x, dest[0].y);
@@ -321,7 +325,7 @@ void MovesListPrint( LINK head , game_state_t * game)
 		{
 			printf("(CAPTURE) ");
 		}
-		for (int i=1; i<(move->num_captures-1); i++)
+		for (int i=1; i<=(move->num_captures-1); i++)
 		{
 			printf ("(%c , %d) (CAPTURE) ", dest[i].x, dest[i].y);
 		}

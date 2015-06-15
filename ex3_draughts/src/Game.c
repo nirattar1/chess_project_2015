@@ -194,6 +194,24 @@ direction_t * GetPieceDirections (char identity)
 
 
 
+
+//tells if the move represented by 3 positions, is a valid capture.
+//* note! assumes that the pieces aligned on same diagonal.
+//checks 3 conditions:
+//1. new dest. is in board boundaries.
+//2. piece in middle is not empty and has opposite color.
+//3. new dest. is empty
+//returns 1 if valid, return 0 if not valid.
+int IsValidCapture (game_state_t * game, position_t source, position_t middlePos, position_t newDest)
+{
+
+	return (PositionInBounds (newDest)
+			&& (GetPiece(middlePos, game) != EMPTY)
+			&& !SameColor(game, source, middlePos)
+			&& (GetPiece(newDest, game) == EMPTY));
+}
+
+
 /**
 //* Get (generate) all the allowed moves for 1 piece on board.
 //@param game the game state.
@@ -268,8 +286,9 @@ ListNode * GetMovesForPiece (game_state_t * game, piece_t piece)
 					}
 					else
 					{
-						//if call returned a not null (list) - concat with main list
+						//if call returned a not null (list) - concat. with main list
 						ListConcat(listp, captures);
+						myfree(newmove);
 					}
 					//update list pointer .
 					list = *listp;
@@ -282,22 +301,6 @@ ListNode * GetMovesForPiece (game_state_t * game, piece_t piece)
 }
 
 
-
-//tells if the move represented by 3 positions, is a valid capture.
-//* note! assumes that the pieces aligned on same diagonal.
-//checks 3 conditions:
-//1. new dest. is in board boundaries.
-//2. piece in middle is not empty and has opposite color.
-//3. new dest. is empty
-//returns 1 if valid, return 0 if not valid.
-int IsValidCapture (game_state_t * game, position_t source, position_t middlePos, position_t newDest)
-{
-
-	return (PositionInBounds (newDest)
-			&& (GetPiece(middlePos, game) != EMPTY)
-			&& !SameColor(game, source, middlePos)
-			&& (GetPiece(newDest, game) == EMPTY));
-}
 
 
 //gets a capture move (move with num_captures > 0).
@@ -334,6 +337,7 @@ ListNode * GetSuccessiveCapturesFromMove (game_state_t * game, move_t * baseMove
 		if (baseMove->num_captures>=2)
 		{
 			//check if moves are equal.
+			//TODO use memcmp
 			if (newDest.x == baseMove->dest [(baseMove->num_captures - 2)].x
 					&& newDest.y == baseMove->dest [(baseMove->num_captures - 2)].y)
 				continue;
@@ -371,12 +375,15 @@ ListNode * GetSuccessiveCapturesFromMove (game_state_t * game, move_t * baseMove
 			}
 			//update list pointer
 			list = *listp;
+
+
 		}
 	}
 	//if haven't found any successive capture - return null.
 	if (!foundCaptures)
 	{
 		return NULL;
+		//caller will be responsible for freeing base move.
 	}
 
 	return list;

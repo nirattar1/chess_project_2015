@@ -11,6 +11,7 @@
 
 int ListTest ();
 int GameTest();
+void Test_Minimax();
 int original_main();
 
 
@@ -21,9 +22,11 @@ int main ()
 
 	//ListTest ();
 
-	GameTest ();
+	//GameTest ();
 
 	//original_main();
+
+	Test_Minimax();
 
 	memory_print();
 
