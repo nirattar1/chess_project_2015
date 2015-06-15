@@ -20,13 +20,13 @@ int main ()
 
 	RulesInit();
 
-	//ListTest ();
+	ListTest ();
 
-	//GameTest ();
+	GameTest ();
 
 	//original_main();
 
-	Test_Minimax();
+	//Test_Minimax();
 
 	memory_print();
 
