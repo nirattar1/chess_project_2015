@@ -16,7 +16,7 @@ int TestScoring (int * leaf_num)
 {
 	return test_values [*leaf_num];
 }
-
+d
 
 //will create a list of children, and return a pointer to them.
 ListNode * TestChildrenGenerate (STATE_TYPE state)
