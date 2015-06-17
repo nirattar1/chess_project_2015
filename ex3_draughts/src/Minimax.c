@@ -6,56 +6,58 @@
  */
 #include "Minimax.h"
 #include <stdio.h>
+#include "Test_List.h"
+#include "Memory.h"
 
+//initialize global
+int _NUM_LEAVES = 0;
 
-
-
-
-//find max in array
-ArrFindMax (int * arr, int arr_size)
-{
-	return 10;
-}
-ArrFindMin (int * arr, int arr_size)
-{
-	return -10;
-}
 
 void MinimaxChoose (STATE_TYPE * state, ListNode * RootChildren,
 		int current_depth, int max_depth,
 		int (*ScoringFunction)(STATE_TYPE *),
-		ListNode * (*TestChildrenGenerate)(STATE_TYPE *),
+		ListNode * (*ChildGenerateFunction)(STATE_TYPE *),
 		int * chosenSon, int * chosenValue) //by reference, will update these for caller.
 {
 
 	//halt condition (leaf node)
+	//update based on scoring function and return.
 	if (current_depth==max_depth)
 	{
 		//compute this node's value and return it.
 		*chosenSon = 0;
-		*chosenValue = (ScoringFunction(&current_depth));
+		//TODO change scoring function to get state
+		*chosenValue = (ScoringFunction(&_NUM_LEAVES));
+
+		//debug
+		printf("scoring function value: %d\n", *chosenValue);
+
+		//increment global leaves counter. (for debug)
+		_NUM_LEAVES ++ ;
+		printf("number of leaves: %d\n", _NUM_LEAVES);
+		return;
 	}
 
 	//get children.
 	//(on first level - from argument, otherwise generate from state.)
-	ListNode * pChildren;
+	ListNode * Children;
 	if (current_depth==0)
 	{
-		pChildren = RootChildren;
+		Children = RootChildren;
 	}
 	else
 	{
-		pChildren = TestChildrenGenerate (state);
+		Children = ChildGenerateFunction (state);
 	}
 
 
 	//for each child :
-	int numChildren = ListCount(pChildren);
+	int numChildren = ListCount(Children);
 	int iChild = 0;
 	int * Scores = (int *) mymalloc (numChildren * (sizeof (int)) );
-	for ( ; pChildren !=0; pChildren = pChildren->next )
+	ListNode * pChildren;
+	for (ListNode * pChildren = Children; pChildren !=NULL; pChildren = pChildren->next )
 	{
-		printf ("element value: %d\n", *((CHILD_TYPE *) pChildren->data));
 
 		//create static copy of state.
 		STATE_TYPE newState;
@@ -69,8 +71,9 @@ void MinimaxChoose (STATE_TYPE * state, ListNode * RootChildren,
 		int childIndex;	//not really used.
 		int childScore;
 		MinimaxChoose(&newState, NULL, current_depth+1, max_depth,
-				ScoringFunction, TestChildrenGenerate, &childIndex, &childScore);
+				ScoringFunction, ChildGenerateFunction, &childIndex, &childScore);
 
+		printf ("current depth : %d. score from child %d: %d\n", current_depth, iChild, childScore);
 		Scores [iChild] = childScore;
 		iChild++;
 	}
@@ -79,13 +82,54 @@ void MinimaxChoose (STATE_TYPE * state, ListNode * RootChildren,
 	//even depth (maximizer)- choose max.
 	if (current_depth%2 == 0)
 	{
-		ArrFindMax (Scores, numChildren);
+		ArrFindMaxOrMin(Scores, numChildren, 1, chosenValue, chosenSon);
 	}
 	//odd depth (minimizer) - choose min.
 	else
 	{
-		ArrFindMin (Scores, numChildren);
+		ArrFindMaxOrMin(Scores, numChildren, 0, chosenValue, chosenSon);
 	}
 
+	//free all children (got what we need from them).
+	ListFreeElements(Children, intlist_free);
+	//free scores of children.
+	myfree(Scores);
+
+	return;
 }
 
+//find max or min value in array
+//if find_max = 1 -> will find max.
+//if find_max = 0 -> will find min.
+//will update : chosenValue with the value.
+// chosenIndex with the index.
+//if array is of length 0 , will return -1.
+int ArrFindMaxOrMin (int * array, int arr_size,
+		int find_max, int * chosenValue, int * chosenIndex)
+{
+	if (!array || arr_size==0)
+	{
+		return -1;
+	}
+
+	//initialize values
+	int extremeValue = array[0];
+	int extremeIndex = 0;
+
+	//loop through array and find the extreme value.
+	for (int i=0; i<arr_size; i++)
+	{
+		//if found a value that exceeds the extreme, change indication.
+		if (((find_max==1) && array[i] > extremeValue)
+			|| ((find_max==0) && array[i] < extremeValue))
+		{
+			extremeValue = array[i];
+			extremeIndex = i;
+		}
+	}
+
+	//update return arguments.
+	*chosenValue = extremeValue;
+	*chosenIndex = extremeIndex;
+	return 1;
+}

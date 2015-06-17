@@ -13,6 +13,7 @@
 //for testing
 #define STATE_TYPE int
 #define CHILD_TYPE int
+extern int _NUM_LEAVES;
 
 //gets a list of children. will determine the best option out of them.
 void MinimaxChoose (STATE_TYPE * state, ListNode * RootChildren,
@@ -21,6 +22,7 @@ void MinimaxChoose (STATE_TYPE * state, ListNode * RootChildren,
 		ListNode * (*TestChildrenGenerate)(STATE_TYPE *),
 		int * chosenSon, int * chosenValue); //by reference, will update these for caller.
 
-
+int ArrFindMaxOrMin (int * array, int arr_size,
+		int find_max, int * chosenValue, int * chosenIndex);
 
 #endif /* MINIMAX_H_ */

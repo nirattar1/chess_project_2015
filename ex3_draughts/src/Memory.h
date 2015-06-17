@@ -11,9 +11,11 @@
 #include <stdlib.h>
 
 extern int CNT_CALLS_MALLOC;
+extern int CNT_CALLS_FREE;
+
 
 void * mymalloc (size_t size);
-void * myfree (void * data);
+void myfree (void * data);
 void memory_print ();
 
 #endif /* MEMORY_H_ */

@@ -6,8 +6,10 @@
  */
 
 #include "Minimax.h"
+#include "Test_List.h"
 
-int test_values [] = {10 , -10 , 5, -7, 9, 20, 21, 24};
+
+int test_values [] = {10 , -10 , 5, -7, 9, 20, -21, -24, 9, 11, -3 , 4, -20};
 
 
 
@@ -18,17 +20,19 @@ int TestScoring (int * leaf_num)
 }
 
 
-//will create a list of children, and return a pointer to them.
+//will create a list of children based on state.
+//and return a pointer to them.
+//this always returns a fixed number of children.
 ListNode * TestChildrenGenerate (STATE_TYPE state)
 {
 	//prepare empty list.
 	ListNode * list = NULL;
 
-	//allocate children
+	//allocate children (no meaning to values on the way)
 	int * child1 = (int *) mymalloc (sizeof (int));
-	*child1 = 7;
+	*child1 = 0;
 	int * child2 = (int *) mymalloc (sizeof (int));
-	*child2 = 8;
+	*child2 = 0;
 
 	//add children to the list.
 	ListNode ** listp = &list;
@@ -47,7 +51,7 @@ void Test_Minimax ()
 {
 
 	int sons = 2;
-	int max_depth  = 2;
+	int max_depth  = 3;
 
 	//get initial children list from given state.
 	STATE_TYPE state = 7000;

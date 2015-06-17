@@ -6,8 +6,11 @@
  */
 
 #include <stdlib.h>
+#include "Memory.h"
 
 int CNT_CALLS_MALLOC = 0;
+int CNT_CALLS_FREE = 0;
+
 
 void * mymalloc (size_t size)
 {
@@ -15,14 +18,17 @@ void * mymalloc (size_t size)
 	return malloc(size);
 }
 
-void * myfree (void * data)
+void myfree (void * data)
 {
-	CNT_CALLS_MALLOC --;
+	CNT_CALLS_FREE ++;
 	free(data);
 }
 
 void memory_print ()
 {
-	printf("memory calls:  %d\n", CNT_CALLS_MALLOC);
+	printf("\n*** memory ***\n");
+	printf("%d malloc calls,", CNT_CALLS_MALLOC);
+	printf("%d free calls.\n", CNT_CALLS_FREE);
+	printf("balance : %d\n", (CNT_CALLS_MALLOC- CNT_CALLS_FREE));
 }
 
