@@ -49,6 +49,13 @@ int GetMatrixCol (position_t pos)
 	return (pos.x - 'a');
 }
 
+position_t PositionFromMatrixCoordinates( int i, int j)
+{
+	position_t pos;
+	pos.x = 'a' + i;
+	pos.y = 1 + j;
+	return pos;
+}
 
 position_t GetPositionRelative
 	(position_t source, direction_t direction, int numSteps)
@@ -105,7 +112,7 @@ void GameInit (game_state_t * game, char ** board )
 	//save pointer to board - assume matrix.
 	game->pieces = (board_column *) board;
 
-	//allocate space for board.
+	//clear board .
 	int i, j;
 	for (i = 0; i < BOARD_SIZE; i++)
 	{
@@ -156,6 +163,33 @@ void SetPiece (position_t pos, char identity, game_state_t * game )
 char GetPiece (position_t pos, game_state_t * game)
 {
 	return game->pieces[GetMatrixCol(pos)][GetMatrixRow(pos)];
+}
+
+
+//will get all pieces of player with given color
+//build an array of pieces
+//will fill caller the array and pieces count.
+void GetAllPieces (game_state_t * game, color_t color, piece_t * array, int * cnt_pieces)
+{
+
+	*cnt_pieces = 0;
+
+	for (int i = 0; i < BOARD_SIZE; i++)
+	{
+		for (int j = 0; j < BOARD_SIZE; j++)
+		{
+
+			position_t pos = PositionFromMatrixCoordinates(i, j);
+			//reached user's piece
+			if (GetPiece(pos, game) != EMPTY && GetPieceColor(game, pos) == color)
+			{
+				array[*cnt_pieces].position = pos;
+				array[*cnt_pieces].identity = GetPiece(pos, game);
+				(*cnt_pieces) ++;
+			}
+		}
+	}
+
 }
 
 
@@ -388,6 +422,38 @@ ListNode * GetSuccessiveCapturesFromMove (game_state_t * game, move_t * baseMove
 
 	return list;
 }
+
+
+//get all the possible moves for player 'color' in game.
+//will generate and return a list of the moves.
+//basic algorithm:
+//1. iterate on all pieces of the player in the game.
+//2. for each piece, run GetMovesForPiece and collect the moves.
+//3. optional - sort moves by number of captures.
+ListNode * GetMovesForPlayer (game_state_t * game, color_t color)
+{
+
+	//get user's pieces
+	int cntPiecesPlayer;//will count how many pieces player has.
+	piece_t piecesPlayer [MAX_PIECES_PLAYER]; //player can have at most 20 pieces.
+	GetAllPieces (game, color, piecesPlayer, &cntPiecesPlayer);
+
+
+	//list of moves (start with empty ).
+	ListNode * allMoves = NULL;
+
+	//iterate on pieces
+	for (int i=0; i<cntPiecesPlayer; i++)
+	{
+		//get moves per piece
+		ListNode * currMoves = GetMovesForPiece(game, piecesPlayer[i]);
+		//concat with general list.
+		ListConcat(&allMoves, currMoves);
+	}
+
+	return allMoves;
+}
+
 
 
 //does the move, does not check validation.

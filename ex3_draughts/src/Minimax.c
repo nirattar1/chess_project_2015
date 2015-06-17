@@ -13,6 +13,15 @@
 int _NUM_LEAVES = 0;
 
 
+
+//for testing. remove this function
+//test function , updates child based on depth and child index.
+int TestUpdateState(int * state, int depth, int iChild)
+{
+	*state = *state + (depth * 10) + (iChild+1) ;
+}
+
+
 void MinimaxChoose (STATE_TYPE * state, ListNode * RootChildren,
 		int current_depth, int max_depth,
 		int (*ScoringFunction)(STATE_TYPE *),
@@ -20,14 +29,18 @@ void MinimaxChoose (STATE_TYPE * state, ListNode * RootChildren,
 		int * chosenSon, int * chosenValue) //by reference, will update these for caller.
 {
 
+
+	//debug
+	printf("current state: %d\n", *((int *) state));
+
 	//halt condition (leaf node)
 	//update based on scoring function and return.
 	if (current_depth==max_depth)
 	{
 		//compute this node's value and return it.
 		*chosenSon = 0;
-		//TODO change scoring function to get state
-		*chosenValue = (ScoringFunction(&_NUM_LEAVES));
+		//call scoring function to compute based on state.
+		*chosenValue = (ScoringFunction(state));
 
 		//debug
 		printf("scoring function value: %d\n", *chosenValue);
@@ -64,7 +77,7 @@ void MinimaxChoose (STATE_TYPE * state, ListNode * RootChildren,
 		memcpy (&newState, state, sizeof (STATE_TYPE));
 
 		//update state based on child (play move)
-		//UpdateState (newState, pChildren);
+		TestUpdateState (&newState, current_depth, iChild);
 
 		//call recursively to determine the score from this child.
 
@@ -133,3 +146,4 @@ int ArrFindMaxOrMin (int * array, int arr_size,
 	*chosenIndex = extremeIndex;
 	return 1;
 }
+

@@ -41,9 +41,14 @@ void GameTest ()
 	GameInit(&game, (char **)board);
 	GetMoves1Capture(& game);
 
-
 	GameInit(&game, (char **)board);
 	GetMoves1SuccessiveCapture(& game);
+
+	GameInit(&game, (char **)board);
+	Test_GetAllPieces(&game);
+
+	GameInit(&game, (char **)board);
+	Test_GetAllPiecesMoves(&game);
 
 
 }
@@ -308,6 +313,10 @@ void GetMoves1SuccessiveCapture(game_state_t * game)
 }
 
 
+
+
+
+
 //prints moves one after the other
 void MovesListPrint( LINK head , game_state_t * game)
 {
@@ -355,8 +364,114 @@ void MovesListPerform( LINK head , game_state_t * game)
 
 
 //get pieces
+void Test_GetAllPieces(game_state_t * game)
+{
+	//put a piece in position
+	position_t pos;
+	char identity;
 
-//get list of moves for piece.
+	pos = Position ('d', 4);
+	identity = WHITE_M;
+	SetPiece(pos, identity, game);
+	piece_t piece1 ;
+	piece1.identity = identity;
+	piece1.position = pos;
+
+	pos = Position ('c', 5);
+	identity = BLACK_M;
+	SetPiece(pos, identity, game);
+	piece_t piece2 ;
+	piece2.identity = identity;
+	piece2.position = pos;
+
+	pos = Position ('d', 2);
+	identity = WHITE_M;
+	SetPiece(pos, identity, game);
+	piece_t piece3 ;
+	piece3.identity = identity;
+	piece3.position = pos;
+
+	//b,2
+	pos = Position ('b', 2);
+	identity = WHITE_M;
+	SetPiece(pos, identity, game);
+
+	PrintBoard(game);
+
+	color_t color;
+	color = COLOR_BLACK;
+	int cnt_black;
+	piece_t pieces_black [20]; //player can have at least 20 moves.
+	GetAllPieces (game, color, pieces_black, &cnt_black);
 
 
-//get all moves for side.
+	color = COLOR_WHITE;
+	int cnt_white;
+	piece_t pieces_white [20]; //player can have at least 20 moves.
+	GetAllPieces (game, color, pieces_white, &cnt_white);
+
+
+}
+
+
+
+//get all moves for color.
+
+//get pieces
+void Test_GetAllPiecesMoves(game_state_t * game)
+{
+	//put a piece in position
+	position_t pos;
+	char identity;
+
+	pos = Position ('d', 4);
+	identity = WHITE_M;
+	SetPiece(pos, identity, game);
+	piece_t piece1 ;
+	piece1.identity = identity;
+	piece1.position = pos;
+
+	pos = Position ('c', 5);
+	identity = BLACK_M;
+	SetPiece(pos, identity, game);
+	piece_t piece2 ;
+	piece2.identity = identity;
+	piece2.position = pos;
+
+	pos = Position ('d', 2);
+	identity = WHITE_M;
+	SetPiece(pos, identity, game);
+	piece_t piece3 ;
+	piece3.identity = identity;
+	piece3.position = pos;
+
+	//b,2
+	pos = Position ('b', 2);
+	identity = WHITE_M;
+	SetPiece(pos, identity, game);
+
+	PrintBoard(game);
+
+	color_t color;
+	color = COLOR_BLACK;
+	ListNode * moves_black = GetMovesForPlayer(game, color);
+
+	color = COLOR_WHITE;
+	ListNode * moves_white = GetMovesForPlayer(game, color);
+
+
+	printf("\n black's moves:\n");
+	MovesListPrint( moves_black, game);
+
+	printf("\n white's moves:\n");
+	MovesListPrint( moves_white, game);
+
+	//free list of moves.
+	ListFreeElements(moves_black, MoveFree);
+
+	ListFreeElements(moves_white, MoveFree);
+
+}
+
+
+

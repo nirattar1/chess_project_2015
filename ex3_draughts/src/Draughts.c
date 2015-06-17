@@ -22,11 +22,14 @@ int main ()
 
 	//ListTest ();
 
-	GameTest ();
+	//GameTest ();
 
 	//original_main();
 
-	Test_Minimax();
+	//Test_Minimax();
+
+
+	Test_GameWithMinimax();
 
 	memory_print();
 

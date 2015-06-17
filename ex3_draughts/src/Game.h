@@ -16,6 +16,7 @@
  * BASIC GAME DEFINITIONS
  * ***********/
 #define BOARD_SIZE 10
+#define MAX_PIECES_PLAYER 20
 
 //pieces identities
 #define MAX_IDENTITIES 4
@@ -175,6 +176,9 @@ void GameInit (game_state_t * game, char ** board );
 void GameDefaultLayout (game_state_t * game);
 
 
+//scoring function to use with minimax.
+int DraughtsScoringFunction (game_state_t * state);
+
 /*************
  * MOVES ON BOARD
 ************/
@@ -209,6 +213,10 @@ void MoveFree( void * data );
 direction_t * GetPieceDirections (char identity);
 
 
+//get all the pieces of certain color
+void GetAllPieces (game_state_t * game, color_t color, piece_t * array, int * cnt_pieces);
+
+
 //get possible moves for 1 piece in game.
 ListNode * GetMovesForPiece (game_state_t * game, piece_t piece);
 
@@ -220,7 +228,7 @@ ListNode * GetSuccessiveCapturesFromMove (game_state_t * game, move_t * baseMove
 //1. iterate on all pieces in game.
 //2. for each piece , run GetMovesForPiece and collect the moves.
 //3. optional - sort moves by number of captures.
-ListNode * GetMovesForPlayer (color_t player, game_state_t * game);
+ListNode * GetMovesForPlayer (game_state_t * game, color_t color);
 
 
 //will perform the move pointed by "move"

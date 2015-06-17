@@ -14,9 +14,12 @@ int test_values [] = {10 , -10 , 5, -7, 9, 20, -21, -24, 9, 11, -3 , 4, -20};
 
 
 //will return a scoring for state.
-int TestScoring (int * leaf_num)
+int TestScoring (STATE_TYPE * state)
 {
-	return test_values [*leaf_num];
+	int score = test_values [_NUM_LEAVES];
+	printf ("scoring according to state: %d, score = %d\n", *state, score);
+	//ignore state, just give according to leaves.
+	return score;
 }
 
 
@@ -49,8 +52,6 @@ ListNode * TestChildrenGenerate (STATE_TYPE state)
 
 void Test_Minimax ()
 {
-
-	int sons = 2;
 	int max_depth  = 3;
 
 	//get initial children list from given state.
@@ -65,6 +66,6 @@ void Test_Minimax ()
 			TestScoring, TestChildrenGenerate,
 			&childIndex, &childScore);
 
-	printf ("index %d was chosen.\n", childIndex);
+	printf ("index %d was chosen. will lead to score of %d\n", childIndex, childScore);
 
 }
