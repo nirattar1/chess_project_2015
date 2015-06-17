@@ -3,6 +3,8 @@
 
 
 void CPUTurn (game_state_t * game);
+void Test_CPUTurn (game_state_t * game);
+
 
 void Test_GameWithMinimax ()
 {
@@ -14,21 +16,60 @@ void Test_GameWithMinimax ()
 
 
 	GameInit(&game, (char **)board);
-
+	Test_CPUTurn(&game);
 
 	//set some layout.
 	//GameDefaultLayout(&game);
 
 
-	CPUTurn(&game);
 
+
+}
+
+void Test_CPUTurn (game_state_t * game)
+{
+
+	//put a piece in position
+	position_t pos;
+	char identity;
+
+	pos = Position ('d', 4);
+	identity = WHITE_M;
+	SetPiece(pos, identity, game);
+	piece_t piece1 ;
+	piece1.identity = identity;
+	piece1.position = pos;
+
+	pos = Position ('c', 5);
+	identity = BLACK_M;
+	SetPiece(pos, identity, game);
+	piece_t piece2 ;
+	piece2.identity = identity;
+	piece2.position = pos;
+
+	pos = Position ('d', 2);
+	identity = WHITE_K;
+	SetPiece(pos, identity, game);
+	piece_t piece3 ;
+	piece3.identity = identity;
+	piece3.position = pos;
+
+	//b,2
+	pos = Position ('b', 2);
+	identity = WHITE_K;
+	SetPiece(pos, identity, game);
+
+	PrintBoard(game);
+
+
+	CPUTurn(game);
 }
 
 //one turn of the CPU.
 void CPUTurn (game_state_t * game)
 {
 	//get CPU's color
-	color_t color = GetCPUColor();
+	color_t color = Settings_CPUColor_Get();
 
 	//get allowed moves for CPU.
 	ListNode * movesCPU = GetMovesForPlayer(game, color);
@@ -45,7 +86,7 @@ void CPUTurn (game_state_t * game)
 	//child with best score will decide what move to do .
 	int childIndex;
 	int childScore;
-	MinimaxChoose (game, RootChildren, 0, max_depth,
+	MinimaxChoose (game, color, RootChildren, 0, max_depth,
 			DraughtsScoringFunction, GetMovesForPlayer,
 			&childIndex, &childScore);
 
@@ -53,4 +94,4 @@ void CPUTurn (game_state_t * game)
 
 }
 
-}
+

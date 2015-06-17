@@ -16,22 +16,23 @@ int _NUM_LEAVES = 0;
 
 //for testing. remove this function
 //test function , updates child based on depth and child index.
-int TestUpdateState(int * state, int depth, int iChild)
-{
-	*state = *state + (depth * 10) + (iChild+1) ;
-}
+//void TestUpdateState(int * state, int depth, int iChild)
+//{
+//	*state = *state + (depth * 10) + (iChild+1) ;
+//}
 
 
-void MinimaxChoose (STATE_TYPE * state, ListNode * RootChildren,
+void MinimaxChoose (STATE_TYPE * state, color_t player,
+		ListNode * RootChildren,
 		int current_depth, int max_depth,
-		int (*ScoringFunction)(STATE_TYPE *),
+		int (*ScoringFunction)(STATE_TYPE *, color_t),
 		ListNode * (*ChildGenerateFunction)(STATE_TYPE *),
 		int * chosenSon, int * chosenValue) //by reference, will update these for caller.
 {
 
 
 	//debug
-	printf("current state: %d\n", *((int *) state));
+	//printf("current state: %d\n", *((int *) state));
 
 	//halt condition (leaf node)
 	//update based on scoring function and return.
@@ -40,7 +41,7 @@ void MinimaxChoose (STATE_TYPE * state, ListNode * RootChildren,
 		//compute this node's value and return it.
 		*chosenSon = 0;
 		//call scoring function to compute based on state.
-		*chosenValue = (ScoringFunction(state));
+		*chosenValue = (ScoringFunction(state, player));
 
 		//debug
 		printf("scoring function value: %d\n", *chosenValue);
@@ -64,26 +65,34 @@ void MinimaxChoose (STATE_TYPE * state, ListNode * RootChildren,
 	}
 
 
-	//for each child :
+	//for each child (move):
 	int numChildren = ListCount(Children);
 	int iChild = 0;
 	int * Scores = (int *) mymalloc (numChildren * (sizeof (int)) );
-	ListNode * pChildren;
-	for (ListNode * pChildren = Children; pChildren !=NULL; pChildren = pChildren->next )
+	ListNode * pChildren = NULL;
+	for (pChildren = Children; pChildren !=NULL; pChildren = pChildren->next )
 	{
 
 		//create static copy of state.
 		STATE_TYPE newState;
-		memcpy (&newState, state, sizeof (STATE_TYPE));
+		char newBoard [BOARD_SIZE][BOARD_SIZE];
+		newState.pieces = (board_column *) newBoard;
+		CopyGameState(&newState, state);
+		//memcpy (&newState, state, sizeof (STATE_TYPE));
 
 		//update state based on child (play move)
-		TestUpdateState (&newState, current_depth, iChild);
+		//TestUpdateState (&newState, current_depth, iChild);
+		DoMove( (move_t *) pChildren->data , &newState);
+
+		//debug
+		//printf("if i play move %d board will look like:\n ", iChild);
+		//PrintBoard(&newState);
 
 		//call recursively to determine the score from this child.
 
 		int childIndex;	//not really used.
 		int childScore;
-		MinimaxChoose(&newState, NULL, current_depth+1, max_depth,
+		MinimaxChoose(&newState, player, NULL, current_depth+1, max_depth,
 				ScoringFunction, ChildGenerateFunction, &childIndex, &childScore);
 
 		printf ("current depth : %d. score from child %d: %d\n", current_depth, iChild, childScore);

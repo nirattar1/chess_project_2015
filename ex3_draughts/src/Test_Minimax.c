@@ -50,22 +50,22 @@ ListNode * TestChildrenGenerate (STATE_TYPE state)
 
 }
 
-void Test_Minimax ()
-{
-	int max_depth  = 3;
-
-	//get initial children list from given state.
-	STATE_TYPE state = 7000;
-	ListNode * RootChildren = TestChildrenGenerate(state);
-
-
-	int childIndex;	//used only on top level.
-	int childScore;
-
-	MinimaxChoose (&state, RootChildren, 0, max_depth,
-			TestScoring, TestChildrenGenerate,
-			&childIndex, &childScore);
-
-	printf ("index %d was chosen. will lead to score of %d\n", childIndex, childScore);
-
-}
+//void Test_Minimax ()
+//{
+//	int max_depth  = 3;
+//
+//	//get initial children list from given state.
+//	STATE_TYPE state = 7000;
+//	ListNode * RootChildren = TestChildrenGenerate(state);
+//
+//
+//	int childIndex;	//used only on top level.
+//	int childScore;
+//
+//	MinimaxChoose (&state, RootChildren, 0, max_depth,
+//			TestScoring, TestChildrenGenerate,
+//			&childIndex, &childScore);
+//
+//	printf ("index %d was chosen. will lead to score of %d\n", childIndex, childScore);
+//
+//}

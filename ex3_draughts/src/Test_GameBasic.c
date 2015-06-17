@@ -50,6 +50,8 @@ void GameTest ()
 	GameInit(&game, (char **)board);
 	Test_GetAllPiecesMoves(&game);
 
+	GameInit(&game, (char **)board);
+	Test_ScoringFunction(&game);
 
 }
 
@@ -150,7 +152,7 @@ void MoveListTest(game_state_t * game)
 	for (int i=0; i<NUM_TEST_MOVES; i++)
 	{
 		//point to existing data
-		int * pMove = moves[i];
+		move_t * pMove = moves[i];
 
 		//create new node
 		ListNode * newnode = ListCreateNode( (void *) pMove , sizeof (move_t));
@@ -473,5 +475,49 @@ void Test_GetAllPiecesMoves(game_state_t * game)
 
 }
 
+
+//get pieces
+void Test_ScoringFunction(game_state_t * game)
+{
+	//put a piece in position
+	position_t pos;
+	char identity;
+
+	pos = Position ('d', 4);
+	identity = WHITE_M;
+	SetPiece(pos, identity, game);
+	piece_t piece1 ;
+	piece1.identity = identity;
+	piece1.position = pos;
+
+	pos = Position ('c', 5);
+	identity = BLACK_M;
+	SetPiece(pos, identity, game);
+	piece_t piece2 ;
+	piece2.identity = identity;
+	piece2.position = pos;
+
+	pos = Position ('d', 2);
+	identity = WHITE_K;
+	SetPiece(pos, identity, game);
+	piece_t piece3 ;
+	piece3.identity = identity;
+	piece3.position = pos;
+
+	//b,2
+	pos = Position ('b', 2);
+	identity = WHITE_K;
+	SetPiece(pos, identity, game);
+
+	PrintBoard(game);
+
+
+	int score = DraughtsScoringFunction(game, COLOR_BLACK);
+	printf("score for black: %d\n", score);
+
+	score = DraughtsScoringFunction(game, COLOR_WHITE);
+	printf("score for white: %d\n", score);
+
+}
 
 

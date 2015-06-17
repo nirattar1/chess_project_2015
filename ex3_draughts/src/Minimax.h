@@ -20,9 +20,10 @@
 extern int _NUM_LEAVES;
 
 //gets a list of children. will determine the best option out of them.
-void MinimaxChoose (STATE_TYPE * state, ListNode * RootChildren,
+void MinimaxChoose (STATE_TYPE * state, color_t player,
+		ListNode * RootChildren,
 		int current_depth, int max_depth,
-		int (*ScoringFunction)(STATE_TYPE *),
+		int (*ScoringFunction)(STATE_TYPE *, color_t),
 		ListNode * (*TestChildrenGenerate)(STATE_TYPE *),
 		int * chosenSon, int * chosenValue); //by reference, will update these for caller.
 

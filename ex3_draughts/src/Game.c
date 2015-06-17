@@ -7,7 +7,9 @@
 
 #include "Game.h"
 #include <stdlib.h>
-
+#include <stdio.h>
+#include <string.h>
+#include "Memory.h"
 
 direction_t * all_allowed_directions [MAX_IDENTITIES];
 
@@ -20,10 +22,10 @@ direction_t allowed_directions_blackk [5] = {UP_LEFT, UP_RIGHT, DOWN_LEFT, DOWN_
 
 void RulesInit ()
 {
-	all_allowed_directions [WHITE_M] = allowed_directions_whitem;
-	all_allowed_directions [WHITE_K] = allowed_directions_whitek;
-	all_allowed_directions [BLACK_M] = allowed_directions_blackm;
-	all_allowed_directions [BLACK_K] = allowed_directions_blackk;
+	all_allowed_directions [0] = allowed_directions_whitem;
+	all_allowed_directions [1] = allowed_directions_whitek;
+	all_allowed_directions [2] = allowed_directions_blackm;
+	all_allowed_directions [3] = allowed_directions_blackk;
 }
 
 
@@ -124,6 +126,28 @@ void GameInit (game_state_t * game, char ** board )
 
 }
 
+//copy from one game state (including all board representation) to another state.
+void CopyGameState (game_state_t * to, game_state_t * from)
+{
+
+//		//define counts
+//		game->piecesCount[COLOR_BLACK]  = 0;
+//		game->piecesCount[COLOR_WHITE]  = 0;
+
+
+
+	//copy board
+	int i, j;
+	for (i = 0; i < BOARD_SIZE; i++)
+	{
+		for (j = 0; j < BOARD_SIZE; j++)
+		{
+			to->pieces[i][j] = from->pieces[i][j] ;
+		}
+	}
+
+}
+
 
 void GameDefaultLayout (game_state_t * game)
 {
@@ -203,6 +227,16 @@ int SameColor(game_state_t * game, position_t pos1, position_t pos2)
 
 }
 
+
+color_t GetOppositeColor(color_t player)
+{
+	if (player==COLOR_BLACK)
+		return COLOR_WHITE;
+	else
+		return COLOR_BLACK;
+}
+
+
 color_t GetPieceColor (game_state_t * game, position_t pos)
 {
 	char identity   = GetPiece(pos, game);
@@ -220,12 +254,89 @@ color_t GetPieceColor (game_state_t * game, position_t pos)
 	return 0;
 }
 
+//will return 1 if piece is man, 0 otherwise.
+int IsMan (piece_t piece)
+{
+	if ((piece.identity == WHITE_M) || (piece.identity == BLACK_M) )
+		return 1;
+	else
+		return 0;
+}
+
+//will return 1 if piece is king, 0 otherwise.
+int IsKing (piece_t piece)
+{
+	if ((piece.identity == WHITE_K) || (piece.identity == BLACK_K) )
+		return 1;
+	else
+		return 0;
+}
+
 //will receive identity and return its allowed directions.
 direction_t * GetPieceDirections (char identity)
 {
-	return all_allowed_directions [identity];
+	if (identity == WHITE_M) {	return all_allowed_directions[0];};
+	if (identity == WHITE_K) {	return all_allowed_directions[1];};
+	if (identity == BLACK_M) {	return all_allowed_directions[2];};
+	if (identity == BLACK_K) {	return all_allowed_directions[3];};
+
+	return NULL;
+
+
 }
 
+
+//scoring function to use with minimax.
+//based on player color and game state.
+int DraughtsScoringFunction (game_state_t * game, color_t player)
+{
+
+
+	//TODO determine end of game. if so return max or min value .
+
+	int player_score=0, opposite_score=0;
+
+	//get player's pieces
+	int cntPiecesPlayer;//will count how many pieces player has.
+	piece_t piecesPlayer [MAX_PIECES_PLAYER]; //player can have at most 20 pieces.
+	GetAllPieces (game, player, piecesPlayer, &cntPiecesPlayer);
+
+	//get opposite color's pieces
+	int cntPiecesOpposite;//will count how many pieces player has.
+	piece_t piecesOpposite [MAX_PIECES_PLAYER]; //player can have at most 20 pieces.
+	GetAllPieces (game, GetOppositeColor(player), piecesOpposite, &cntPiecesOpposite);
+
+
+	//iterate and add on both sides.
+	for (int i=0; i<cntPiecesPlayer; i++)
+	{
+		if (IsMan (piecesPlayer[i]))
+		{
+			player_score += 1;
+		}
+		else if (IsKing (piecesPlayer[i]) )
+		{
+			player_score += 3;
+		}
+	}
+
+	for (int i=0; i<cntPiecesOpposite; i++)
+	{
+		if (IsMan (piecesOpposite[i]))
+		{
+			opposite_score += 1;
+		}
+		else if (IsKing (piecesOpposite[i]) )
+		{
+			opposite_score += 3;
+		}
+	}
+
+
+	//return the difference between player's and opponent's score
+	return ( player_score - opposite_score ) ;
+
+}
 
 
 
@@ -247,13 +358,13 @@ int IsValidCapture (game_state_t * game, position_t source, position_t middlePos
 
 
 /**
-//* Get (generate) all the allowed moves for 1 piece on board.
+// Get (generate) all the allowed moves for 1 piece on board.
 //@param game the game state.
 //@param piece piece to play.
 //@...
 //@return a pointer to a list of moves.
 //caller responsible to free the list.
- */
+*/
 ListNode * GetMovesForPiece (game_state_t * game, piece_t piece)
 {
 
@@ -383,7 +494,7 @@ ListNode * GetSuccessiveCapturesFromMove (game_state_t * game, move_t * baseMove
 
 			//duplicate baseMove into newMove.
 			move_t * newMove = (move_t *) mymalloc(sizeof (move_t));
-			memcpy(newMove, baseMove, sizeof (move_t));
+			memcpy((void *)newMove, (void *) baseMove, sizeof (move_t));
 
 			//add new_dest to destinations of newMove.
 			newMove->dest[newMove->num_captures] = newDest;
@@ -474,13 +585,23 @@ void DoMove (move_t * move, game_state_t * game)
 	{
 		//perform capture.
 		SetPiece(destinations[i], EMPTY, game);
-
+		//TODO clear middle piece.
 	}
 
 	//mark final destination with identity
-	SetPiece(destinations[i], identity, game);
 
-	//update game piece counts.
+	position_t final;
+	if (move->num_captures==0)
+	{
+		final = destinations[0];
+	}
+	else
+	{
+		final = destinations[move->num_captures-1];
+	}
+
+	SetPiece(final, identity, game);
+
 
 
 }

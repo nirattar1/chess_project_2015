@@ -1,8 +1,11 @@
 #include "Draughts.h"
 #include "Game.h"
+#include "Memory.h"
 
+//default settings initialization.
 
-
+color_t SETTINGS_USER_COLOR = DEFAULT_USER_COLOR;
+int SETTINGS_MAX_DEPTH = DEFAULT_MAX_DEPTH;
 
 
 //contains main
@@ -12,6 +15,7 @@
 int ListTest ();
 int GameTest();
 void Test_Minimax();
+void Test_GameWithMinimax();
 int original_main();
 
 
@@ -80,6 +84,37 @@ void PrintBoard(game_state_t * game)
 	printf("\n");
 }
 
+//get color of user
+color_t Settings_UserColor_Get()
+{
+	return SETTINGS_USER_COLOR;
+}
+
+//set color of user
+void Settings_UserColor_Set(color_t color)
+{
+	SETTINGS_USER_COLOR = color;
+}
 
 
 
+//get color of CPU - opposite of user's color.
+color_t Settings_CPUColor_Get()
+{
+
+	color_t user_color = Settings_UserColor_Get();
+
+	return GetOppositeColor(user_color);
+
+}
+
+//get/set max depth for minimax.
+int Settings_MaxDepth_Get()
+{
+	return SETTINGS_MAX_DEPTH;
+}
+
+void Settings_MaxDepth_Set(int max_depth)
+{
+	SETTINGS_MAX_DEPTH = max_depth;
+}

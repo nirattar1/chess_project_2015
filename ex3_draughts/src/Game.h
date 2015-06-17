@@ -35,6 +35,11 @@ typedef enum
 } 	color_t;
 
 
+//return the opposite color to given color.
+color_t GetOppositeColor(color_t player);
+
+
+
 /*************
  * POSITIONS ON BOARD
  * ***********/
@@ -149,6 +154,9 @@ typedef struct
 } game_state_t;
 
 
+//copy from one game state (including all board representation) to another state.
+void CopyGameState (game_state_t * to, game_state_t * from);
+
 
 //returns identity piece that is located in given position
 //i.e. GetPiece (<1,2>) == 'm' (white man)
@@ -166,6 +174,13 @@ color_t GetPieceColor (game_state_t * game, position_t pos);
 //0 = different colors or at least one is empty.
 int SameColor(game_state_t * game, position_t pos1, position_t pos2);
 
+//will return 1 if piece is man, 0 otherwise.
+int IsMan (piece_t piece);
+
+//will return 1 if piece is king, 0 otherwise.
+int IsKing (piece_t piece);
+
+
 //returns a list of pieces on board that player has in current game.
 ListNode * GetPiecesOfPlayer (color_t player, game_state_t * game);
 
@@ -177,7 +192,8 @@ void GameDefaultLayout (game_state_t * game);
 
 
 //scoring function to use with minimax.
-int DraughtsScoringFunction (game_state_t * state);
+//based on player and game state.
+int DraughtsScoringFunction (game_state_t * game, color_t player);
 
 /*************
  * MOVES ON BOARD
