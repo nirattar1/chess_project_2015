@@ -27,7 +27,7 @@ void MinimaxChoose (STATE_TYPE * state, color_t player,
 		ListNode * RootChildren,
 		int current_depth, int max_depth,
 		int (*ScoringFunction)(STATE_TYPE *, color_t),
-		ListNode * (*ChildGenerateFunction)(STATE_TYPE *),
+		ListNode * (*ChildGenerateFunction)(STATE_TYPE *, color_t),
 		int * chosenSon, int * chosenValue) //by reference, will update these for caller.
 {
 
@@ -62,7 +62,7 @@ void MinimaxChoose (STATE_TYPE * state, color_t player,
 	}
 	else
 	{
-		Children = ChildGenerateFunction (state);
+		Children = ChildGenerateFunction (state, player);
 	}
 
 
@@ -117,7 +117,11 @@ void MinimaxChoose (STATE_TYPE * state, color_t player,
 	}
 
 	//free all children (got what we need from them).
-	ListFreeElements(Children, MoveFree);
+	//(only on depth > 0), because caller needs children in level 0
+	if (current_depth!=0)
+	{
+		ListFreeElements(Children, MoveFree);
+	}
 	//free scores of children.
 	myfree(Scores);
 

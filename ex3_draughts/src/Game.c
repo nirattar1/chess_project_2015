@@ -87,6 +87,43 @@ position_t GetPositionRelative
 	return dest;
 }
 
+direction_t GetDirection (position_t src, position_t dest)
+{
+	if (dest.x > src.x && dest.y > src.y)
+	{
+		return UP_RIGHT;
+	}
+	else if (dest.x < src.x && dest.y > src.y)
+	{
+		return UP_LEFT;
+	}
+	if (dest.x > src.x && dest.y < src.y)
+	{
+		return DOWN_RIGHT;
+	}
+	else if (dest.x < src.x && dest.y < src.y)
+	{
+		return DOWN_LEFT;
+	}
+
+	return DOWN_LEFT;
+}
+
+int GetDistance (position_t src, position_t dest)
+{
+
+	//only the x distance matters (diagonal moves only)
+	if (dest.x > src.x )
+	{
+		return (dest.x - src.x);
+	}
+	else
+	{
+		return (src.x - dest.x);
+	}
+
+
+}
 
 int PositionInBounds (position_t pos)
 {
@@ -566,6 +603,19 @@ ListNode * GetMovesForPlayer (game_state_t * game, color_t color)
 }
 
 
+void ClearPiecesInBetween (game_state_t * game, position_t src, position_t dest)
+{
+	//get the direction between the two
+	direction_t direction = GetDirection (src, dest);
+	int distance = GetDistance (src, dest);
+	//start diagonally from src until dest, clear everyone in the way.
+	//(it's okay because of draughts capture rules)
+	for (int i=1; i < distance; i++)
+	{
+		//clear everyone on the way
+		SetPiece (GetPositionRelative(src, direction, i), EMPTY, game);
+	}
+}
 
 //does the move, does not check validation.
 void DoMove (move_t * move, game_state_t * game)
@@ -581,11 +631,14 @@ void DoMove (move_t * move, game_state_t * game)
 
 	//clear along the way
 	int i;
+	position_t prev = move->src; 	//remember the last spot and kill in between
 	for (i=0; i<move->num_captures; i++)
 	{
-		//perform capture.
-		SetPiece(destinations[i], EMPTY, game);
-		//TODO clear middle piece.
+		position_t curr = destinations[i];
+
+		//perform capture (clear middle piece)
+		ClearPiecesInBetween(game, prev, curr);
+		prev = curr;
 	}
 
 	//mark final destination with identity
@@ -628,3 +681,25 @@ void MoveFree( void * data )
 	myfree (p);
 }
 
+//returns 1 if mymove is in list, 0 otherwise
+int MoveInList (ListNode * moves, move_t mymove)
+{
+
+	for ( ; moves !=NULL; moves = moves->next )
+	{
+		move_t * move = (move_t *) moves->data;
+		if (move)
+		{
+			if (move->src.x==mymove.src.x && move->src.y==mymove.src.y)
+			{
+				if (move->dest[0].x==mymove.dest[0].x && move->dest[0].y==mymove.dest[0].y)
+				{
+					//TODO check all destinations are same
+					return 1;
+				}
+			}
+		}
+	}
+
+	return 0;
+}

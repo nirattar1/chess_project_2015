@@ -61,5 +61,17 @@ void Settings_MaxDepth_Set(int max_depth);
 //prints the board
 void PrintBoard(game_state_t * game);
 
+//one turn of the CPU.
+void CPUTurn (game_state_t * game);
+
+//one turn of the user.
+void UserTurn (game_state_t * game);
+
+//manages game
+void DoGame(game_state_t * game);
+
+//print a list of moves in good format
+void MovesListPrint( LINK head);
+
 
 #endif  

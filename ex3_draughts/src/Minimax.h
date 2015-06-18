@@ -24,7 +24,7 @@ void MinimaxChoose (STATE_TYPE * state, color_t player,
 		ListNode * RootChildren,
 		int current_depth, int max_depth,
 		int (*ScoringFunction)(STATE_TYPE *, color_t),
-		ListNode * (*TestChildrenGenerate)(STATE_TYPE *),
+		ListNode * (*TestChildrenGenerate)(STATE_TYPE *, color_t),
 		int * chosenSon, int * chosenValue); //by reference, will update these for caller.
 
 int ArrFindMaxOrMin (int * array, int arr_size,
