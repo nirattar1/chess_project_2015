@@ -1,6 +1,21 @@
 #ifndef DRAUGHTS_
 #define DRAUGHTS_
 
+//debug
+//#define DEBUG
+
+#ifdef DEBUG
+	#define IS_DEBUG 1
+#else
+	#define IS_DEBUG 0
+#endif
+
+#ifdef DEBUG
+# define DEBUG_PRINT(x) printf x
+#else
+# define DEBUG_PRINT(x) do {} while (0)
+#endif
+
 #include <stdlib.h>
 #include <stdio.h>
 #include "Game.h"
@@ -8,6 +23,7 @@
 
 //main class.
 //will also include the settings.
+
 
 
 //settings + defaults

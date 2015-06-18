@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include "Test_List.h"
 #include "Memory.h"
+#include "Draughts.h"
 
 //initialize global
 int _NUM_LEAVES = 0;
@@ -31,8 +32,8 @@ void MinimaxChoose (STATE_TYPE * state, color_t player,
 {
 
 
-	//debug
-	//printf("current state: %d\n", *((int *) state));
+	//debug (only for ints)
+	//DEBUG_PRINT(("current state: %d\n", *((int *) state)));
 
 	//halt condition (leaf node)
 	//update based on scoring function and return.
@@ -44,11 +45,11 @@ void MinimaxChoose (STATE_TYPE * state, color_t player,
 		*chosenValue = (ScoringFunction(state, player));
 
 		//debug
-		printf("scoring function value: %d\n", *chosenValue);
+		DEBUG_PRINT(("scoring function value: %d\n", *chosenValue));
 
 		//increment global leaves counter. (for debug)
 		_NUM_LEAVES ++ ;
-		printf("number of leaves: %d\n", _NUM_LEAVES);
+		DEBUG_PRINT(("number of leaves: %d\n", _NUM_LEAVES));
 		return;
 	}
 
@@ -85,8 +86,11 @@ void MinimaxChoose (STATE_TYPE * state, color_t player,
 		DoMove( (move_t *) pChildren->data , &newState);
 
 		//debug
-		//printf("if i play move %d board will look like:\n ", iChild);
-		//PrintBoard(&newState);
+		DEBUG_PRINT(("if i play move %d board will look like:\n ", iChild));
+		if (IS_DEBUG)
+		{
+			PrintBoard(&newState);
+		}
 
 		//call recursively to determine the score from this child.
 
@@ -95,7 +99,7 @@ void MinimaxChoose (STATE_TYPE * state, color_t player,
 		MinimaxChoose(&newState, player, NULL, current_depth+1, max_depth,
 				ScoringFunction, ChildGenerateFunction, &childIndex, &childScore);
 
-		printf ("current depth : %d. score from child %d: %d\n", current_depth, iChild, childScore);
+		DEBUG_PRINT( ("current depth : %d. score from child %d: %d\n", current_depth, iChild, childScore));
 		Scores [iChild] = childScore;
 		iChild++;
 	}
@@ -113,7 +117,7 @@ void MinimaxChoose (STATE_TYPE * state, color_t player,
 	}
 
 	//free all children (got what we need from them).
-	ListFreeElements(Children, intlist_free);
+	ListFreeElements(Children, MoveFree);
 	//free scores of children.
 	myfree(Scores);
 

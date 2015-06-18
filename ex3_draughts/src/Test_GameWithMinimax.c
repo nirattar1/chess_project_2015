@@ -1,6 +1,6 @@
 #include "Game.h"
 #include "Minimax.h"
-
+#include "Draughts.h"
 
 void CPUTurn (game_state_t * game);
 void Test_CPUTurn (game_state_t * game);
@@ -90,7 +90,7 @@ void CPUTurn (game_state_t * game)
 			DraughtsScoringFunction, GetMovesForPlayer,
 			&childIndex, &childScore);
 
-	printf ("index %d was chosen. will lead to score of %d\n", childIndex, childScore);
+	DEBUG_PRINT( ("index %d was chosen. will lead to score of %d\n", childIndex, childScore));
 
 }
 

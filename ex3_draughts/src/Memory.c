@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include "Memory.h"
 #include <stdio.h>
+#include "Draughts.h"
 
 int CNT_CALLS_MALLOC = 0;
 int CNT_CALLS_FREE = 0;
@@ -27,9 +28,9 @@ void myfree (void * data)
 
 void memory_print ()
 {
-	printf("\n*** memory ***\n");
-	printf("%d malloc calls,", CNT_CALLS_MALLOC);
-	printf("%d free calls.\n", CNT_CALLS_FREE);
-	printf("balance : %d\n", (CNT_CALLS_MALLOC- CNT_CALLS_FREE));
+	DEBUG_PRINT( ("\n*** memory ***\n"));
+	DEBUG_PRINT(("%d malloc calls,", CNT_CALLS_MALLOC));
+	DEBUG_PRINT(("%d free calls.\n", CNT_CALLS_FREE));
+	DEBUG_PRINT(("balance : %d\n", (CNT_CALLS_MALLOC- CNT_CALLS_FREE)));
 }
 
