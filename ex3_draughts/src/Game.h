@@ -18,6 +18,11 @@
 #define BOARD_SIZE 10
 #define MAX_PIECES_PLAYER 20
 
+
+#define SCORE_WIN_PLAYER 	100
+#define SCORE_WIN_OPPONENT 	-100
+
+
 //pieces identities
 #define MAX_IDENTITIES 4
 #define WHITE_M 'm'
@@ -200,7 +205,7 @@ void GameDefaultLayout (game_state_t * game);
 int DraughtsScoringFunction (game_state_t * game, color_t player);
 
 //did someone win game
-int GameWinning(game_state_t * game);
+int GameWinning(game_state_t * game, color_t color);
 
 /*************
  * MOVES ON BOARD
@@ -260,7 +265,8 @@ ListNode * GetMovesForPlayer (game_state_t * game, color_t color);
 //2. promoting to king
 void DoMove (move_t * move, game_state_t * game);
 
-int MoveInList (ListNode * moves, move_t mymove);
+//find the move in allowed moves list (will update it's captures)
+int FindMoveInList (ListNode * moves, move_t * mymove);
 
 //will clear all the pieces in between two positions
 void ClearPiecesInBetween (game_state_t * game, position_t src, position_t dest);

@@ -14,7 +14,8 @@ void MoveTest(game_state_t * game);
 void MoveListTest(game_state_t * game);
 void GetMovesBasicTest(game_state_t * game);
 void GetMoves1Capture(game_state_t * game);
-
+void Test_CaptureBackwards(game_state_t * game);
+void Test_Kings(game_state_t * game);
 
 void GameTest ()
 {
@@ -50,9 +51,15 @@ void GameTest ()
 	GameInit(&game, (char **)board);
 	Test_GetAllPiecesMoves(&game);
 
+
+	GameInit(&game, (char **)board);
+	Test_CaptureBackwards(&game);
+
 	GameInit(&game, (char **)board);
 	Test_ScoringFunction(&game);
 
+	GameInit(&game, (char **)board);
+	Test_Kings(&game);
 }
 
 
@@ -476,6 +483,72 @@ void Test_GetAllPiecesMoves(game_state_t * game)
 }
 
 
+void Test_CaptureBackwards(game_state_t * game)
+{
+	//put a piece in position
+	position_t pos;
+	char identity;
+
+	pos = Position ('d', 4);
+	identity = WHITE_M;
+	SetPiece(pos, identity, game);
+	piece_t piece1 ;
+	piece1.identity = identity;
+	piece1.position = pos;
+
+	pos = Position ('c', 5);
+	identity = BLACK_M;
+	SetPiece(pos, identity, game);
+	piece_t piece2 ;
+	piece2.identity = identity;
+	piece2.position = pos;
+
+	pos = Position ('d', 2);
+	identity = WHITE_M;
+	SetPiece(pos, identity, game);
+	piece_t piece3 ;
+	piece3.identity = identity;
+	piece3.position = pos;
+
+	//b,2
+	pos = Position ('b', 2);
+	identity = WHITE_M;
+	SetPiece(pos, identity, game);
+
+	pos = Position ('d', 6);
+	identity = WHITE_M;
+	SetPiece(pos, identity, game);
+	piece_t piece4 ;
+	piece4.identity = identity;
+	piece4.position = pos;
+
+
+	PrintBoard(game);
+
+	color_t color;
+	color = COLOR_BLACK;
+	ListNode * moves_black = GetMovesForPlayer(game, color);
+
+	color = COLOR_WHITE;
+	ListNode * moves_white = GetMovesForPlayer(game, color);
+
+
+	printf("\n black's moves:\n");
+	MovesListPrint( moves_black);
+
+	printf("\n white's moves:\n");
+	MovesListPrint( moves_white);
+
+	//free list of moves.
+	ListFreeElements(moves_black, MoveFree);
+
+	ListFreeElements(moves_white, MoveFree);
+
+}
+
+
+
+
 //get pieces
 void Test_ScoringFunction(game_state_t * game)
 {
@@ -521,3 +594,60 @@ void Test_ScoringFunction(game_state_t * game)
 }
 
 
+void Test_Kings(game_state_t * game)
+{
+	//put a piece in position
+	position_t pos;
+	char identity;
+
+	pos = Position ('d', 4);
+	identity = WHITE_M;
+	SetPiece(pos, identity, game);
+	piece_t piece1 ;
+	piece1.identity = identity;
+	piece1.position = pos;
+
+	pos = Position ('c', 5);
+	identity = BLACK_M;
+	SetPiece(pos, identity, game);
+	piece_t piece2 ;
+	piece2.identity = identity;
+	piece2.position = pos;
+
+	pos = Position ('d', 2);
+	identity = WHITE_K;
+	SetPiece(pos, identity, game);
+	piece_t piece3 ;
+	piece3.identity = identity;
+	piece3.position = pos;
+
+	//b,2
+	pos = Position ('b', 2);
+	identity = BLACK_K;
+	SetPiece(pos, identity, game);
+
+	PrintBoard(game);
+
+
+	color_t color;
+	color = COLOR_BLACK;
+	ListNode * moves_black = GetMovesForPlayer(game, color);
+
+	color = COLOR_WHITE;
+	ListNode * moves_white = GetMovesForPlayer(game, color);
+
+
+
+	printf("\n black's moves:\n");
+	MovesListPrint( moves_black);
+
+	printf("\n white's moves:\n");
+	MovesListPrint( moves_white);
+
+	//free list of moves.
+	ListFreeElements(moves_black, MoveFree);
+
+	ListFreeElements(moves_white, MoveFree);
+
+
+}

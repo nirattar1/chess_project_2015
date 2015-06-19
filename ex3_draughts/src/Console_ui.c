@@ -62,7 +62,14 @@ int Menu_Settings(game_state_t * game, char ** board)
 			strncpy(d, line+14, 1);
 			d[1] = '\0';
 			int depth = atoi(d);
-			Settings_MaxDepth_Set(depth);
+			if (depth<1 || depth > 6)
+			{
+				printf(WRONG_MINIMAX_DEPTH);
+			}
+			else
+			{
+				Settings_MaxDepth_Set(depth);
+			}
 		}
 
 
@@ -78,6 +85,94 @@ int Menu_Settings(game_state_t * game, char ** board)
 				color = COLOR_WHITE;
 			}
 			Settings_UserColor_Set(color);
+		}
+
+		//rm
+		//format:rm <x,y>
+		else if(strncmp(line, "rm <", 4)==0)
+		{
+			//get position
+			char x ;
+			strncpy(&x, line+4, 1);
+			//get 'y' value of position - either '10' (2 digits) or 1 digit
+			int yInt;
+			if (strncmp(line+6, "10", 2)==0)
+			{
+				yInt = 10;
+			}
+			else
+			{
+				char y[2] ;
+				strncpy(y, line+6, 1);
+				y[1] = '\0';
+				yInt = atoi(y);
+			}
+			position_t pos;
+			pos.x = x;
+			pos.y = yInt;
+
+			if (PositionInBounds(pos))
+			{
+				SetPiece(pos, EMPTY, game);
+			}
+			else
+			{
+				printf(WRONG_POSITION);
+			}
+		}
+
+
+		//set
+		//format: set <x,y> a b
+		else if(strncmp(line, "set <", 5)==0)
+		{
+			//get position
+			char x ;
+			strncpy(&x, line+5, 1);
+			//get 'y' value of position - either '10' (2 digits) or 1 digit
+			int yInt;
+			if (strncmp(line+7, "10", 2)==0)
+			{
+				yInt = 10;
+			}
+			else
+			{
+				char y[2] ;
+				strncpy(y, line+7, 1);
+				y[1] = '\0';
+				yInt = atoi(y);
+			}
+			position_t pos;
+			pos.x = x;
+			pos.y = yInt;
+
+			//find identity - by substring
+			char identity = WHITE_M;
+			if (strstr(line, "white m"))
+			{
+				identity = WHITE_M;
+			}
+			else if (strstr(line, "black m"))
+			{
+				identity = BLACK_M;
+			}
+			else if (strstr(line, "white k"))
+			{
+				identity = WHITE_K;
+			}
+			else if (strstr(line, "black k"))
+			{
+				identity = BLACK_K;
+			}
+
+			if (PositionInBounds(pos))
+			{
+				SetPiece(pos, identity, game);
+			}
+			else
+			{
+				printf(WRONG_POSITION);
+			}
 		}
 
 		//clear
@@ -97,6 +192,11 @@ int Menu_Settings(game_state_t * game, char ** board)
 		{
 			start = 1;
 			break;
+		}
+
+		else if (strncmp(line, "quit", 4)==0)
+		{
+			exit (1);
 		}
 
 	}
@@ -178,7 +278,8 @@ move_t Menu_PlayUser(game_state_t * game)
 			//mark if valid move .
 			proposed_move.dest[0] = dest;
 
-			if (MoveInList(moves, proposed_move))
+			//find the move in allowed moves list (will update it's captures)
+			if (FindMoveInList(moves, &proposed_move))
 			{
 				valid = 1;
 				return proposed_move;
@@ -186,6 +287,7 @@ move_t Menu_PlayUser(game_state_t * game)
 			else
 			{
 				//print
+				printf(ILLEGAL_MOVE);
 			}
 
 		}
@@ -200,6 +302,6 @@ move_t Menu_PlayUser(game_state_t * game)
 
 	}
 
-
-
+	move_t zero;
+	return zero;
 }

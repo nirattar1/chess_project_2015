@@ -137,12 +137,16 @@ void Settings_MaxDepth_Set(int max_depth)
 }
 
 
-//return number if somebody won
+//return number if given color has won
 //if 	0 : nobody won (continue play).
-//		1 : black won.
-//		2 : white won.
-int GameWinning(game_state_t * game)
+//		1 : given color has won.
+int GameWinning(game_state_t * game, color_t color)
 {
+
+	if (DraughtsScoringFunction(game, color)==SCORE_WIN_PLAYER)
+	{
+		return 1;
+	}
 	return 0;
 }
 
@@ -214,7 +218,7 @@ void DoGame(game_state_t * game)
 	color_t current_player = COLOR_WHITE;
 
 	//play until somebody won
-	while (GameWinning(game)==0)
+	while (!GameWinning(game,COLOR_BLACK) && !GameWinning(game,COLOR_WHITE))
 	{
 		if (Settings_UserColor_Get()==current_player)
 		{
@@ -232,6 +236,15 @@ void DoGame(game_state_t * game)
 		current_player = (current_player==COLOR_WHITE) ? COLOR_BLACK : COLOR_WHITE;
 	}
 
+	//print winning side
+	if (GameWinning(game,COLOR_BLACK))
+	{
+		printf("black player wins!\n");
+	}
+	else
+	{
+		printf("white player wins!\n");
+	}
 }
 
 

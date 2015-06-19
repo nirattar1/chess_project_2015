@@ -6,7 +6,6 @@
  */
 #include "Minimax.h"
 #include <stdio.h>
-#include "Test_List.h"
 #include "Memory.h"
 #include "Draughts.h"
 

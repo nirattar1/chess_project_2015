@@ -328,9 +328,6 @@ direction_t * GetPieceDirections (char identity)
 int DraughtsScoringFunction (game_state_t * game, color_t player)
 {
 
-
-	//TODO determine end of game. if so return max or min value .
-
 	int player_score=0, opposite_score=0;
 
 	//get player's pieces
@@ -344,6 +341,17 @@ int DraughtsScoringFunction (game_state_t * game, color_t player)
 	GetAllPieces (game, GetOppositeColor(player), piecesOpposite, &cntPiecesOpposite);
 
 
+	//determine winning score if one side has no pieces left.
+	if (cntPiecesPlayer==0)
+	{
+		return SCORE_WIN_OPPONENT;
+	}
+	else if (cntPiecesOpposite==0)
+	{
+		return SCORE_WIN_PLAYER;
+	}
+
+	//in any other case, count pieces to compute score
 	//iterate and add on both sides.
 	for (int i=0; i<cntPiecesPlayer; i++)
 	{
@@ -408,15 +416,17 @@ ListNode * GetMovesForPiece (game_state_t * game, piece_t piece)
 	//prepare list .
 	ListNode * list = NULL;
 
-	//get possible directions.
+	//get possible directions for normal (non-capture) move.
 	direction_t * directions = GetPieceDirections(piece.identity);
 
 	//generate moves.
 	//for each direction
-	int max_distance = 1;
+
+	//determine how far the piece can go in the first destination
+	int max_distance = (IsKing(piece)) ? 10 : 1;
+
 	for (; *directions != 0; directions++)
 	{
-
 		direction_t direction = *directions;
 
 		//loop through all the allowed distances (if piece has them).
@@ -425,10 +435,15 @@ ListNode * GetMovesForPiece (game_state_t * game, piece_t piece)
 
 			//get 1 possible destination position.
 			position_t dest = GetPositionRelative(piece.position, direction, distance);
+			if (!PositionInBounds(dest))
+			{
+				continue;
+			}
 
 			//position is empty. generate simple move.
 			if (GetPiece(dest, game) == EMPTY)
 			{
+
 				//generate new move.
 				move_t * newmove = MoveCreate(piece.position, dest);
 
@@ -436,11 +451,32 @@ ListNode * GetMovesForPiece (game_state_t * game, piece_t piece)
 				ListNode ** listp = &list;
 				ListPushBackElement (listp, (void *) newmove, sizeof (move_t));
 				list = *listp;
+			}
 
+		}
+	}
+
+
+	//try to generate capture moves (on all directions)
+	//capture moves are on all directions (take direction array of some king)
+	directions = allowed_directions_whitek;
+	for (; *directions != 0; directions++)
+	{
+		direction_t direction = *directions;
+
+		//loop through all the allowed distances (if piece has them).
+		for (int distance = 1; distance <= max_distance ; distance++)
+		{
+
+			//get 1 possible destination position.
+			position_t dest = GetPositionRelative(piece.position, direction, distance);
+			if (!PositionInBounds(dest))
+			{
+				continue;
 			}
 			//position is occupied.
 			//try generating capture moves from it.
-			else
+			if (GetPiece(dest, game) != EMPTY)
 			{
 
 				//go 1 spot further in direction (loop for king)
@@ -476,8 +512,13 @@ ListNode * GetMovesForPiece (game_state_t * game, piece_t piece)
 					list = *listp;
 				}
 			}
+
 		}
 	}
+
+
+	//iterated on both normal moves and eat moves.
+
 
 	return list;
 }
@@ -682,7 +723,7 @@ void MoveFree( void * data )
 }
 
 //returns 1 if mymove is in list, 0 otherwise
-int MoveInList (ListNode * moves, move_t mymove)
+int FindMoveInList (ListNode * moves, move_t * mymove)
 {
 
 	for ( ; moves !=NULL; moves = moves->next )
@@ -690,11 +731,14 @@ int MoveInList (ListNode * moves, move_t mymove)
 		move_t * move = (move_t *) moves->data;
 		if (move)
 		{
-			if (move->src.x==mymove.src.x && move->src.y==mymove.src.y)
+			if (move->src.x==mymove->src.x && move->src.y==mymove->src.y)
 			{
-				if (move->dest[0].x==mymove.dest[0].x && move->dest[0].y==mymove.dest[0].y)
+				if (move->dest[0].x==mymove->dest[0].x && move->dest[0].y==mymove->dest[0].y)
 				{
 					//TODO check all destinations are same
+
+					//update number of captures.
+					mymove->num_captures = move->num_captures;
 					return 1;
 				}
 			}
