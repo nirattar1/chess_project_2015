@@ -736,7 +736,11 @@ int FindMoveInList (ListNode * moves, move_t * mymove)
 				if (move->dest[0].x==mymove->dest[0].x && move->dest[0].y==mymove->dest[0].y)
 				{
 					//TODO check all destinations are same
-
+					//copy all destinations from original move
+					for (int i=0; i<MAX_CAPTURES_MOVE; i++)
+					{
+						mymove->dest[i] = move->dest[i];
+					}
 					//update number of captures.
 					mymove->num_captures = move->num_captures;
 					return 1;

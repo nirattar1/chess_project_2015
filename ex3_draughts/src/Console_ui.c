@@ -298,6 +298,10 @@ move_t Menu_PlayUser(game_state_t * game)
 			MovesListPrint(moves);
 		}
 
+		else if (strncmp(line, "quit", 4)==0)
+		{
+			exit (1);
+		}
 
 
 	}

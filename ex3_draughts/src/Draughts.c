@@ -217,6 +217,9 @@ void DoGame(game_state_t * game)
 	//white always start
 	color_t current_player = COLOR_WHITE;
 
+	//print board first time
+	PrintBoard(game);
+
 	//play until somebody won
 	while (!GameWinning(game,COLOR_BLACK) && !GameWinning(game,COLOR_WHITE))
 	{
