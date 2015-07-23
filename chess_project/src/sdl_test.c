@@ -7,6 +7,8 @@
 #define IMG_W 240
 #define IMG_H 296
 
+//
+
 int main(void) {
 	SDL_Event e;
 	SDL_Rect rect = {10, 10, 50, 50};
@@ -14,7 +16,7 @@ int main(void) {
 	SDL_Surface *img = SDL_LoadBMP("test.bmp");
 	SDL_Surface *w  = SDL_SetVideoMode(WIN_W, WIN_H, 0, SDL_HWSURFACE | SDL_DOUBLEBUF);
 	int quit = 0;
-	
+
 	/* Initialize SDL and make sure it quits*/
 	if (SDL_Init(SDL_INIT_VIDEO) < 0) {
 		printf("ERROR: unable to init SDL: %s\n", SDL_GetError());
