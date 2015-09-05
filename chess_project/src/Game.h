@@ -190,9 +190,6 @@ int IsMan (piece_t piece);
 int IsKing (piece_t piece);
 
 
-//returns a list of pieces on board that player has in current game.
-ListNode * GetPiecesOfPlayer (color_t player, game_state_t * game);
-
 //will initialize the game
 void GameInit (game_state_t * game, char ** board );
 
