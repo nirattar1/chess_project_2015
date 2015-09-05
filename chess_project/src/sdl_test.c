@@ -7,7 +7,7 @@
 #define IMG_W 240
 #define IMG_H 296
 
-////t2
+////t2 new
 int main(void) {
 	SDL_Event e;
 	SDL_Rect rect = {10, 10, 50, 50};
