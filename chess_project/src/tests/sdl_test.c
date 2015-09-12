@@ -8,7 +8,7 @@
 #define IMG_H 296
 
 ////t2 new
-int main(void) {
+int main1(void) {
 	SDL_Event e;
 	SDL_Rect rect = {10, 10, 50, 50};
 	SDL_Rect imgrect = {0, 0, IMG_W, IMG_H};

@@ -7,14 +7,14 @@
 #include <stdio.h>
 #include <SDL.h>
 #include <SDL_video.h>
-#include "Gui_framework.h"
+#include "../Gui_framework.h"
 #define WIN_W 800
 #define WIN_H 600
 
 
 
 
-int main ()
+int main2 ()
 {
 	/* Initialize SDL and make sure it quits*/
 	if (SDL_Init(SDL_INIT_VIDEO) < 0) {
@@ -23,6 +23,7 @@ int main ()
 	}
 	atexit(SDL_Quit);
 
+	//initialize screen/window
 	SDL_Surface * screen;
     /*
      * Initialize the display in a 640x480 8-bit palettized mode,
@@ -36,9 +37,13 @@ int main ()
         exit(1);
     }
 
-    //display background image
-    display_bmp("imgs/background.bmp", screen);
+    //load background image
+    bmp_load("imgs/background.bmp", screen);
 
+    //display ?
+    //is done seperately
+
+    //poll events
     int quit = 0 ;
 
     while (!quit)
