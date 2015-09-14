@@ -13,8 +13,20 @@ void main ()
 	window_2_buttons_stupid();
 }
 
+void testfunction1()
+{
+	printf ("1st button!\n");
+}
+
+void testfunction2()
+{
+	printf ("2nd button!\n");
+}
 
 //just a couple of objects on screen. no tree relations.
+//-create background, 2 distinct buttons.
+//-handle buttons actions.
+//-exit gracefully
 void window_2_buttons_stupid()
 {
 	//init SDL
@@ -28,9 +40,13 @@ void window_2_buttons_stupid()
 	SDL_Surface * screen = init_screen();
 
 	//create objects (not attached to each other).
-	Control * w1 = WindowCreate("imgs/background.bmp");
-	Control * b1 = ButtonCreate("imgs/new_g.bmp");
-	Control * b2 = ButtonCreate("imgs/load_g.bmp");
+	Control * w1 = WindowCreate("imgs/background.bmp", NULL);
+
+	SDL_Rect b1Rect = {10, 10, 20, 30};
+	Control * b1 = ButtonCreate("imgs/new_g.bmp", &b1Rect, testfunction1);
+
+	SDL_Rect b2Rect = {10, 100, 20, 30};
+	Control * b2 = ButtonCreate("imgs/load_g.bmp", &b2Rect, testfunction2);
 
 	//draw them
 	w1->Draw(w1, screen);
@@ -38,7 +54,7 @@ void window_2_buttons_stupid()
 	b2->Draw(b2, screen);
 
 	//handle events until exit.
-	HandleEvents();
+	HandleEvents(b1, b2);
 
 	//clear controls resources
 	//...

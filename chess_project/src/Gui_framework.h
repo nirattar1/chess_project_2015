@@ -13,16 +13,15 @@
 int bmp_load(char *file_name, SDL_Surface ** image);
 
 //will display the source surface onto destination (screen).
-void bmp_display(SDL_Surface * src, SDL_Surface * dest);
+void bmp_display(SDL_Surface * src, SDL_Rect * dstrect, SDL_Surface * dest);
 
 //initializes SDL and returns screen object.
 SDL_Surface * init_screen ();
 
 
-//handle events
-void HandleEvents();
 
-//
+
+
 //typedef enum
 //{
 //	CONTROL_BUTTON,
@@ -36,15 +35,11 @@ void HandleEvents();
 typedef struct Control
 {
 	//fields
-	int x, y;	//RELATIVE position.
-	int w, h;	//width height.
-	//Control_Type_t type;
 	ListNode * children;
 	struct Control * parent;
 	//connection to SDL
 	SDL_Surface * surface;
-
-
+	SDL_Rect * rect;
 
 	//functionality callbacks.
 	void (*Draw)(struct Control * controlname, SDL_Surface * screen);
@@ -53,20 +48,34 @@ typedef struct Control
 } Control;
 
 
+//generic constructing function for Control.
+Control * ControlCreate(char * filename, SDL_Rect * rect);
+
 //Window
 //Note: THERE'S ALWAYS ONLY ONE WINDOW, which is also the tree root.
-Control * 	WindowCreate();
+Control * 	WindowCreate(char * filename, SDL_Rect * rect);
 void		WindowDraw(Control * window, SDL_Surface * screen);
-void		WindowHandleEvents(SDL_Event * event);
 void 		WindowFree();
 
 //Button
-Control * 	ButtonCreate ();
+Control * 	ButtonCreate (char * filename, SDL_Rect * rect,
+		void (*ButtonHandleEvents)(SDL_Event *));
 void 		ButtonDraw (Control * button, SDL_Surface * screen);
-void		ButtonHandleEvents(SDL_Event * event);
 void 		ButtonFree();
+
 //Label
 //Panel
 
 
 //
+/////////////////////
+//EVENT HANDLING
+/////////////////////
+
+//find and notify relevant control of event.
+Control * NotifyRelevantControl (SDL_Event * e, Control * b1, Control * b2);
+
+//handle events
+void HandleEvents();
+
+/////////////////////
