@@ -36,10 +36,12 @@ void window_2_buttons_stupid()
 	}
 
 	//init screen
-	//(screen is a global surface)
+	//(screen is a global surface).
+	//(will be freed by SDL_Quit).
 	SDL_Surface * screen = init_screen();
 
 	//create objects (not attached to each other).
+	//(window has no rect).
 	Control * w1 = WindowCreate("imgs/background.bmp", NULL);
 
 	SDL_Rect b1Rect = {10, 10, 20, 30};
@@ -57,7 +59,10 @@ void window_2_buttons_stupid()
 	HandleEvents(b1, b2);
 
 	//clear controls resources
-	//...
+	ControlFree(w1);
+	ControlFree(b1);
+	ControlFree(b2);
+
 }
 
 ////DRAW WITH GUI TREE

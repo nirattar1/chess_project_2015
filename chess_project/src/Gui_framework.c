@@ -31,6 +31,7 @@ SDL_Surface * init_screen ()
 	 * Initialize the display in a 640x480 8-bit palettized mode,
 	 * requesting a software surface
 	 */
+	//screen will be freed by SDL_Quit.
 	screen = SDL_SetVideoMode(WIN_W, WIN_H, 0, SDL_SWSURFACE | SDL_DOUBLEBUF);
 	if ( screen == NULL )
 	{
@@ -68,7 +69,7 @@ void bmp_display(SDL_Surface * src, SDL_Rect * dstrect, SDL_Surface * screen)
     //flip instead of update
     SDL_Flip(screen);
 
-    /* Free the allocated BMP surface ? */
+    /* Free the allocated BMP surface. */
     SDL_FreeSurface(src);
 }
 
@@ -164,6 +165,22 @@ Control * ControlCreate(char * filename, SDL_Rect * rect)
 	return ctl;
 }
 
+void ControlFree (Control * ctl)
+{
+	if (ctl)
+	{
+		//free attached surface
+		if (ctl->surface)
+		{
+			SDL_FreeSurface(ctl->surface);
+		}
+
+		//free the struct itself
+		myfree(ctl);
+	}
+
+}
+
 //Window
 Control * WindowCreate(char * filename, SDL_Rect * rect)
 {
@@ -175,22 +192,14 @@ Control * WindowCreate(char * filename, SDL_Rect * rect)
 
 void WindowDraw(Control * window, SDL_Surface * screen)
 {
-	//get relative x , y somehow .
 
 	//update SDL surface .
 	bmp_display(window->surface, NULL, screen);
 
 }
 
-void WindowFree()
-{
-	;
-}
 
-void WindowHandleEvents(Control * window, SDL_Event * event)
-{
-	;
-}
+
 
 //Button
 Control * ButtonCreate (char * filename, SDL_Rect * rect,
@@ -205,19 +214,11 @@ Control * ButtonCreate (char * filename, SDL_Rect * rect,
 
 void ButtonDraw (Control * button, SDL_Surface * screen)
 {
-	//get relative x , y somehow .
 
 	//update SDL surface .
+	//draw button inside it's rect.
 	bmp_display(button->surface, button->rect, screen);
 
 }
 
-void ButtonFree()
-{
 
-}
-
-void ButtonHandleEvents(Control * button, SDL_Event * event)
-{
-	;
-}

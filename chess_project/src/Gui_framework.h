@@ -9,15 +9,16 @@
 
 //general GUI functions
 
-//will take image and load it into surface buffer;
-int bmp_load(char *file_name, SDL_Surface ** image);
-
-//will display the source surface onto destination (screen).
-void bmp_display(SDL_Surface * src, SDL_Rect * dstrect, SDL_Surface * dest);
-
 //initializes SDL and returns screen object.
 SDL_Surface * init_screen ();
 
+//will take image and load it into surface buffer;
+int bmp_load(char *file_name, SDL_Surface ** image);
+
+//a wrapper around SDL Blit function.
+//will display the source surface onto destination (screen).
+//will also free source surface !
+void bmp_display(SDL_Surface * src, SDL_Rect * dstrect, SDL_Surface * dest);
 
 
 
@@ -31,13 +32,14 @@ SDL_Surface * init_screen ();
 //} 	Control_Type_t;
 
 
-//GUI Control struct
+//GUI Control struct.
+//contains SDL connection points (surface, rect),
+//as well as information for our framework (part of controls tree).
 typedef struct Control
 {
 	//fields
 	ListNode * children;
 	struct Control * parent;
-	//connection to SDL
 	SDL_Surface * surface;
 	SDL_Rect * rect;
 
@@ -50,18 +52,19 @@ typedef struct Control
 
 //generic constructing function for Control.
 Control * ControlCreate(char * filename, SDL_Rect * rect);
+//generic freeing function for Control.
+void ControlFree (Control * ctl) ;
+
 
 //Window
 //Note: THERE'S ALWAYS ONLY ONE WINDOW, which is also the tree root.
 Control * 	WindowCreate(char * filename, SDL_Rect * rect);
 void		WindowDraw(Control * window, SDL_Surface * screen);
-void 		WindowFree();
 
 //Button
 Control * 	ButtonCreate (char * filename, SDL_Rect * rect,
 		void (*ButtonHandleEvents)(SDL_Event *));
 void 		ButtonDraw (Control * button, SDL_Surface * screen);
-void 		ButtonFree();
 
 //Label
 //Panel
