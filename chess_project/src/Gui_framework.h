@@ -9,8 +9,12 @@
 
 //general GUI functions
 
+//inits SDL
+int init_sdl();
+
+
 //initializes SDL and returns screen object.
-SDL_Surface * init_screen ();
+SDL_Surface * init_screen (const char *);
 
 //will take image and load it into surface buffer;
 int bmp_load(char *file_name, SDL_Surface ** image);
@@ -21,15 +25,6 @@ int bmp_load(char *file_name, SDL_Surface ** image);
 void bmp_display(SDL_Surface * src, SDL_Rect * dstrect, SDL_Surface * dest);
 
 
-
-
-//typedef enum
-//{
-//	CONTROL_BUTTON,
-//	CONTROL_LABEL,
-//	CONTROL_WINDOW,
-//	CONTROL_PANEL
-//} 	Control_Type_t;
 
 
 //GUI Control struct.
@@ -56,6 +51,15 @@ Control * ControlCreate(char * filename, SDL_Rect * rect);
 void ControlFree (Control * ctl) ;
 
 
+/*
+ * will allow adding a child control under specific control.
+ *
+ */
+void ControlAddChild(Control * control, Control * child);
+
+//visit UI tree in DFS, starting from root
+void DFSTraverseDraw(Control * root, SDL_Surface * screen);
+
 //Window
 //Note: THERE'S ALWAYS ONLY ONE WINDOW, which is also the tree root.
 Control * 	WindowCreate(char * filename, SDL_Rect * rect);
@@ -76,7 +80,7 @@ void 		ButtonDraw (Control * button, SDL_Surface * screen);
 /////////////////////
 
 //find and notify relevant control of event.
-Control * NotifyRelevantControl (SDL_Event * e, Control * b1, Control * b2);
+Control * NotifyRelevantControl (SDL_Event * e);
 
 //handle events
 void HandleEvents();

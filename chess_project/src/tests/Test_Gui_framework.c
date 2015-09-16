@@ -7,10 +7,24 @@
 
 #include "../Gui_framework.h"
 
-void main ()
+Control * TestNotifyRelevantControl (SDL_Event * e,
+		Control * b1, Control * b2);
+
+void TestHandleEvents(Control * b1,Control * b2);
+
+void window_2_buttons_stupid();
+
+
+//test
+int main ()
 {
 
-	window_2_buttons_stupid();
+	//window_2_buttons_stupid();
+
+	window_buttons_tree();
+
+
+	return 0;
 }
 
 void testfunction1()
@@ -38,7 +52,7 @@ void window_2_buttons_stupid()
 	//init screen
 	//(screen is a global surface).
 	//(will be freed by SDL_Quit).
-	SDL_Surface * screen = init_screen();
+	SDL_Surface * screen = init_screen("Chess");
 
 	//create objects (not attached to each other).
 	//(window has no rect).
@@ -56,7 +70,7 @@ void window_2_buttons_stupid()
 	b2->Draw(b2, screen);
 
 	//handle events until exit.
-	HandleEvents(b1, b2);
+	TestHandleEvents(b1, b2);
 
 	//clear controls resources
 	ControlFree(w1);
@@ -65,19 +79,145 @@ void window_2_buttons_stupid()
 
 }
 
-////DRAW WITH GUI TREE
-//void window_2_buttons()
-//{
-//	SDL_Surface * screen = init_screen();
-//	//create objects
-//	Control * w = CreateWindow ();
-//	Control * b1 = CreateButton();
-//	Control * b2 = CreateButton();
-//
-//	//link the objects
-//	AddChildElement (w, b1);
-//	AddChildElement (w, b2);
-//
-//	//draw the objects.
-//	//(DFS traverse)
-//}
+//DRAW WITH GUI TREE
+void window_buttons_tree()
+{
+	//init SDL
+	if (init_sdl() != 0)
+	{
+		exit (1);
+	}
+
+	//init screen
+	//(screen is a global surface).
+	//(will be freed by SDL_Quit).
+	SDL_Surface * screen = init_screen("Chess");
+
+	//create objects (not attached to each other).
+	//(window has no rect).
+	Control * w1 = WindowCreate("imgs/background.bmp", NULL);
+
+	SDL_Rect b1Rect = {20, 100, 20, 30};
+	Control * b1 = ButtonCreate("imgs/new_g.bmp", &b1Rect, testfunction2);
+
+	SDL_Rect b2Rect = {180, 100, 20, 30};
+	Control * b2 = ButtonCreate("imgs/load_g.bmp", &b2Rect, testfunction1);
+
+	//children of b1
+	SDL_Rect b3Rect = {0, 200, 20, 30};
+	Control * b3 = ButtonCreate("imgs/load_g.bmp", &b3Rect, testfunction2);
+
+	SDL_Rect b4Rect = {40, 200, 20, 30};
+	Control * b4 = ButtonCreate("imgs/load_g.bmp", &b4Rect, testfunction2);
+
+	//children of b2
+	SDL_Rect b5Rect = {160, 200, 20, 30};
+	Control * b5 = ButtonCreate("imgs/load_g.bmp", &b5Rect, testfunction2);
+
+	SDL_Rect b6Rect = {200, 200, 20, 30};
+	Control * b6 = ButtonCreate("imgs/load_g.bmp", &b6Rect, testfunction2);
+
+
+
+	//link the objects
+	ControlAddChild(w1, b1);
+	ControlAddChild(w1, b2);
+	ControlAddChild(b1, b3);
+	ControlAddChild(b1, b4);
+	ControlAddChild(b2, b5);
+	ControlAddChild(b2, b6);
+
+	//draw the objects.
+	//(DFS traverse)
+	DFSTraverseDraw (w1, screen);
+
+
+	//handle events until exit.
+	TestHandleEvents(b1, b2);
+
+	//clear controls resources
+	ControlFree(w1);
+	ControlFree(b1);
+	ControlFree(b2);
+	ControlFree(b3);
+	ControlFree(b4);
+	ControlFree(b5);
+	ControlFree(b6);
+}
+
+
+//find and notify relevant control of event.
+//simple test version
+Control * TestNotifyRelevantControl (SDL_Event * e,
+		//DEBUG parameters
+		Control * b1, Control * b2)
+{
+	Control * found = NULL;
+	SDL_Rect * b1Rect = b1->rect;
+	SDL_Rect * b2Rect = b2->rect;
+
+	//check boundaries of the control
+	if ((e->button.x > b1Rect->x) && (e->button.x < b1Rect->x + b1Rect->w) && (e->button.y > b1Rect->y) && (e->button.y < b1Rect->y+b1Rect->h))
+	{
+		//mark control as found.
+		found = b1;
+	}
+	if ((e->button.x > b2Rect->x) && (e->button.x < b2Rect->x + b2Rect->w) && (e->button.y > b2Rect->y) && (e->button.y < b2Rect->y+b2Rect->h))
+	{
+		found = b2;
+	}
+
+
+	//real life - loop through all controls.
+
+
+	//call the function of control ( if exists ).
+	if (found)
+	{
+		found->HandleEvents(e);
+	}
+	return found;
+}
+
+
+
+//a loop for handling events.
+//simple test version.
+void TestHandleEvents(
+		Control * b1,Control * b2
+)
+{
+	int quit = 0;
+
+	while (!quit)
+	{
+		/* Poll for keyboard & mouse events*/
+		SDL_Event e;
+		while (SDL_PollEvent(&e) != 0) {
+			switch (e.type) {
+				case (SDL_QUIT):
+					quit = 1;
+					break;
+				case (SDL_KEYUP):
+					if (e.key.keysym.sym == SDLK_ESCAPE)
+					{
+						quit = 1;
+					}
+					break;
+				case (SDL_MOUSEBUTTONUP):
+					//send the event to the relevant control.
+					;
+					Control * matched = TestNotifyRelevantControl (&e, b1, b2);
+					if (matched)
+					{
+						printf ("matched control!\n");
+					}
+					break;
+				default:
+					break;
+			}
+		}
+		/* Wait a little before redrawing*/
+		SDL_Delay(200);
+	}
+}

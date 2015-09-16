@@ -38,7 +38,7 @@ int main2 ()
     }
 
     //load background image
-    bmp_load("imgs/background.bmp", screen);
+    bmp_load("imgs/background.bmp", &screen);
 
     //display ?
     //is done seperately

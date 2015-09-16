@@ -23,10 +23,13 @@ int init_sdl()
 	return 0;
 }
 
-SDL_Surface * init_screen ()
+SDL_Surface * init_screen (const char * title)
 {
 
 	SDL_Surface * screen = NULL;
+
+	SDL_WM_SetCaption(title, NULL);
+
 	/*
 	 * Initialize the display in a 640x480 8-bit palettized mode,
 	 * requesting a software surface
@@ -73,78 +76,7 @@ void bmp_display(SDL_Surface * src, SDL_Rect * dstrect, SDL_Surface * screen)
     SDL_FreeSurface(src);
 }
 
-//find and notify relevant control of event.
-Control * NotifyRelevantControl (SDL_Event * e,
-		//DEBUG parameters
-		Control * b1, Control * b2)
-{
-	Control * found = NULL;
-	SDL_Rect * b1Rect = b1->rect;
-	SDL_Rect * b2Rect = b2->rect;
 
-	//check boundaries of the control
-	if ((e->button.x > b1Rect->x) && (e->button.x < b1Rect->x + b1Rect->w) && (e->button.y > b1Rect->y) && (e->button.y < b1Rect->y+b1Rect->h))
-	{
-		//mark control as found.
-		found = b1;
-	}
-	if ((e->button.x > b2Rect->x) && (e->button.x < b2Rect->x + b2Rect->w) && (e->button.y > b2Rect->y) && (e->button.y < b2Rect->y+b2Rect->h))
-	{
-		found = b2;
-	}
-
-
-	//real life - loop through all controls.
-
-
-	//call the function of control ( if exists ).
-	if (found)
-	{
-		found->HandleEvents(e);
-	}
-	return found;
-}
-
-//a loop for handling events.
-void HandleEvents(
-		//DEBUG parameters
-		Control * b1,Control * b2
-)
-{
-	int quit = 0;
-
-	while (!quit)
-	{
-		/* Poll for keyboard & mouse events*/
-		SDL_Event e;
-		while (SDL_PollEvent(&e) != 0) {
-			switch (e.type) {
-				case (SDL_QUIT):
-					quit = 1;
-					break;
-				case (SDL_KEYUP):
-					if (e.key.keysym.sym == SDLK_ESCAPE)
-					{
-						quit = 1;
-					}
-					break;
-				case (SDL_MOUSEBUTTONUP):
-					//send the event to the relevant control.
-					;
-					Control * matched = NotifyRelevantControl (&e, b1, b2);
-					if (matched)
-					{
-						printf ("matched control!\n");
-					}
-					break;
-				default:
-					break;
-			}
-		}
-		/* Wait a little before redrawing*/
-		SDL_Delay(200);
-	}
-}
 
 
 //generic constructing function for Control.
@@ -179,6 +111,50 @@ void ControlFree (Control * ctl)
 		myfree(ctl);
 	}
 
+}
+
+
+void ControlAddChild(Control * control, Control * child)
+{
+
+	if (!control)
+	{
+		return;
+	}
+
+
+	//add child control to the list.
+	ListNode ** listp = &control->children;
+	ListPushBackElement (listp, (void *) child, sizeof (Control *));
+	control->children = *listp;
+}
+
+
+void DFSTraverseDraw(Control * root, SDL_Surface * screen)
+{
+	//halt condition
+	if (!root)
+	{
+		return;
+	}
+
+	//do the action with the root .
+	//(draw it into screen)
+	root->Draw(root, screen);
+
+	//traverse all children (if exist),
+	//and call DFS recursively for them
+	if (root->children)
+	{
+		ListNode * pChild = root->children;
+		for ( ; pChild !=NULL; pChild = pChild->next )
+		{
+			//get the data from child.
+			Control * childControl = (Control *) pChild->data;
+			//call recursively for child control (may be null).
+			DFSTraverseDraw(childControl, screen);
+		}
+	}
 }
 
 //Window
