@@ -1,21 +1,25 @@
-#all: sdl_test
-#
-#clean:
-#	-rm sdl_test.o sdl_test
-#
-#sdl_test: sdl_test.o
-#	gcc  -o sdl_test sdl_test.o -lm -std=c99 -pedantic-errors -g `sdl-config --libs`
-#
-#sdl_test.o: sdl_test.c
-#	gcc  -std=c99 -pedantic-errors -c -Wall -g -lm sdl_test.c `sdl-config --cflags`
-
-all: sdl_test2
+all: Draughts 
 
 clean:
-	-rm sdl_test2.o sdl_test2
+	-rm Draughts.o Game.o ListNode.o Memory.o Minimax.o Console_ui.o Draughts
 
-sdl_test2: sdl_test2.o
-	gcc  -o sdl_test2 sdl_test2.o -lm -std=c99 -pedantic-errors -g `sdl-config --libs`
+Draughts: Draughts.o Game.o ListNode.o Memory.o Minimax.o Console_ui.o
+	gcc -o Draughts Draughts.o Game.o ListNode.o Memory.o Minimax.o Console_ui.o -lm -std=c99 -pedantic-errors -g
 
-sdl_test2.o: sdl_test2.c
-	gcc  -std=c99 -pedantic-errors -c -Wall -g -lm sdl_test2.c `sdl-config --cflags`
+Draughts.o: Draughts.h Draughts.c
+	gcc -std=c99 -pedantic-errors -c -Wall -g -lm Draughts.c
+
+Game.o: Game.h Game.c
+	gcc -std=c99 -pedantic-errors -c -Wall -g -lm Game.c
+	
+ListNode.o: ListNode.h ListNode.c
+	gcc -std=c99 -pedantic-errors -c -Wall -g -lm ListNode.c
+
+Memory.o: Memory.h Memory.c
+	gcc -std=c99 -pedantic-errors -c -Wall -g -lm Memory.c
+	
+Minimax.o: Minimax.h Minimax.c
+	gcc -std=c99 -pedantic-errors -c -Wall -g -lm Minimax.c
+	
+Console_ui.o: Console_ui.h Console_ui.c
+	gcc -std=c99 -pedantic-errors -c -Wall -g -lm Console_ui.c

@@ -22,7 +22,7 @@ int _NUM_LEAVES = 0;
 //}
 
 
-void MinimaxChoose (STATE_TYPE * state, color_t player,
+void MinimaxChoose (STATE_TYPE * state, color_t maximizing_player,
 		ListNode * RootChildren,
 		int current_depth, int max_depth,
 		int (*ScoringFunction)(STATE_TYPE *, color_t),
@@ -34,14 +34,31 @@ void MinimaxChoose (STATE_TYPE * state, color_t player,
 	//debug (only for ints)
 	//DEBUG_PRINT(("current state: %d\n", *((int *) state)));
 
-	//halt condition (leaf node)
-	//update based on scoring function and return.
-	if (current_depth==max_depth)
+
+	//get children.
+	//(on first level - from argument, otherwise generate from state.)
+	ListNode * Children = NULL;
+	if (current_depth==0)
 	{
-		//compute this node's value and return it.
-		*chosenSon = 0;
+		Children = RootChildren;
+	}
+	else
+	{
+		//understand current player based on depth
+		//(0th and all even levels are the maximizing player)
+		color_t current_player = (current_depth%2 == 0) ? maximizing_player : GetOppositeColor(maximizing_player) ;
+		Children = ChildGenerateFunction (state, current_player);
+	}
+
+	//halt condition- 1 of the following:
+	//1. if max depth was reached
+	//2. no more children from this node.
+	//compute scoring function and return.
+	if (current_depth==max_depth || !Children)
+	{
+		*chosenSon = 0;//has no meaning here.
 		//call scoring function to compute based on state.
-		*chosenValue = (ScoringFunction(state, player));
+		*chosenValue = (ScoringFunction(state, maximizing_player));
 
 		//debug
 		DEBUG_PRINT(("scoring function value: %d\n", *chosenValue));
@@ -51,19 +68,6 @@ void MinimaxChoose (STATE_TYPE * state, color_t player,
 		DEBUG_PRINT(("number of leaves: %d\n", _NUM_LEAVES));
 		return;
 	}
-
-	//get children.
-	//(on first level - from argument, otherwise generate from state.)
-	ListNode * Children;
-	if (current_depth==0)
-	{
-		Children = RootChildren;
-	}
-	else
-	{
-		Children = ChildGenerateFunction (state, player);
-	}
-
 
 	//for each child (move):
 	int numChildren = ListCount(Children);
@@ -91,11 +95,11 @@ void MinimaxChoose (STATE_TYPE * state, color_t player,
 			PrintBoard(&newState);
 		}
 
-		//call recursively to determine the score from this child.
+		//call recursively (next player's move) to determine the score from this child.
 
 		int childIndex;	//not really used.
 		int childScore;
-		MinimaxChoose(&newState, player, NULL, current_depth+1, max_depth,
+		MinimaxChoose(&newState, maximizing_player, NULL, current_depth+1, max_depth,
 				ScoringFunction, ChildGenerateFunction, &childIndex, &childScore);
 
 		DEBUG_PRINT( ("current depth : %d. score from child %d: %d\n", current_depth, iChild, childScore));

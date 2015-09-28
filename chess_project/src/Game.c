@@ -325,7 +325,7 @@ direction_t * GetPieceDirections (char identity)
 
 //scoring function to use with minimax.
 //based on player color and game state.
-int DraughtsScoringFunction (game_state_t * game, color_t player)
+int DraughtsScoringFunction (game_state_t * game, color_t maximizing_player)
 {
 
 	int player_score=0, opposite_score=0;
@@ -333,12 +333,12 @@ int DraughtsScoringFunction (game_state_t * game, color_t player)
 	//get player's pieces
 	int cntPiecesPlayer;//will count how many pieces player has.
 	piece_t piecesPlayer [MAX_PIECES_PLAYER]; //player can have at most 20 pieces.
-	GetAllPieces (game, player, piecesPlayer, &cntPiecesPlayer);
+	GetAllPieces (game, maximizing_player, piecesPlayer, &cntPiecesPlayer);
 
 	//get opposite color's pieces
 	int cntPiecesOpposite;//will count how many pieces player has.
 	piece_t piecesOpposite [MAX_PIECES_PLAYER]; //player can have at most 20 pieces.
-	GetAllPieces (game, GetOppositeColor(player), piecesOpposite, &cntPiecesOpposite);
+	GetAllPieces (game, GetOppositeColor(maximizing_player), piecesOpposite, &cntPiecesOpposite);
 
 
 	//determine winning score if one side has no pieces left.

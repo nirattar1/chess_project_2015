@@ -23,39 +23,38 @@ int SETTINGS_MAX_DEPTH = DEFAULT_MAX_DEPTH;
 //void Test_GameWithMinimax();
 
 
-//int main ()
-//{
-//
-//	printf(WELCOME_TO_DRAUGHTS);
-//
-//	RulesInit();
-//
-//	//initialize game state.
-//	//(empty layout)
-//	game_state_t game;
-//	char board [BOARD_SIZE][BOARD_SIZE];
-//
-//	//ListTest ();
-//
-//	//GameTest ();
-//
-//	//original_main();
-//
-//	//Test_Minimax();
-//
-//
-//	//Test_GameWithMinimax();
-//
-//	//clear board, put default layout
-//	GameInit(&game, (char **) board);
-//	GameDefaultLayout(&game);
-//
-//	Menu_Settings(&game, (char **) board);
-//
-//	memory_print();
-//
-//	return 0;
-//}
+int main ()
+{
+
+	printf(WELCOME_TO_DRAUGHTS);
+
+	RulesInit();
+
+	//initialize game state.
+	//(empty layout)
+	game_state_t game;
+	char board [BOARD_SIZE][BOARD_SIZE];
+
+	//ListTest ();
+
+	//GameTest ();
+
+	//original_main();
+
+	//Test_Minimax();
+
+	//Test_GameWithMinimax();
+
+	//clear board, put default layout
+	GameInit(&game, (char **) board);
+	GameDefaultLayout(&game);
+
+	Menu_Settings(&game, (char **) board);
+
+	memory_print();
+
+	return 0;
+}
 
 
 
