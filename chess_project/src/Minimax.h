@@ -19,12 +19,18 @@
 //for testing
 extern int _NUM_LEAVES;
 
+//maximum score
+#define MAX_SCORE 10000
+#define MIN_SCORE -10000
+
 //gets a list of children. will determine the best option out of them.
-void MinimaxChoose (STATE_TYPE * state, color_t player,
-		ListNode * RootChildren,
+void MinimaxChoose (
+		STATE_TYPE * state, ListNode * RootChildren,
 		int current_depth, int max_depth,
+		int enable_pruning, int alpha, int beta,
+		color_t current_player, int is_maximizing,
 		int (*ScoringFunction)(STATE_TYPE *, color_t),
-		ListNode * (*TestChildrenGenerate)(STATE_TYPE *, color_t),
+		ListNode * (*ChildGenerateFunction)(STATE_TYPE *, color_t),
 		int * chosenSon, int * chosenValue); //by reference, will update these for caller.
 
 int ArrFindMaxOrMin (int * array, int arr_size,

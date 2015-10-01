@@ -14,7 +14,7 @@ int test_values [MAX_TEST_VALUES];
 void Test_Minimax ()
 {
 
-	//Test_Minimax_simple_tree();
+	Test_Minimax_simple_tree();
 
 	Test_Minimax_tree2_for_pruning();
 }
@@ -85,6 +85,9 @@ void Test_Minimax_simple_tree ()
 			TestScoring, TestChildrenGenerate,
 			&childIndex, &childScore);
 
+	//clean leaves counter.
+	_NUM_LEAVES = 0;
+
 	printf ("index %d was chosen. will lead to score of %d\n", childIndex, childScore);
 
 }
@@ -116,6 +119,9 @@ void Test_Minimax_tree2_for_pruning ()
 	MinimaxChoose (&state, COLOR_WHITE, RootChildren, 0, max_depth,
 			TestScoring, TestChildrenGenerate,
 			&childIndex, &childScore);
+
+	//clean leaves counter.
+	_NUM_LEAVES = 0;
 
 	printf ("index %d was chosen. will lead to score of %d\n", childIndex, childScore);
 

@@ -10,7 +10,7 @@
 #include "Memory.h"
 #include "Draughts.h"
 #include "tests/Test_Minimax.h"
-
+#include <math.h>
 //initialize global
 int _NUM_LEAVES = 0;
 
@@ -18,9 +18,11 @@ int _NUM_LEAVES = 0;
 
 
 
-void MinimaxChoose (STATE_TYPE * state, color_t maximizing_player,
-		ListNode * RootChildren,
+void MinimaxChoose (
+		STATE_TYPE * state, ListNode * RootChildren,
 		int current_depth, int max_depth,
+		int enable_pruning, int alpha, int beta,
+		color_t current_player, int is_maximizing,
 		int (*ScoringFunction)(STATE_TYPE *, color_t),
 		ListNode * (*ChildGenerateFunction)(STATE_TYPE *, color_t),
 		int * chosenSon, int * chosenValue) //by reference, will update these for caller.
@@ -31,7 +33,7 @@ void MinimaxChoose (STATE_TYPE * state, color_t maximizing_player,
 	//DEBUG_PRINT(("current state: %d\n", *((int *) state)));
 
 
-	//get children.
+	//get children of node.
 	//(on first level - from argument, otherwise generate from state.)
 	ListNode * Children = NULL;
 	if (current_depth==0)
@@ -40,9 +42,8 @@ void MinimaxChoose (STATE_TYPE * state, color_t maximizing_player,
 	}
 	else
 	{
-		//understand current player based on depth
-		//(0th and all even levels are the maximizing player)
-		color_t current_player = (current_depth%2 == 0) ? maximizing_player : GetOppositeColor(maximizing_player) ;
+		//get current player from argument
+		//color_t current_player = (current_depth%2 == 0) ? maximizing_player : GetOppositeColor(maximizing_player) ;
 		Children = ChildGenerateFunction (state, current_player);
 	}
 
@@ -65,65 +66,72 @@ void MinimaxChoose (STATE_TYPE * state, color_t maximizing_player,
 		return;
 	}
 
-	//for each child (move):
-	int numChildren = ListCount(Children);
-	int iChild = 0;
-	int * Scores = (int *) mymalloc (numChildren * (sizeof (int)) );
-	ListNode * pChildren = NULL;
-	for (pChildren = Children; pChildren !=NULL; pChildren = pChildren->next )
+	if (is_maximizing)
 	{
-
-		//create static copy of state.
-		STATE_TYPE newState;
-		//TO FIX
-//		char newBoard [BOARD_SIZE][BOARD_SIZE];
-//		newState.pieces = (board_column *) newBoard;
-//		CopyGameState(&newState, state);
-		//for debug ints:
-		memcpy (&newState, state, sizeof (STATE_TYPE));
-
-		//TO FIX
-		//update state based on child (play move)
-		//DoMove( (move_t *) pChildren->data , &newState);
-		//for debug ints:
-		TestUpdateState (&newState, current_depth, iChild);
-
-		//debug
-		DEBUG_PRINT(("if i play move %d board will look like:\n ", iChild));
-		if (IS_DEBUG)
+		//get initial value
+		int v = MIN_SCORE;
+		//for each child (move):
+		int numChildren = ListCount(Children);
+		int iChild = 0;
+		int * Scores = (int *) mymalloc (numChildren * (sizeof (int)) );
+		ListNode * pChildren = NULL;
+		for (pChildren = Children; pChildren !=NULL; pChildren = pChildren->next )
 		{
-			//PrintBoard(&newState);
+
+			//create static copy of state.
+			STATE_TYPE newState;
+			//TO FIX
+	//		char newBoard [BOARD_SIZE][BOARD_SIZE];
+	//		newState.pieces = (board_column *) newBoard;
+	//		CopyGameState(&newState, state);
+			//for debug ints:
+			memcpy (&newState, state, sizeof (STATE_TYPE));
+
+			//TO FIX
+			//update state based on child (play move)
+			//DoMove( (move_t *) pChildren->data , &newState);
+			//for debug ints:
+			TestUpdateState (&newState, current_depth, iChild);
+
+			//debug
+			DEBUG_PRINT(("if i play move %d board will look like:\n ", iChild));
+			if (IS_DEBUG)
+			{
+				//PrintBoard(&newState);
+			}
+
+			//call recursively (next player's move) to determine the score from this child.
+
+			int childIndex;	//not really used.
+			int childScore;
+			v = MAX(MinimaxChoose(&newState, maximizing_player, NULL, current_depth+1, max_depth,
+					ScoringFunction, ChildGenerateFunction, &childIndex, &childScore);
+
+			DEBUG_PRINT( ("current depth : %d. score from child %d: %d\n", current_depth, iChild, childScore));
+			Scores [iChild] = childScore;
+			iChild++;
 		}
 
-		//call recursively (next player's move) to determine the score from this child.
-
-		int childIndex;	//not really used.
-		int childScore;
-		MinimaxChoose(&newState, maximizing_player, NULL, current_depth+1, max_depth,
-				ScoringFunction, ChildGenerateFunction, &childIndex, &childScore);
-
-		DEBUG_PRINT( ("current depth : %d. score from child %d: %d\n", current_depth, iChild, childScore));
-		Scores [iChild] = childScore;
-		iChild++;
-	}
-
-	//choose the child with the max / min level.
-	//even depth (maximizer)- choose max.
-	if (current_depth%2 == 0)
-	{
-		ArrFindMaxOrMin(Scores, numChildren, 1, chosenValue, chosenSon);
-	}
-	//odd depth (minimizer) - choose min.
-	else
-	{
-		ArrFindMaxOrMin(Scores, numChildren, 0, chosenValue, chosenSon);
+		//choose the child with the max / min level.
+		//even depth (maximizer)- choose max.
+		if (current_depth%2 == 0)
+		{
+			ArrFindMaxOrMin(Scores, numChildren, 1, chosenValue, chosenSon);
+		}
+		//odd depth (minimizer) - choose min.
+		else
+		{
+			ArrFindMaxOrMin(Scores, numChildren, 0, chosenValue, chosenSon);
+		}
 	}
 
 	//free all children (got what we need from them).
 	//(only on depth > 0), because caller needs children in level 0
 	if (current_depth!=0)
 	{
-		ListFreeElements(Children, MoveFree);
+		//TO FIX
+		//ListFreeElements(Children, MoveFree);
+		ListFreeElements(Children, intlist_free);
 	}
 	//free scores of children.
 	myfree(Scores);
