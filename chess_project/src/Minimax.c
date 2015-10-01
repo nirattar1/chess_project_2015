@@ -6,20 +6,16 @@
  */
 #include "Minimax.h"
 #include <stdio.h>
+#include <string.h>
 #include "Memory.h"
 #include "Draughts.h"
+#include "tests/Test_Minimax.h"
 
 //initialize global
 int _NUM_LEAVES = 0;
 
 
 
-//for testing. remove this function
-//test function , updates child based on depth and child index.
-//void TestUpdateState(int * state, int depth, int iChild)
-//{
-//	*state = *state + (depth * 10) + (iChild+1) ;
-//}
 
 
 void MinimaxChoose (STATE_TYPE * state, color_t maximizing_player,
@@ -30,7 +26,7 @@ void MinimaxChoose (STATE_TYPE * state, color_t maximizing_player,
 		int * chosenSon, int * chosenValue) //by reference, will update these for caller.
 {
 
-
+	//TO FIX
 	//debug (only for ints)
 	//DEBUG_PRINT(("current state: %d\n", *((int *) state)));
 
@@ -79,20 +75,24 @@ void MinimaxChoose (STATE_TYPE * state, color_t maximizing_player,
 
 		//create static copy of state.
 		STATE_TYPE newState;
-		char newBoard [BOARD_SIZE][BOARD_SIZE];
-		newState.pieces = (board_column *) newBoard;
-		CopyGameState(&newState, state);
-		//memcpy (&newState, state, sizeof (STATE_TYPE));
+		//TO FIX
+//		char newBoard [BOARD_SIZE][BOARD_SIZE];
+//		newState.pieces = (board_column *) newBoard;
+//		CopyGameState(&newState, state);
+		//for debug ints:
+		memcpy (&newState, state, sizeof (STATE_TYPE));
 
+		//TO FIX
 		//update state based on child (play move)
-		//TestUpdateState (&newState, current_depth, iChild);
-		DoMove( (move_t *) pChildren->data , &newState);
+		//DoMove( (move_t *) pChildren->data , &newState);
+		//for debug ints:
+		TestUpdateState (&newState, current_depth, iChild);
 
 		//debug
 		DEBUG_PRINT(("if i play move %d board will look like:\n ", iChild));
 		if (IS_DEBUG)
 		{
-			PrintBoard(&newState);
+			//PrintBoard(&newState);
 		}
 
 		//call recursively (next player's move) to determine the score from this child.

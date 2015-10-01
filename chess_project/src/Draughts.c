@@ -3,7 +3,7 @@
 #include "Memory.h"
 #include "Console_ui.h"
 #include "Minimax.h"
-
+#include "tests/Test_Minimax.h"
 
 
 
@@ -16,11 +16,11 @@ int SETTINGS_MAX_DEPTH = DEFAULT_MAX_DEPTH;
 
 
 
-
-//int ListTest ();
-//int GameTest();
-//void Test_Minimax();
-//void Test_GameWithMinimax();
+//TO FIX- comment out
+int ListTest ();
+int GameTest();
+void Test_Minimax();
+void Test_GameWithMinimax();
 
 
 int main ()
@@ -41,15 +41,16 @@ int main ()
 
 	//original_main();
 
-	//Test_Minimax();
+	Test_Minimax();
 
 	//Test_GameWithMinimax();
 
-	//clear board, put default layout
-	GameInit(&game, (char **) board);
-	GameDefaultLayout(&game);
-
-	Menu_Settings(&game, (char **) board);
+//	//clear board, put default layout
+//	GameInit(&game, (char **) board);
+//	GameDefaultLayout(&game);
+//
+//	//start console ui
+//	Menu_Settings(&game, (char **) board);
 
 	memory_print();
 
@@ -169,9 +170,11 @@ void CPUTurn (game_state_t * game)
 	//child with best score will decide what move to do .
 	int childIndex;
 	int childScore;
-	MinimaxChoose (game, color, RootChildren, 0, max_depth,
-			DraughtsScoringFunction, GetMovesForPlayer,
-			&childIndex, &childScore);
+
+	///TO FIX - uncomment this
+	//	MinimaxChoose (game, color, RootChildren, 0, max_depth,
+	//			DraughtsScoringFunction, GetMovesForPlayer,
+	//			&childIndex, &childScore);
 
 	DEBUG_PRINT( ("index %d was chosen. will lead to score of %d\n", childIndex, childScore));
 

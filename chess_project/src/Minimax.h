@@ -12,9 +12,9 @@
 #define MINIMAX_H_
 
 //for testing
-//#define STATE_TYPE int
+#define STATE_TYPE int
 //for draughts
-#define STATE_TYPE game_state_t
+//#define STATE_TYPE game_state_t
 
 //for testing
 extern int _NUM_LEAVES;

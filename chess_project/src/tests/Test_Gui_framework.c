@@ -15,17 +15,17 @@ void TestHandleEvents(Control * b1,Control * b2);
 void window_2_buttons_stupid();
 
 
-//test
-int main ()
-{
-
-	//window_2_buttons_stupid();
-
-	window_buttons_tree();
-
-
-	return 0;
-}
+////test
+//int main ()
+//{
+//
+//	//window_2_buttons_stupid();
+//
+//	window_buttons_tree();
+//
+//
+//	return 0;
+//}
 
 void testfunction1()
 {
