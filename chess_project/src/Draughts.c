@@ -41,9 +41,11 @@ int main ()
 
 	//original_main();
 
-	Test_Minimax();
+	//Test_Minimax();
 
 	//Test_GameWithMinimax();
+
+	Test_Files();
 
 //	//clear board, put default layout
 //	GameInit(&game, (char **) board);

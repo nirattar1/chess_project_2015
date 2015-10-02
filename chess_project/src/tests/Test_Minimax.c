@@ -117,7 +117,7 @@ void Test_Minimax_tree2_for_pruning ()
 	int childIndex;	//used only on top level.
 	int childScore;
 
-	//no pruning
+	//with pruning
 	MinimaxChoose (&state, RootChildren, 0, max_depth,
 			1, MIN_SCORE, MAX_SCORE,
 			COLOR_WHITE, 1,
