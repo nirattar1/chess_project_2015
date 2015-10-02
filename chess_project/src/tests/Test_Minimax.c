@@ -81,7 +81,11 @@ void Test_Minimax_simple_tree ()
 	int childIndex;	//used only on top level.
 	int childScore;
 
-	MinimaxChoose (&state, COLOR_WHITE, RootChildren, 0, max_depth,
+
+	//no pruning
+	MinimaxChoose (&state, RootChildren, 0, max_depth,
+			0, MIN_SCORE, MAX_SCORE,
+			COLOR_WHITE, 1,
 			TestScoring, TestChildrenGenerate,
 			&childIndex, &childScore);
 
@@ -103,11 +107,8 @@ void Test_Minimax_tree2_for_pruning ()
 	test_values[0] = 10;
 	test_values[1] = -10;
 	test_values[2] = 11;
-	test_values[3] = 12;
-	test_values[4] = 9;
-	test_values[5] = 8;
-	test_values[6] = -21;
-	test_values[7] = -24;
+	test_values[3] = 9;
+	test_values[4] = 8;
 	//get initial children list from given state.
 	STATE_TYPE state = 7000;
 	ListNode * RootChildren = TestChildrenGenerate(state);
@@ -116,7 +117,10 @@ void Test_Minimax_tree2_for_pruning ()
 	int childIndex;	//used only on top level.
 	int childScore;
 
-	MinimaxChoose (&state, COLOR_WHITE, RootChildren, 0, max_depth,
+	//no pruning
+	MinimaxChoose (&state, RootChildren, 0, max_depth,
+			1, MIN_SCORE, MAX_SCORE,
+			COLOR_WHITE, 1,
 			TestScoring, TestChildrenGenerate,
 			&childIndex, &childScore);
 
