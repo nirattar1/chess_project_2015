@@ -1,4 +1,4 @@
-#include "Draughts.h"
+#include "Chess.h"
 #include "Game.h"
 #include "Memory.h"
 #include "Console_ui.h"
@@ -27,7 +27,6 @@ int main (int argc, char * argv[])
 #endif
 
 
-	printf(WELCOME_TO_DRAUGHTS);
 
 	//init game rules
 	RulesInit();

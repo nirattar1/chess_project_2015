@@ -5,13 +5,21 @@
  *      Author: nirattar
  */
 
+#include "../Chess.h"
 #include "Test_Minimax.h"
-#include "../Draughts.h"
+#include "Test_Main.h"
+#include "../Memory.h"
+#include "Test_GameBasic.h"
+
+//declarations
+int ListTest ();
+void Test_GameWithMinimax();
+
 
 void Test_Main ()
 {
 
-	printf(WELCOME_TO_DRAUGHTS);
+
 
 	//init game rules
 	RulesInit();
@@ -26,13 +34,13 @@ void Test_Main ()
 
 	//ListTest ();
 
-	//GameTest ();
+	GameTest();
 
 	//original_main();
 
 	//Test_Minimax();
 
-	Test_GameWithMinimax();
+	//Test_GameWithMinimax();
 
 	//Test_Files();
 

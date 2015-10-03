@@ -5,17 +5,23 @@
  *      Author: nirattar
  */
 
+#include "../Chess.h"
 #include "../Game.h"
-#include "../Draughts.h"
 #include "../Memory.h"
 
-void BasicTest (game_state_t * game);
+void Test_PiecesDirections (game_state_t * game);
 void MoveTest(game_state_t * game);
 void MoveListTest(game_state_t * game);
 void GetMovesBasicTest(game_state_t * game);
 void GetMoves1Capture(game_state_t * game);
+void GetMoves1SuccessiveCapture(game_state_t * game);
 void Test_CaptureBackwards(game_state_t * game);
 void Test_Kings(game_state_t * game);
+void Test_GetAllPieces(game_state_t * game);
+void Test_GetAllPiecesMoves(game_state_t * game);
+void Test_ScoringFunction(game_state_t * game);
+void MovesListPerform( LINK head , game_state_t * game);
+
 
 void GameTest ()
 {
@@ -28,7 +34,7 @@ void GameTest ()
 	//GameDefaultLayout(&game);
 
 	GameInit(&game, (char **)board);
-	BasicTest(&game);
+	Test_PiecesDirections(&game);
 
 	GameInit(&game, (char **)board);
 	MoveTest(&game);
@@ -63,7 +69,7 @@ void GameTest ()
 }
 
 
-void BasicTest (game_state_t * game)
+void Test_PiecesDirections (game_state_t * game)
 {
 
 
@@ -71,38 +77,44 @@ void BasicTest (game_state_t * game)
 	PrintBoard(game);
 
 	//position
-	// (h, 2)
-	position_t pos = Position ('h', 2);
 
-	//put something on board.
-	SetPiece(pos, WHITE_M, game);
+	//put all of them on board.
+	SetPiece(Position ('h', 2), WHITE_M, game);
+	SetPiece(Position ('h', 3), WHITE_B, game);
+	SetPiece(Position ('h', 4), WHITE_N, game);
+	SetPiece(Position ('h', 5), WHITE_R, game);
+	SetPiece(Position ('h', 6), WHITE_Q, game);
+	SetPiece(Position ('h', 7), WHITE_K, game);
+	SetPiece(Position ('a', 8), BLACK_M, game);
+	SetPiece(Position ('b', 7), BLACK_B, game);
+	SetPiece(Position ('c', 6), BLACK_N, game);
+	SetPiece(Position ('d', 5), BLACK_R, game);
+	SetPiece(Position ('e', 4), BLACK_Q, game);
+	SetPiece(Position ('f', 3), BLACK_K, game);
 	PrintBoard(game);
 
 
-
 	//get piece allowed directions.
-	direction_t * dirs = GetPieceDirections(WHITE_K);
+	char piece = GetPiece(Position ('c',6), game);
+	direction_t * dirs = GetPieceDirections(piece);
+	printf ("for piece %c: ", piece);
 	while (*dirs != 0)
 	{
-		printf ("allowed direction : %d \n", *dirs);
+		printf ("allowed direction : %d ,", *dirs);
 		dirs++;
-
 	}
-
-
+	printf ("\n");
 
 }
 
 void MoveTest(game_state_t * game)
 {
 
-
-
 	//position
 	// (h, 2)
-	position_t pos = Position ('h', 2);
+	position_t pos = Position ('a', 2);
 	//put something on board.
-	SetPiece(pos, WHITE_M, game);
+	SetPiece(pos, WHITE_R, game);
 	PrintBoard(game);
 
 
@@ -110,7 +122,7 @@ void MoveTest(game_state_t * game)
 	move_t * move1 = (move_t *) mymalloc(sizeof (move_t));
 	move1->src = pos;
 	move1->num_captures = 0;
-	move1->dest[0] = Position('g',3);
+	move1->dest[0] = Position('a',5);
 
 
 	//do 1 move.
@@ -213,7 +225,6 @@ void GetMovesBasicTest(game_state_t * game)
 	PrintBoard(game);
 
 
-
 	ListNode * list1 = GetMovesForPiece(game, piece1);
 
 	ListNode * list2 = GetMovesForPiece(game, piece2);
@@ -225,6 +236,7 @@ void GetMovesBasicTest(game_state_t * game)
 	ListFreeElements(list1, MoveFree);
 
 	ListFreeElements(list2, MoveFree);
+
 }
 
 

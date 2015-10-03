@@ -15,7 +15,7 @@
 /*************
  * BASIC GAME DEFINITIONS
  * ***********/
-#define BOARD_SIZE 10
+#define BOARD_SIZE 8
 #define MAX_PIECES_PLAYER 20
 
 
@@ -24,10 +24,19 @@
 
 
 //pieces identities
-#define MAX_IDENTITIES 4
+#define MAX_IDENTITIES 12
 #define WHITE_M 'm'
+#define WHITE_B 'b'
+#define WHITE_N 'n'
+#define WHITE_R 'r'
+#define WHITE_Q 'q'
 #define WHITE_K 'k'
+
 #define BLACK_M 'M'
+#define BLACK_B 'B'
+#define BLACK_N 'N'
+#define BLACK_R 'R'
+#define BLACK_Q 'Q'
 #define BLACK_K 'K'
 #define EMPTY ' '
 
@@ -48,14 +57,13 @@ color_t GetOppositeColor(color_t player);
 /*************
  * POSITIONS ON BOARD
  * ***********/
-//enum of the 4 directions you can walk on board.
-//(for chess: add more: for horse, tower etc.)
+//enum of the directions pieces can move on board.
 typedef enum
 {
-	UP_RIGHT  = 1 ,
-	UP_LEFT,
-	DOWN_RIGHT,
-	DOWN_LEFT
+	UP_RIGHT  = 1 ,	UP_LEFT,	DOWN_RIGHT,	DOWN_LEFT,
+	UP,	DOWN,	RIGHT,	LEFT,
+	KNIGHT_1,	KNIGHT_2,	KNIGHT_3,	KNIGHT_4,
+	KNIGHT_5,	KNIGHT_6,	KNIGHT_7,	KNIGHT_8
 } direction_t;
 
 
@@ -63,10 +71,19 @@ typedef enum
 //see RulesInit-  fills these values.
 direction_t * all_allowed_directions [MAX_IDENTITIES];
 
-direction_t allowed_directions_whitem [3];
-direction_t allowed_directions_whitek [5];
-direction_t allowed_directions_blackm [3];
-direction_t allowed_directions_blackk [5];
+direction_t allowed_directions_whitem [4];
+direction_t allowed_directions_whiteb [5];
+direction_t allowed_directions_whiten [9];
+direction_t allowed_directions_whiter [5];
+direction_t allowed_directions_whiteq [9];
+direction_t allowed_directions_whitek [9];
+
+direction_t allowed_directions_blackm [4];
+direction_t allowed_directions_blackb [5];
+direction_t allowed_directions_blackn [9];
+direction_t allowed_directions_blackr [5];
+direction_t allowed_directions_blackq [9];
+direction_t allowed_directions_blackk [9];
 
 
 //fills values of all_allowed_directions based on rules.

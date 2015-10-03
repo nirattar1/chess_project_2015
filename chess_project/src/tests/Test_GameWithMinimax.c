@@ -1,6 +1,6 @@
+#include "../Chess.h"
 #include "../Game.h"
 #include "../Minimax.h"
-#include "../Draughts.h"
 
 void CPUTurn (game_state_t * game);
 void Test_CPUTurn (game_state_t * game);

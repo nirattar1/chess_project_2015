@@ -13,19 +13,45 @@
 
 direction_t * all_allowed_directions [MAX_IDENTITIES];
 
+//TODO special behavior pawn capture!
+direction_t allowed_directions_whitem [4] = {UP, UP_LEFT, UP_RIGHT, 0};
+direction_t allowed_directions_whiteb [5] = {UP_LEFT, UP_RIGHT, DOWN_LEFT, DOWN_RIGHT, 0};
+direction_t allowed_directions_whiten [9] =
+	{KNIGHT_1, KNIGHT_2, KNIGHT_3, KNIGHT_4, KNIGHT_5, KNIGHT_6, KNIGHT_7, KNIGHT_8, 0};
+direction_t allowed_directions_whiter [5] = {UP, DOWN, LEFT, RIGHT, 0};
+direction_t allowed_directions_whiteq [9] =
+	{UP_LEFT, UP_RIGHT, DOWN_LEFT, DOWN_RIGHT, UP, DOWN, LEFT, RIGHT, 0};
+direction_t allowed_directions_whitek [9] =
+	{UP_LEFT, UP_RIGHT, DOWN_LEFT, DOWN_RIGHT, UP, DOWN, LEFT, RIGHT, 0};
 
-direction_t allowed_directions_whitem [3] = {UP_LEFT, UP_RIGHT, 0};
-direction_t allowed_directions_whitek [5] = {UP_LEFT, UP_RIGHT, DOWN_LEFT, DOWN_RIGHT, 0};
-direction_t allowed_directions_blackm [3] = {DOWN_LEFT, DOWN_RIGHT, 0};
-direction_t allowed_directions_blackk [5] = {UP_LEFT, UP_RIGHT, DOWN_LEFT, DOWN_RIGHT, 0};
+//TODO special behavior pawn capture!
+direction_t allowed_directions_blackm [4] = {DOWN, DOWN_LEFT, DOWN_RIGHT, 0};
+direction_t allowed_directions_blackb [5] = {UP_LEFT, UP_RIGHT, DOWN_LEFT, DOWN_RIGHT, 0};
+direction_t allowed_directions_blackn [9] =
+	{KNIGHT_1, KNIGHT_2, KNIGHT_3, KNIGHT_4, KNIGHT_5, KNIGHT_6, KNIGHT_7, KNIGHT_8, 0};
+direction_t allowed_directions_blackr [5] = {UP, DOWN, LEFT, RIGHT, 0};
+direction_t allowed_directions_blackq [9] =
+	{UP_LEFT, UP_RIGHT, DOWN_LEFT, DOWN_RIGHT, UP, DOWN, LEFT, RIGHT, 0};
+direction_t allowed_directions_blackk [9] =
+	{UP_LEFT, UP_RIGHT, DOWN_LEFT, DOWN_RIGHT, UP, DOWN, LEFT, RIGHT, 0};
+
 
 
 void RulesInit ()
 {
 	all_allowed_directions [0] = allowed_directions_whitem;
-	all_allowed_directions [1] = allowed_directions_whitek;
-	all_allowed_directions [2] = allowed_directions_blackm;
-	all_allowed_directions [3] = allowed_directions_blackk;
+	all_allowed_directions [1] = allowed_directions_whiteb;
+	all_allowed_directions [2] = allowed_directions_whiten;
+	all_allowed_directions [3] = allowed_directions_whiter;
+	all_allowed_directions [4] = allowed_directions_whiteq;
+	all_allowed_directions [5] = allowed_directions_whitek;
+	all_allowed_directions [6] = allowed_directions_blackm;
+	all_allowed_directions [7] = allowed_directions_blackb;
+	all_allowed_directions [8] = allowed_directions_blackn;
+	all_allowed_directions [9] = allowed_directions_blackr;
+	all_allowed_directions [10] = allowed_directions_blackq;
+	all_allowed_directions [11] = allowed_directions_blackk;
+
 }
 
 
@@ -313,12 +339,19 @@ int IsKing (piece_t piece)
 direction_t * GetPieceDirections (char identity)
 {
 	if (identity == WHITE_M) {	return all_allowed_directions[0];};
-	if (identity == WHITE_K) {	return all_allowed_directions[1];};
-	if (identity == BLACK_M) {	return all_allowed_directions[2];};
-	if (identity == BLACK_K) {	return all_allowed_directions[3];};
+	if (identity == WHITE_B) {	return all_allowed_directions[1];};
+	if (identity == WHITE_N) {	return all_allowed_directions[2];};
+	if (identity == WHITE_R) {	return all_allowed_directions[3];};
+	if (identity == WHITE_Q) {	return all_allowed_directions[4];};
+	if (identity == WHITE_K) {	return all_allowed_directions[5];};
+	if (identity == BLACK_M) {	return all_allowed_directions[6];};
+	if (identity == BLACK_B) {	return all_allowed_directions[7];};
+	if (identity == BLACK_N) {	return all_allowed_directions[8];};
+	if (identity == BLACK_R) {	return all_allowed_directions[9];};
+	if (identity == BLACK_Q) {	return all_allowed_directions[10];};
+	if (identity == BLACK_K) {	return all_allowed_directions[11];};
 
 	return NULL;
-
 
 }
 

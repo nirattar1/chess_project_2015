@@ -8,9 +8,10 @@
 #include <stdio.h>
 #include <string.h>
 #include "Memory.h"
-#include "Draughts.h"
 #include "tests/Test_Minimax.h"
 #include <math.h>
+
+#include "Chess.h"
 //initialize global
 int _NUM_LEAVES = 0;
 

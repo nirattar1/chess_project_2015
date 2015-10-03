@@ -8,7 +8,8 @@
 #include <stdlib.h>
 #include "Memory.h"
 #include <stdio.h>
-#include "Draughts.h"
+
+#include "Chess.h"
 
 int CNT_CALLS_MALLOC = 0;
 int CNT_CALLS_FREE = 0;

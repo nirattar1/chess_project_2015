@@ -8,7 +8,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "Draughts.h"
+
+#include "Chess.h"
 
 void ClearCharBuffer (char * buffer, int buflen)
 {
@@ -37,6 +38,9 @@ int readline (char * line)
 int Menu_Settings(game_state_t * game, char ** board)
 {
 
+
+	//print the board
+	PrintBoard(game);
 
 	//buffer to store commands
 	char line[MAX_COMMAND_LENGTH];
@@ -227,7 +231,7 @@ move_t Menu_PlayUser(game_state_t * game)
 	ClearCharBuffer (line, MAX_COMMAND_LENGTH);
 
 	//print the command to enter settings to the user
-	printf(ENTER_YOUR_MOVE);
+	printf("XXXXXX- enter your move !! ");
 
 
 	//get the list of user's moves.
