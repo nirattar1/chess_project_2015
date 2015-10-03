@@ -197,9 +197,12 @@ void MoveListTest(game_state_t * game)
 }
 
 
+void GetMovesBasicRook()
+{
 
+}
 
-
+//get moves for all pieces types
 void GetMovesBasicTest(game_state_t * game)
 {
 
@@ -663,3 +666,4 @@ void Test_Kings(game_state_t * game)
 
 
 }
+

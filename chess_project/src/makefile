@@ -1,10 +1,10 @@
-all: Chess 
+all: chessprog 
 
 clean:
-	-rm Chess.o Game.o ListNode.o Memory.o Minimax.o Console_ui.o Test_Main.o Chess
+	-rm Chess.o Game.o ListNode.o Memory.o Minimax.o Console_ui.o Test_Main.o chessprog
 
-Chess: Chess.o Game.o ListNode.o Memory.o Minimax.o Console_ui.o Tests
-	gcc -o Chess Chess.o Game.o ListNode.o Memory.o Minimax.o Console_ui.o Test_Main.o Test_GameBasic.o -lm -std=c99 -pedantic-errors -g
+chessprog: Chess.o Game.o ListNode.o Memory.o Minimax.o Console_ui.o Tests
+	gcc -o chessprog Chess.o Game.o ListNode.o Memory.o Minimax.o Console_ui.o Test_Main.o Test_GameBasic.o -lm -std=c99 -pedantic-errors -g
 
 Chess.o: Chess.h Chess.c
 	gcc -std=c99 -pedantic-errors -c -Wall -g -lm Chess.c

@@ -9,7 +9,7 @@
 #include "Test_Minimax.h"
 #include "Test_Main.h"
 #include "../Memory.h"
-#include "Test_GameBasic.h"
+
 
 //declarations
 int ListTest ();
@@ -48,3 +48,4 @@ void Test_Main ()
 
 
 }
+

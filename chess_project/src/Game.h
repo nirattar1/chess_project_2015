@@ -90,6 +90,14 @@ direction_t allowed_directions_blackk [9];
 void RulesInit ();
 
 
+//will receive identity and return its allowed directions.
+direction_t * GetPieceDirections (char identity);
+
+//will return the maximum number of hops possible for 1 move of the piece.
+//i.e. for queen, rook, bishop - can move up to BOARD_SIZE-1.
+//for king, knight, pawn - only 1.
+int GetPieceNumOfSteps();
+
 //struct for position (spot) on board.
 //has x and y coordinates for column and row respectively.
 typedef struct
@@ -251,18 +259,16 @@ move_t * MoveCreate (position_t src, position_t dest);
 //frees a move
 void MoveFree( void * data );
 
-//will receive identity and return its allowed directions.
-direction_t * GetPieceDirections (char identity);
-
 
 //get all the pieces of certain color
 void GetAllPieces (game_state_t * game, color_t color, piece_t * array, int * cnt_pieces);
 
 
-//get possible moves for 1 piece in game.
-ListNode * GetMovesForPiece (game_state_t * game, piece_t piece);
 
 ListNode * GetSuccessiveCapturesFromMove (game_state_t * game, move_t * baseMove);
+
+//get possible moves for 1 piece in game.
+ListNode * GetMovesForPiece (game_state_t * game, piece_t piece);
 
 //get all the possible moves for player in game.
 //updates list moves.
