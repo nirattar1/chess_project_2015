@@ -3,9 +3,16 @@
 #include "Memory.h"
 #include "Console_ui.h"
 #include "Minimax.h"
-#include "tests/Test_Minimax.h"
 
 
+#ifdef TESTING
+	#include "tests/Test_Main.h"
+	//TO FIX- comment out
+	int ListTest ();
+	int GameTest();
+	void Test_Minimax();
+	void Test_GameWithMinimax();
+#endif
 
 
 //default settings initialization.
@@ -15,19 +22,19 @@ int SETTINGS_MAX_DEPTH = DEFAULT_MAX_DEPTH;
 
 
 
-
-//TO FIX- comment out
-int ListTest ();
-int GameTest();
-void Test_Minimax();
-void Test_GameWithMinimax();
-
-
-int main ()
+int main (int argc, char * argv[])
 {
+
+	//on testing, execute different main.
+#ifdef TESTING
+	Test_Main();
+	exit (0);
+#endif
+
 
 	printf(WELCOME_TO_DRAUGHTS);
 
+	//init game rules
 	RulesInit();
 
 	//initialize game state.
@@ -35,24 +42,12 @@ int main ()
 	game_state_t game;
 	char board [BOARD_SIZE][BOARD_SIZE];
 
-	//ListTest ();
+	//clear board, put default layout
+	GameInit(&game, (char **) board);
+	GameDefaultLayout(&game);
 
-	//GameTest ();
-
-	//original_main();
-
-	//Test_Minimax();
-
-	//Test_GameWithMinimax();
-
-	Test_Files();
-
-//	//clear board, put default layout
-//	GameInit(&game, (char **) board);
-//	GameDefaultLayout(&game);
-//
-//	//start console ui
-//	Menu_Settings(&game, (char **) board);
+	//start console ui
+	Menu_Settings(&game, (char **) board);
 
 	memory_print();
 

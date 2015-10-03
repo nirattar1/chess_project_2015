@@ -37,7 +37,4 @@ void MinimaxChoose (
 		ListNode * (*ChildGenerateFunction)(STATE_TYPE *, color_t),
 		int * chosenSon, int * chosenValue); //by reference, will update these for caller.
 
-int ArrFindMaxOrMin (int * array, int arr_size,
-		int find_max, int * chosenValue, int * chosenIndex);
-
 #endif /* MINIMAX_H_ */

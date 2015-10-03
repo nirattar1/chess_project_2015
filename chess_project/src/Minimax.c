@@ -15,6 +15,31 @@
 int _NUM_LEAVES = 0;
 
 
+static void UpdateState(STATE_TYPE * state, STATE_TYPE * newState, ListNode * pChildren,
+		//TO FIX- remove if not needed
+		int current_depth, int iChild)
+{
+
+	//TO FIX
+//		char newBoard [BOARD_SIZE][BOARD_SIZE];
+//		newState->pieces = (board_column *) newBoard;
+//		CopyGameState(newState, state);
+	//for debug ints:
+	memcpy (newState, state, sizeof (STATE_TYPE));
+
+	//TO FIX
+	//update state based on child (play move)
+	//DoMove( (move_t *) pChildren->data , newState);
+	//for debug ints:
+	TestUpdateState (newState, current_depth, iChild);
+
+	//debug
+	DEBUG_PRINT(("if i play move %d board will look like:\n ", iChild));
+	if (IS_DEBUG)
+	{
+		//PrintBoard(newState);
+	}
+}
 
 //note: maximizing player==root player.
 void MinimaxChoose (
@@ -65,44 +90,28 @@ void MinimaxChoose (
 		return;
 	}
 
+	//initial value
+	int v = 0;
 	if (current_turn_is_maximizing)
 	{
 		//MAXIMIZING PLAYER
 		//get initial value
-		int v = MIN_SCORE;
+		v = MIN_SCORE;
 		//for each child (move):
 		int iChild = 0;
 		ListNode * pChildren = NULL;
 		for (pChildren = Children; pChildren !=NULL; pChildren = pChildren->next )
 		{
 
-			//create static copy of state.
+			//create static copy of state and update it.
 			STATE_TYPE newState;
-			//TO FIX
-	//		char newBoard [BOARD_SIZE][BOARD_SIZE];
-	//		newState.pieces = (board_column *) newBoard;
-	//		CopyGameState(&newState, state);
-			//for debug ints:
-			memcpy (&newState, state, sizeof (STATE_TYPE));
 
-			//TO FIX
-			//update state based on child (play move)
-			//DoMove( (move_t *) pChildren->data , &newState);
-			//for debug ints:
-			TestUpdateState (&newState, current_depth, iChild);
-
-			//debug
-			DEBUG_PRINT(("if i play move %d board will look like:\n ", iChild));
-			if (IS_DEBUG)
-			{
-				//PrintBoard(&newState);
-			}
+			UpdateState(state, &newState, pChildren, current_depth, iChild);
 
 			//call recursively (next player's move) to determine the score from this child.
 
 			int childIndex;	//not really used.
 			int childScore;
-
 
 			//compute next turn (opposite color, minimizing player)
 			MinimaxChoose(&newState, NULL, current_depth+1, max_depth,
@@ -123,24 +132,20 @@ void MinimaxChoose (
 			iChild++;
 
 			//prune if needed
-			//(don't continue to next child
+			//(don't continue to next child)
 			if (enable_pruning && beta <= alpha)
 			{
-				DEBUG_PRINT(("beta cut off. pruning child."));
+				DEBUG_PRINT(("beta cut off. pruning child.\n"));
 				break;
 			}
 		}
-
-		//return value from this node up.
-		*chosenValue = v;
-		//chosenSon was already updated.
 
 	}
 	else
 	{
 		//MINIMIZING PLAYER
 		//get initial value
-		int v = MAX_SCORE;
+		v = MAX_SCORE;
 		//for each child (move):
 		int iChild = 0;
 		ListNode * pChildren = NULL;
@@ -149,31 +154,12 @@ void MinimaxChoose (
 
 			//create static copy of state.
 			STATE_TYPE newState;
-			//TO FIX
-	//		char newBoard [BOARD_SIZE][BOARD_SIZE];
-	//		newState.pieces = (board_column *) newBoard;
-	//		CopyGameState(&newState, state);
-			//for debug ints:
-			memcpy (&newState, state, sizeof (STATE_TYPE));
-
-			//TO FIX
-			//update state based on child (play move)
-			//DoMove( (move_t *) pChildren->data , &newState);
-			//for debug ints:
-			TestUpdateState (&newState, current_depth, iChild);
-
-			//debug
-			DEBUG_PRINT(("if i play move %d board will look like:\n ", iChild));
-			if (IS_DEBUG)
-			{
-				//PrintBoard(&newState);
-			}
+			UpdateState(state, &newState, pChildren, current_depth, iChild);
 
 			//call recursively (next player's move) to determine the score from this child.
 
 			int childIndex;	//not really used.
 			int childScore;
-
 
 			//compute next turn (opposite color, maximizing player)
 			MinimaxChoose(&newState, NULL, current_depth+1, max_depth,
@@ -194,20 +180,20 @@ void MinimaxChoose (
 			iChild++;
 
 			//prune if needed
-			//(don't continue to next child
+			//(don't continue to next child)
 			if (enable_pruning && beta <= alpha)
 			{
-				DEBUG_PRINT(("alpha cut off. pruning child."));
+				DEBUG_PRINT(("alpha cut off. pruning child.\n"));
 				break;
 			}
 		}
 
-		//return value from this node up.
-		*chosenValue = v;
-		//chosenSon was already updated.
 
 	}
 
+	//return value from this node up.
+	*chosenValue = v;
+	//chosenSon was already updated.
 
 	//free all children (got what we need from them).
 	//(only on depth > 0), because caller needs children in level 0
@@ -220,41 +206,5 @@ void MinimaxChoose (
 
 
 	return;
-}
-
-//find max or min value in array
-//if find_max = 1 -> will find max.
-//if find_max = 0 -> will find min.
-//will update : chosenValue with the value.
-// chosenIndex with the index.
-//if array is of length 0 , will return -1.
-int ArrFindMaxOrMin (int * array, int arr_size,
-		int find_max, int * chosenValue, int * chosenIndex)
-{
-	if (!array || arr_size==0)
-	{
-		return -1;
-	}
-
-	//initialize values
-	int extremeValue = array[0];
-	int extremeIndex = 0;
-
-	//loop through array and find the extreme value.
-	for (int i=0; i<arr_size; i++)
-	{
-		//if found a value that exceeds the extreme, change indication.
-		if (((find_max==1) && array[i] > extremeValue)
-			|| ((find_max==0) && array[i] < extremeValue))
-		{
-			extremeValue = array[i];
-			extremeIndex = i;
-		}
-	}
-
-	//update return arguments.
-	*chosenValue = extremeValue;
-	*chosenIndex = extremeIndex;
-	return 1;
 }
 

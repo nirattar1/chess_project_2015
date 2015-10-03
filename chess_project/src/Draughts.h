@@ -16,6 +16,13 @@
 # define DEBUG_PRINT(x) do {} while (0)
 #endif
 
+
+//for unit testing,
+//if defined will run tests main instead of main.
+#define TESTING
+
+
+
 #include <stdlib.h>
 #include <stdio.h>
 #include "Game.h"

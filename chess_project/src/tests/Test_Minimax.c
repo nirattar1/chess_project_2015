@@ -5,6 +5,7 @@
  *      Author: nirattar
  */
 
+#include "Test_Minimax.h"
 #include "../Minimax.h"
 #include "Test_List.h"
 
