@@ -11,4 +11,11 @@
 //will execute all the tests
 void Test_Main ();
 
+
+//declarations
+int ListTest ();
+int GameTest();
+void Test_GameWithMinimax();
+
+
 #endif /* SRC_TESTS_TEST_MAIN_H_ */

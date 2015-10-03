@@ -7,11 +7,6 @@
 
 #ifdef TESTING
 	#include "tests/Test_Main.h"
-	//TO FIX- comment out
-	int ListTest ();
-	int GameTest();
-	void Test_Minimax();
-	void Test_GameWithMinimax();
 #endif
 
 
@@ -168,10 +163,11 @@ void CPUTurn (game_state_t * game)
 	int childIndex;
 	int childScore;
 
-	///TO FIX - uncomment this
-	//	MinimaxChoose (game, color, RootChildren, 0, max_depth,
-	//			DraughtsScoringFunction, GetMovesForPlayer,
-	//			&childIndex, &childScore);
+	MinimaxChoose (game,  RootChildren, 0, max_depth,
+				1, MIN_SCORE, MAX_SCORE,	//pruning=true
+				color,1,					//define CPU color as maximizing, start as maximizer
+				DraughtsScoringFunction, GetMovesForPlayer,
+				&childIndex, &childScore);
 
 	DEBUG_PRINT( ("index %d was chosen. will lead to score of %d\n", childIndex, childScore));
 

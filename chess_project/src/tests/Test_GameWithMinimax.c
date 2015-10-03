@@ -18,9 +18,6 @@ void Test_GameWithMinimax ()
 	GameInit(&game, (char **)board);
 	Test_CPUTurn(&game);
 
-	//set some layout.
-	//GameDefaultLayout(&game);
-
 
 
 

@@ -11,10 +11,14 @@
 #ifndef MINIMAX_H_
 #define MINIMAX_H_
 
-//for testing
-#define STATE_TYPE int
-//for draughts
-//#define STATE_TYPE game_state_t
+
+//#define MINIMAX_TESTING_STATE_TYPE_INTS
+#ifdef MINIMAX_TESTING_STATE_TYPE_INTS
+	#define STATE_TYPE int
+#else
+	#define STATE_TYPE game_state_t
+#endif
+
 
 //for testing
 extern int _NUM_LEAVES;

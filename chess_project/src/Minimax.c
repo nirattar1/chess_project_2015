@@ -16,28 +16,25 @@ int _NUM_LEAVES = 0;
 
 
 static void UpdateState(STATE_TYPE * state, STATE_TYPE * newState, ListNode * pChildren,
-		//TO FIX- remove if not needed
-		int current_depth, int iChild)
+		int iChild)
 {
 
-	//TO FIX
-//		char newBoard [BOARD_SIZE][BOARD_SIZE];
-//		newState->pieces = (board_column *) newBoard;
-//		CopyGameState(newState, state);
-	//for debug ints:
-	memcpy (newState, state, sizeof (STATE_TYPE));
 
-	//TO FIX
+	CopyGameState(newState, state);
+//	//for debug ints:
+//	memcpy (newState, state, sizeof (STATE_TYPE));
+
+
 	//update state based on child (play move)
-	//DoMove( (move_t *) pChildren->data , newState);
-	//for debug ints:
-	TestUpdateState (newState, current_depth, iChild);
+	DoMove( (move_t *) pChildren->data , newState);
+//	//for debug ints:
+//	TestUpdateState (newState, current_depth, iChild);
 
 	//debug
 	DEBUG_PRINT(("if i play move %d board will look like:\n ", iChild));
 	if (IS_DEBUG)
 	{
-		//PrintBoard(newState);
+		PrintBoard(newState);
 	}
 }
 
@@ -52,7 +49,7 @@ void MinimaxChoose (
 		int * chosenSon, int * chosenValue) //by reference, will update these for caller.
 {
 
-	//TO FIX
+
 	//debug (only for ints)
 	//DEBUG_PRINT(("current state: %d\n", *((int *) state)));
 
@@ -105,8 +102,9 @@ void MinimaxChoose (
 
 			//create static copy of state and update it.
 			STATE_TYPE newState;
-
-			UpdateState(state, &newState, pChildren, current_depth, iChild);
+			char newBoard [BOARD_SIZE][BOARD_SIZE];
+			newState.pieces = (board_column *) newBoard;
+			UpdateState(state, &newState, pChildren, iChild);
 
 			//call recursively (next player's move) to determine the score from this child.
 
@@ -120,7 +118,7 @@ void MinimaxChoose (
 			ScoringFunction, ChildGenerateFunction, &childIndex, &childScore);
 
 			//update v and alpha to the max.
-			if (childScore >= v)
+			if (childScore > v)
 			{
 				v = childScore ;
 				*chosenSon = iChild ;
@@ -154,7 +152,9 @@ void MinimaxChoose (
 
 			//create static copy of state.
 			STATE_TYPE newState;
-			UpdateState(state, &newState, pChildren, current_depth, iChild);
+			char newBoard [BOARD_SIZE][BOARD_SIZE];
+			newState.pieces = (board_column *) newBoard;
+			UpdateState(state, &newState, pChildren, iChild);
 
 			//call recursively (next player's move) to determine the score from this child.
 
@@ -167,8 +167,8 @@ void MinimaxChoose (
 			maximizing_player, 1,	//1 == maximizing.
 			ScoringFunction, ChildGenerateFunction, &childIndex, &childScore);
 
-			//update v and beta to the max.
-			if (childScore <= v)
+			//update v and beta to the min.
+			if (childScore < v)
 			{
 				v = childScore ;
 				*chosenSon = iChild ;
@@ -199,9 +199,10 @@ void MinimaxChoose (
 	//(only on depth > 0), because caller needs children in level 0
 	if (current_depth!=0)
 	{
-		//TO FIX
-		//ListFreeElements(Children, MoveFree);
-		ListFreeElements(Children, intlist_free);
+
+		ListFreeElements(Children, MoveFree);
+		//for debug ints
+		//ListFreeElements(Children, intlist_free);
 	}
 
 

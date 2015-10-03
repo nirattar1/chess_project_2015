@@ -9,6 +9,8 @@
 #include "../Minimax.h"
 #include "Test_List.h"
 
+#ifdef MINIMAX_TESTING_STATE_TYPE_INTS
+
 #define MAX_TEST_VALUES 16
 int test_values [MAX_TEST_VALUES];
 
@@ -138,3 +140,5 @@ void TestUpdateState(int * state, int depth, int iChild)
 {
 	*state = *state + (depth * 10) + (iChild+1) ;
 }
+
+#endif

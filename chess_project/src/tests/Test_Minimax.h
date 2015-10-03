@@ -8,6 +8,7 @@
 #ifndef SRC_TESTS_TEST_MINIMAX_H_
 #define SRC_TESTS_TEST_MINIMAX_H_
 
+#ifdef MINIMAX_TESTING_STATE_TYPE_INTS
 /*
  * Test_Minimax.c
  *
@@ -34,3 +35,5 @@ void Test_Minimax ();
 void TestUpdateState(int * state, int depth, int iChild);
 
 #endif /* SRC_TESTS_TEST_MINIMAX_H_ */
+
+#endif

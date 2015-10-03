@@ -2,7 +2,7 @@
 #define DRAUGHTS_
 
 //debug
-#define DEBUG
+//#define DEBUG
 
 #ifdef DEBUG
 	#define IS_DEBUG 1
@@ -19,7 +19,7 @@
 
 //for unit testing,
 //if defined will run tests main instead of main.
-#define TESTING
+//#define TESTING
 
 
 

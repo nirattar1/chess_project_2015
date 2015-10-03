@@ -30,9 +30,9 @@ void Test_Main ()
 
 	//original_main();
 
-	Test_Minimax();
+	//Test_Minimax();
 
-	//Test_GameWithMinimax();
+	Test_GameWithMinimax();
 
 	//Test_Files();
 
