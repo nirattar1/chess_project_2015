@@ -557,7 +557,7 @@ ListNode * GetMovesForPiece (game_state_t * game, piece_t piece)
 	//generate moves.
 	//for each direction
 
-	//determine how far the piece can go in the first destination
+	//determine how far the piece can go in direction
 	int max_distance = GetPieceMaxNumOfHops(piece.identity);
 
 	for (; *directions != 0; directions++)
