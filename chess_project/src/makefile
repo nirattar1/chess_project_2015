@@ -4,10 +4,10 @@ CFLAGS=`xml2-config --cflags`
 LIBS=`xml2-config --libs`
 
 clean:
-	-rm Chess.o Game.o ListNode.o Memory.o Minimax.o Console_ui.o Test_Main.o Test_GameBasic.o Test_Files.o chessprog
+	-rm Chess.o Game.o ListNode.o Memory.o Minimax.o Console_ui.o Files.o Test_Main.o Test_GameBasic.o Test_Files.o chessprog
 
-chessprog: Chess.o Game.o ListNode.o Memory.o Minimax.o Console_ui.o Tests
-	gcc -o chessprog Chess.o Game.o ListNode.o Memory.o Minimax.o Console_ui.o Test_Main.o Test_GameBasic.o Test_Files.o -lm -std=c99 -pedantic-errors -g `xml2-config --libs`
+chessprog: Chess.o Game.o ListNode.o Memory.o Minimax.o Console_ui.o Files.o Tests
+	gcc -o chessprog Chess.o Game.o ListNode.o Memory.o Minimax.o Console_ui.o Files.o Test_Main.o Test_GameBasic.o Test_Files.o -lm -std=c99 -pedantic-errors -g `xml2-config --libs`
 
 Chess.o: Chess.h Chess.c
 	gcc -std=c99 -pedantic-errors -c -Wall -g -lm Chess.c
@@ -27,8 +27,8 @@ Minimax.o: Minimax.h Minimax.c
 Console_ui.o: Console_ui.h Console_ui.c
 	gcc -std=c99 -pedantic-errors -c -Wall -g -lm Console_ui.c
 
-Files.o: Files.h
-	gcc -std=c99 -pedantic-errors -c -Wall -g -lm Files.c
+Files.o: Files.h Files.c
+	gcc -std=c99 -pedantic-errors -c -Wall -g -lm Files.c `xml2-config --cflags`
 
 
 #TODO makefile - from here only for testing - not needed

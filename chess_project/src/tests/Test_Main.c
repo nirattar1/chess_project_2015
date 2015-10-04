@@ -24,13 +24,13 @@ void Test_Main ()
 	//init game rules
 	RulesInit();
 
-	//initialize game state.
-	//(empty layout)
-	game_state_t game;
-	char board [BOARD_SIZE][BOARD_SIZE];
-
-	//clear board, put default layout
-	GameInit(&game, (char **) board);
+//	//initialize game state.
+//	//(empty layout)
+//	game_state_t game;
+//	char board [BOARD_SIZE][BOARD_SIZE];
+//
+//	//clear board, put default layout
+//	GameInit(&game, (char **) board);
 
 	//ListTest ();
 

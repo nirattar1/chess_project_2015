@@ -7,12 +7,16 @@
 
 #include "../Files.h"
 #include "Test_Files.h"
+#include "../Chess.h"
 
 void Test_Files ()
 {
-	xml_create_tree();
+	//xml_create_tree();
 
-	xml_read_from_tree();
+	//xml_read_from_tree();
+
+	Test_SaveGame();
+
 }
 
 
@@ -174,3 +178,33 @@ xml_read_from_tree()
 }
 
 
+//test. creates test game and saves it.
+void Test_SaveGame()
+{
+	//initialize game state.
+	//(empty layout)
+	game_state_t game;
+	char board [BOARD_SIZE][BOARD_SIZE];
+	//TODO bug in default layout
+	//GameDefaultLayout(&game);
+
+	//put some layout and print it
+	GameInit(&game, (char **)board);
+
+	//put all of them on board.
+	SetPiece(Position ('h', 2), WHITE_M, &game);
+	SetPiece(Position ('h', 3), WHITE_B, &game);
+	SetPiece(Position ('h', 4), WHITE_N, &game);
+	SetPiece(Position ('h', 5), WHITE_R, &game);
+	SetPiece(Position ('h', 6), WHITE_Q, &game);
+	SetPiece(Position ('h', 7), WHITE_K, &game);
+	SetPiece(Position ('a', 8), BLACK_M, &game);
+	SetPiece(Position ('b', 7), BLACK_B, &game);
+	SetPiece(Position ('c', 6), BLACK_N, &game);
+	SetPiece(Position ('d', 5), BLACK_R, &game);
+	SetPiece(Position ('e', 4), BLACK_Q, &game);
+	SetPiece(Position ('f', 3), BLACK_K, &game);
+	PrintBoard(&game);
+
+	SaveGame(&game, "mygame.xml");
+}

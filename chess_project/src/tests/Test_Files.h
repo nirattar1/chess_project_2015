@@ -12,4 +12,6 @@ void Test_Files();
 int xml_create_tree();
 int xml_read_from_tree();
 
+void Test_SaveGame();
+
 #endif /* SRC_TESTS_TEST_FILES_H_ */
