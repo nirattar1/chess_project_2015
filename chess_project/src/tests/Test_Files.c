@@ -6,6 +6,7 @@
  */
 
 #include "../Files.h"
+#include "Test_Files.h"
 
 void Test_Files ()
 {
@@ -134,7 +135,7 @@ print_element_names(xmlNode * a_node)
  * xml elements nodes.
  */
 int
-xml_read_from_tree(int argc, char **argv)
+xml_read_from_tree()
 {
     xmlDoc *doc = NULL;
     xmlNode *root_element = NULL;

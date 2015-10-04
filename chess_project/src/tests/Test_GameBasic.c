@@ -66,6 +66,8 @@ void GameTest ()
 
 	GameInit(&game, (char **)board);
 	Test_Kings(&game);
+
+	memory_print();
 }
 
 
