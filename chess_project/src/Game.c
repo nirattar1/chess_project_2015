@@ -13,8 +13,12 @@
 
 direction_t * all_allowed_directions [MAX_IDENTITIES];
 
-//TODO special behavior pawn capture!
-direction_t allowed_directions_whitem [4] = {UP, UP_LEFT, UP_RIGHT, 0};
+//allowed directions.
+//for all pieces except pawn,
+//the allowed directions are same for simple move and for capture move.
+//for pawn there is a separate array for capture directions.
+direction_t allowed_directions_whitem [2] = {UP, 0};
+direction_t allowed_directions_whitem_for_capture [3] = {UP_RIGHT, UP_LEFT, 0};
 direction_t allowed_directions_whiteb [5] = {UP_LEFT, UP_RIGHT, DOWN_LEFT, DOWN_RIGHT, 0};
 direction_t allowed_directions_whiten [9] =
 	{KNIGHT_1, KNIGHT_2, KNIGHT_3, KNIGHT_4, KNIGHT_5, KNIGHT_6, KNIGHT_7, KNIGHT_8, 0};
@@ -24,8 +28,8 @@ direction_t allowed_directions_whiteq [9] =
 direction_t allowed_directions_whitek [9] =
 	{UP_LEFT, UP_RIGHT, DOWN_LEFT, DOWN_RIGHT, UP, DOWN, LEFT, RIGHT, 0};
 
-//TODO special behavior pawn capture!
-direction_t allowed_directions_blackm [4] = {DOWN, DOWN_LEFT, DOWN_RIGHT, 0};
+direction_t allowed_directions_blackm [2] = {DOWN, 0};
+direction_t allowed_directions_blackm_for_capture [3] = {DOWN_RIGHT, DOWN_LEFT, 0};
 direction_t allowed_directions_blackb [5] = {UP_LEFT, UP_RIGHT, DOWN_LEFT, DOWN_RIGHT, 0};
 direction_t allowed_directions_blackn [9] =
 	{KNIGHT_1, KNIGHT_2, KNIGHT_3, KNIGHT_4, KNIGHT_5, KNIGHT_6, KNIGHT_7, KNIGHT_8, 0};
@@ -110,6 +114,67 @@ position_t GetPositionRelative
 		dest.x = source.x - numSteps;
 		dest.y = source.y - numSteps;
 	}
+
+	if (direction == UP)
+	{
+		dest.x = source.x;
+		dest.y = source.y + numSteps;
+	}
+	if (direction == LEFT)
+	{
+		dest.x = source.x - numSteps;
+		dest.y = source.y;
+	}
+	if (direction == RIGHT)
+	{
+		dest.x = source.x + numSteps;
+		dest.y = source.y;
+	}
+	if (direction == DOWN)
+	{
+		dest.x = source.x;
+		dest.y = source.y - numSteps;
+	}
+	if (direction == KNIGHT_1)
+	{
+		dest.x = source.x + 1;
+		dest.y = source.y + 2;
+	}
+	if (direction == KNIGHT_2)
+	{
+		dest.x = source.x + 2;
+		dest.y = source.y + 1;
+	}
+	if (direction == KNIGHT_3)
+	{
+		dest.x = source.x + 2;
+		dest.y = source.y - 1;
+	}
+	if (direction == KNIGHT_4)
+	{
+		dest.x = source.x + 1;
+		dest.y = source.y - 2;
+	}
+	if (direction == KNIGHT_5)
+	{
+		dest.x = source.x - 1;
+		dest.y = source.y - 2;
+	}
+	if (direction == KNIGHT_6)
+	{
+		dest.x = source.x - 2;
+		dest.y = source.y - 1;
+	}
+	if (direction == KNIGHT_7)
+	{
+		dest.x = source.x - 2;
+		dest.y = source.y + 1;
+	}
+	if (direction == KNIGHT_8)
+	{
+		dest.x = source.x - 1;
+		dest.y = source.y + 2;
+	}
 	return dest;
 }
 
@@ -164,6 +229,66 @@ int PositionInBounds (position_t pos)
 	}
 
 	return 1;
+}
+
+//will receive identity and return its allowed directions.
+direction_t * GetPieceDirections (char identity)
+{
+	if (identity == WHITE_M) {	return all_allowed_directions[0];};
+	if (identity == WHITE_B) {	return all_allowed_directions[1];};
+	if (identity == WHITE_N) {	return all_allowed_directions[2];};
+	if (identity == WHITE_R) {	return all_allowed_directions[3];};
+	if (identity == WHITE_Q) {	return all_allowed_directions[4];};
+	if (identity == WHITE_K) {	return all_allowed_directions[5];};
+	if (identity == BLACK_M) {	return all_allowed_directions[6];};
+	if (identity == BLACK_B) {	return all_allowed_directions[7];};
+	if (identity == BLACK_N) {	return all_allowed_directions[8];};
+	if (identity == BLACK_R) {	return all_allowed_directions[9];};
+	if (identity == BLACK_Q) {	return all_allowed_directions[10];};
+	if (identity == BLACK_K) {	return all_allowed_directions[11];};
+
+	return NULL;
+}
+
+direction_t * GetPawnCaptureDirections (char identity)
+{
+	if (identity == WHITE_M) {return allowed_directions_whitem_for_capture;};
+	if (identity == BLACK_M) {return allowed_directions_blackm_for_capture;};
+	return NULL;
+}
+
+
+int GetPieceMaxNumOfHops(char identity)
+{
+	switch (identity)
+	{
+		case WHITE_M:
+			return 1;
+		case WHITE_B:
+			return (BOARD_SIZE-1);
+		case WHITE_N:
+			return 1;
+		case WHITE_R:
+			return (BOARD_SIZE-1);
+		case WHITE_Q:
+			return (BOARD_SIZE-1);
+		case WHITE_K:
+			return 1;
+		case BLACK_M:
+			return 1;
+		case BLACK_B:
+			return (BOARD_SIZE-1);
+		case BLACK_N:
+			return 1;
+		case BLACK_R:
+			return (BOARD_SIZE-1);
+		case BLACK_Q:
+			return (BOARD_SIZE-1);
+		case BLACK_K:
+			return 1;
+		default:
+			return -1;
+	}
 }
 
 
@@ -241,43 +366,7 @@ void GameDefaultLayout (game_state_t * game)
 
 }
 
-//
-void SetPiece (position_t pos, char identity, game_state_t * game )
-{
-	game->pieces[GetMatrixCol(pos)][GetMatrixRow(pos)] = identity;
-}
 
-char GetPiece (position_t pos, game_state_t * game)
-{
-	return game->pieces[GetMatrixCol(pos)][GetMatrixRow(pos)];
-}
-
-
-//will get all pieces of player with given color
-//build an array of pieces
-//will fill caller the array and pieces count.
-void GetAllPieces (game_state_t * game, color_t color, piece_t * array, int * cnt_pieces)
-{
-
-	*cnt_pieces = 0;
-
-	for (int i = 0; i < BOARD_SIZE; i++)
-	{
-		for (int j = 0; j < BOARD_SIZE; j++)
-		{
-
-			position_t pos = PositionFromMatrixCoordinates(i, j);
-			//reached user's piece
-			if (GetPiece(pos, game) != EMPTY && GetPieceColor(game, pos) == color)
-			{
-				array[*cnt_pieces].position = pos;
-				array[*cnt_pieces].identity = GetPiece(pos, game);
-				(*cnt_pieces) ++;
-			}
-		}
-	}
-
-}
 
 
 int SameColor(game_state_t * game, position_t pos1, position_t pos2)
@@ -335,26 +424,45 @@ int IsKing (piece_t piece)
 		return 0;
 }
 
-//will receive identity and return its allowed directions.
-direction_t * GetPieceDirections (char identity)
+
+
+//
+void SetPiece (position_t pos, char identity, game_state_t * game )
 {
-	if (identity == WHITE_M) {	return all_allowed_directions[0];};
-	if (identity == WHITE_B) {	return all_allowed_directions[1];};
-	if (identity == WHITE_N) {	return all_allowed_directions[2];};
-	if (identity == WHITE_R) {	return all_allowed_directions[3];};
-	if (identity == WHITE_Q) {	return all_allowed_directions[4];};
-	if (identity == WHITE_K) {	return all_allowed_directions[5];};
-	if (identity == BLACK_M) {	return all_allowed_directions[6];};
-	if (identity == BLACK_B) {	return all_allowed_directions[7];};
-	if (identity == BLACK_N) {	return all_allowed_directions[8];};
-	if (identity == BLACK_R) {	return all_allowed_directions[9];};
-	if (identity == BLACK_Q) {	return all_allowed_directions[10];};
-	if (identity == BLACK_K) {	return all_allowed_directions[11];};
-
-	return NULL;
-
+	game->pieces[GetMatrixCol(pos)][GetMatrixRow(pos)] = identity;
 }
 
+char GetPiece (position_t pos, game_state_t * game)
+{
+	return game->pieces[GetMatrixCol(pos)][GetMatrixRow(pos)];
+}
+
+
+//will get all pieces of player with given color
+//build an array of pieces
+//will fill caller the array and pieces count.
+void GetAllPieces (game_state_t * game, color_t color, piece_t * array, int * cnt_pieces)
+{
+
+	*cnt_pieces = 0;
+
+	for (int i = 0; i < BOARD_SIZE; i++)
+	{
+		for (int j = 0; j < BOARD_SIZE; j++)
+		{
+
+			position_t pos = PositionFromMatrixCoordinates(i, j);
+			//reached user's piece
+			if (GetPiece(pos, game) != EMPTY && GetPieceColor(game, pos) == color)
+			{
+				array[*cnt_pieces].position = pos;
+				array[*cnt_pieces].identity = GetPiece(pos, game);
+				(*cnt_pieces) ++;
+			}
+		}
+	}
+
+}
 
 //scoring function to use with minimax.
 //based on player color and game state.
@@ -418,20 +526,14 @@ int DraughtsScoringFunction (game_state_t * game, color_t maximizing_player)
 
 
 
-//tells if the move represented by 3 positions, is a valid capture.
-//* note! assumes that the pieces aligned on same diagonal.
-//checks 3 conditions:
-//1. new dest. is in board boundaries.
-//2. piece in middle is not empty and has opposite color.
-//3. new dest. is empty
-//returns 1 if valid, return 0 if not valid.
-int IsValidCapture (game_state_t * game, position_t source, position_t middlePos, position_t newDest)
+
+int IsValidCapture (game_state_t * game, position_t source, position_t newDest)
 {
 
 	return (PositionInBounds (newDest)
-			&& (GetPiece(middlePos, game) != EMPTY)
-			&& !SameColor(game, source, middlePos)
-			&& (GetPiece(newDest, game) == EMPTY));
+			&& (GetPiece(newDest, game) != EMPTY)
+			&& (GetPiece(source, game) != EMPTY)
+			&& !SameColor(game, source, newDest));
 }
 
 
@@ -449,14 +551,14 @@ ListNode * GetMovesForPiece (game_state_t * game, piece_t piece)
 	//prepare list .
 	ListNode * list = NULL;
 
-	//get possible directions for normal (non-capture) move.
+	//get possible directions for simple (non-capture) move.
 	direction_t * directions = GetPieceDirections(piece.identity);
 
 	//generate moves.
 	//for each direction
 
 	//determine how far the piece can go in the first destination
-	int max_distance = (IsKing(piece)) ? 10 : 1;
+	int max_distance = GetPieceMaxNumOfHops(piece.identity);
 
 	for (; *directions != 0; directions++)
 	{
@@ -470,15 +572,16 @@ ListNode * GetMovesForPiece (game_state_t * game, piece_t piece)
 			position_t dest = GetPositionRelative(piece.position, direction, distance);
 			if (!PositionInBounds(dest))
 			{
-				continue;
+				//no point in going more in this direction
+				break;
 			}
 
 			//position is empty. generate simple move.
 			if (GetPiece(dest, game) == EMPTY)
 			{
-
 				//generate new move.
 				move_t * newmove = MoveCreate(piece.position, dest);
+				//TODO do promotion for pawn.
 
 				//add move to the list.
 				ListNode ** listp = &list;
@@ -486,172 +589,76 @@ ListNode * GetMovesForPiece (game_state_t * game, piece_t piece)
 				list = *listp;
 			}
 
-		}
-	}
-
-
-	//try to generate capture moves (on all directions)
-	//capture moves are on all directions (take direction array of some king)
-	directions = allowed_directions_whitek;
-	for (; *directions != 0; directions++)
-	{
-		direction_t direction = *directions;
-
-		//loop through all the allowed distances (if piece has them).
-		for (int distance = 1; distance <= max_distance ; distance++)
-		{
-
-			//get 1 possible destination position.
-			position_t dest = GetPositionRelative(piece.position, direction, distance);
-			if (!PositionInBounds(dest))
-			{
-				continue;
-			}
-			//position is occupied.
-			//try generating capture moves from it.
-			if (GetPiece(dest, game) != EMPTY)
+			else if (!IsMan(piece))
+				//piece is not pawn, and is blocked by another piece.
+				//will try to capture in same direction.
+				//(pawn captures separately)
 			{
 
-				//go 1 spot further in direction (loop for king)
-				position_t afterDest = GetPositionRelative(dest, direction, 1);
-
-				//TODO king check on each possible landing position
+				//try to generate capture move (once)
 
 				//check validity of capture.
-				if (IsValidCapture(game, piece.position, dest, afterDest))
+				if (IsValidCapture(game, piece.position, dest))
 				{
 
 					//generate new capture move.
-					move_t * newmove = MoveCreate(piece.position, afterDest);
+					move_t * newmove = MoveCreate(piece.position, dest);
 					newmove->num_captures = 1;
 
-					//get list of successive capture moves starting from this move.
-					ListNode * captures = GetSuccessiveCapturesFromMove(game, newmove);
-
+					//add move to the list.
 					ListNode ** listp = &list;
-					//if call returned null - just add move to the main list.
-					if (!captures)
-					{
-						//add move to the list.
-						ListPushBackElement (listp, (void *) newmove, sizeof (move_t));
-					}
-					else
-					{
-						//if call returned a not null (list) - concat. with main list
-						ListConcat(listp, captures);
-						myfree(newmove);
-					}
-					//update list pointer .
+					ListPushBackElement (listp, (void *) newmove, sizeof (move_t));
 					list = *listp;
 				}
+				//no point in going more in this direction
+				//(either capture opponent's piece or blocked by same color piece.)
+				break;
 			}
 
 		}
 	}
 
+	//TODO generate capture moves for pawn.
+	if (IsMan(piece))
+	{
+		//get possible directions for pawn capture.
+		direction_t * directions = GetPawnCaptureDirections(piece.identity);
+
+		for (; *directions != 0; directions++)
+		{
+			direction_t direction = *directions;
+			//get 1 possible destination position.
+			position_t dest = GetPositionRelative(piece.position, direction, 1); //in this case max_distance == 1
+			if (!PositionInBounds(dest))
+			{
+				//out of bounds, try next direction
+				continue;
+			}
+
+			//position is not empty. try to generate valid capture move.
+			if (GetPiece(dest, game) != EMPTY && IsValidCapture(game, piece.position, dest))
+			{
+				//generate new capture move.
+				//TODO do promotion for pawn.
+				move_t * newmove = MoveCreate(piece.position, dest);
+				newmove->num_captures = 1;
+
+				//add move to the list.
+				ListNode ** listp = &list;
+				ListPushBackElement (listp, (void *) newmove, sizeof (move_t));
+				list = *listp;
+			}
+
+			//if not a valid capture, move on
+		}
+	}
 
 	//iterated on both normal moves and eat moves.
-
-
-	return list;
-}
-
-
-
-
-//gets a capture move (move with num_captures > 0).
-//returns a list of ALL the capture moves, that are based on this move.
-//recursive function. it will try to generate routes until no more captures can be done.
-//(all these moves will have num_captures >= 1).
-ListNode * GetSuccessiveCapturesFromMove (game_state_t * game, move_t * baseMove)
-{
-	//get the last position from move.
-	position_t source = baseMove->dest [(baseMove->num_captures - 1)];
-
-	//build moves list.
-	ListNode * list = NULL;
-	int foundCaptures = 0;
-
-	//get possible directions
-	//ALL directions are valid in successive captures (equal to king).
-	//note: possible distances are only 1
-	direction_t * directions = GetPieceDirections(WHITE_K);
-
-	//generate moves.
-
-	//for each direction
-	for (; *directions != 0; directions++)
-	{
-
-		direction_t direction = *directions;
-
-		//get destination
-		position_t middlePos = GetPositionRelative(source, direction, 1);
-		position_t newDest = GetPositionRelative(source, direction, 2);
-		//if possible to eat:
-
-		if (baseMove->num_captures>=2)
-		{
-			//check if moves are equal.
-			//TODO use memcmp
-			if (newDest.x == baseMove->dest [(baseMove->num_captures - 2)].x
-					&& newDest.y == baseMove->dest [(baseMove->num_captures - 2)].y)
-				continue;
-		}
-		if (IsValidCapture (game, source, middlePos, newDest))
-		{
-			//report found.
-			foundCaptures = 1;
-
-			//duplicate baseMove into newMove.
-			move_t * newMove = (move_t *) mymalloc(sizeof (move_t));
-			memcpy((void *)newMove, (void *) baseMove, sizeof (move_t));
-
-			//add new_dest to destinations of newMove.
-			newMove->dest[newMove->num_captures] = newDest;
-
-			//increment capture counts
-			newMove->num_captures++;
-
-			//call recursively with newMove.
-			ListNode * Captures = GetSuccessiveCapturesFromMove(game, newMove);
-
-
-			//if call returned null - create a list with one move (this destination) and return it.
-			ListNode ** listp = &list;
-			if (!Captures)
-			{
-				//add move to the list.
-				ListPushBackElement (listp, (void *) newMove, sizeof (move_t));
-			}
-			//if call returned a not null (list) - concat with main list
-			else
-			{
-				ListConcat(listp, Captures);
-			}
-			//update list pointer
-			list = *listp;
-
-
-		}
-	}
-	//if haven't found any successive capture - return null.
-	if (!foundCaptures)
-	{
-		return NULL;
-		//caller will be responsible for freeing base move.
-	}
+	//return the generated list.
 
 	return list;
 }
 
-
-//get all the possible moves for player 'color' in game.
-//will generate and return a list of the moves.
-//basic algorithm:
-//1. iterate on all pieces of the player in the game.
-//2. for each piece, run GetMovesForPiece and collect the moves.
-//3. optional - sort moves by number of captures.
 ListNode * GetMovesForPlayer (game_state_t * game, color_t color)
 {
 
@@ -675,6 +682,102 @@ ListNode * GetMovesForPlayer (game_state_t * game, color_t color)
 
 	return allMoves;
 }
+
+//TODO remove, not needed for chess
+////gets a capture move (move with num_captures > 0).
+////returns a list of ALL the capture moves, that are based on this move.
+////recursive function. it will try to generate routes until no more captures can be done.
+////(all these moves will have num_captures >= 1).
+//ListNode * GetSuccessiveCapturesFromMove (game_state_t * game, move_t * baseMove)
+//{
+//	//get the last position from move.
+//	position_t source = baseMove->dest [(baseMove->num_captures - 1)];
+//
+//	//build moves list.
+//	ListNode * list = NULL;
+//	int foundCaptures = 0;
+//
+//	//get possible directions
+//	//ALL directions are valid in successive captures (equal to king).
+//	//note: possible distances are only 1
+//	direction_t * directions = GetPieceDirections(WHITE_K);
+//
+//	//generate moves.
+//
+//	//for each direction
+//	for (; *directions != 0; directions++)
+//	{
+//
+//		direction_t direction = *directions;
+//
+//		//get destination
+//		position_t middlePos = GetPositionRelative(source, direction, 1);
+//		position_t newDest = GetPositionRelative(source, direction, 2);
+//		//if possible to eat:
+//
+//		if (baseMove->num_captures>=2)
+//		{
+//			//check if moves are equal.
+//			//TODO use memcmp
+//			if (newDest.x == baseMove->dest [(baseMove->num_captures - 2)].x
+//					&& newDest.y == baseMove->dest [(baseMove->num_captures - 2)].y)
+//				continue;
+//		}
+//		if (IsValidCapture (game, source, middlePos, newDest))
+//		{
+//			//report found.
+//			foundCaptures = 1;
+//
+//			//duplicate baseMove into newMove.
+//			move_t * newMove = (move_t *) mymalloc(sizeof (move_t));
+//			memcpy((void *)newMove, (void *) baseMove, sizeof (move_t));
+//
+//			//add new_dest to destinations of newMove.
+//			newMove->dest[newMove->num_captures] = newDest;
+//
+//			//increment capture counts
+//			newMove->num_captures++;
+//
+//			//call recursively with newMove.
+//			ListNode * Captures = GetSuccessiveCapturesFromMove(game, newMove);
+//
+//
+//			//if call returned null - create a list with one move (this destination) and return it.
+//			ListNode ** listp = &list;
+//			if (!Captures)
+//			{
+//				//add move to the list.
+//				ListPushBackElement (listp, (void *) newMove, sizeof (move_t));
+//			}
+//			//if call returned a not null (list) - concat with main list
+//			else
+//			{
+//				ListConcat(listp, Captures);
+//			}
+//			//update list pointer
+//			list = *listp;
+//
+//
+//		}
+//	}
+//	//if haven't found any successive capture - return null.
+//	if (!foundCaptures)
+//	{
+//		return NULL;
+//		//caller will be responsible for freeing base move.
+//	}
+//
+//	return list;
+//}
+
+
+//get all the possible moves for player 'color' in game.
+//will generate and return a list of the moves.
+//basic algorithm:
+//1. iterate on all pieces of the player in the game.
+//2. for each piece, run GetMovesForPiece and collect the moves.
+//3. optional - sort moves by number of captures.
+
 
 
 void ClearPiecesInBetween (game_state_t * game, position_t src, position_t dest)

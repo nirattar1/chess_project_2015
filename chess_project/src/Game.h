@@ -71,14 +71,16 @@ typedef enum
 //see RulesInit-  fills these values.
 direction_t * all_allowed_directions [MAX_IDENTITIES];
 
-direction_t allowed_directions_whitem [4];
+direction_t allowed_directions_whitem [2];
+direction_t allowed_directions_whitem_for_capture [3];
 direction_t allowed_directions_whiteb [5];
 direction_t allowed_directions_whiten [9];
 direction_t allowed_directions_whiter [5];
 direction_t allowed_directions_whiteq [9];
 direction_t allowed_directions_whitek [9];
 
-direction_t allowed_directions_blackm [4];
+direction_t allowed_directions_blackm [2];
+direction_t allowed_directions_blackm_for_capture [3];
 direction_t allowed_directions_blackb [5];
 direction_t allowed_directions_blackn [9];
 direction_t allowed_directions_blackr [5];
@@ -93,10 +95,14 @@ void RulesInit ();
 //will receive identity and return its allowed directions.
 direction_t * GetPieceDirections (char identity);
 
+//will receive identity of pawn, and return its allowed directions FOR A CAPTURE MOVE.
+//(diagonal, based on black or white pawn).
+direction_t * GetPawnCaptureDirections (char identity);
+
 //will return the maximum number of hops possible for 1 move of the piece.
 //i.e. for queen, rook, bishop - can move up to BOARD_SIZE-1.
 //for king, knight, pawn - only 1.
-int GetPieceNumOfSteps();
+int GetPieceMaxNumOfHops(char identity);
 
 //struct for position (spot) on board.
 //has x and y coordinates for column and row respectively.
@@ -232,8 +238,13 @@ int GameWinning(game_state_t * game, color_t color);
 /*************
  * MOVES ON BOARD
 ************/
-
-int IsValidCapture (game_state_t * game, position_t source, position_t middlePos, position_t newDest);
+//tells if the move represented by 2 positions, is a valid capture.
+//checks 3 conditions:
+//1. new dest. is in board boundaries.
+//2. both positions are not empty.
+//3. destination has a piece of opposite color.
+//returns 1 if valid, return 0 if not valid.
+int IsValidCapture (game_state_t * game, position_t source, position_t newDest);
 
 //maximum captures in 1 move (if eat all opponents).
 #define MAX_CAPTURES_MOVE 20
@@ -246,6 +257,7 @@ typedef struct
 	position_t 	src;
 	//series of destination positions (1 on normal move, more on successive captures).
 	position_t 	dest [MAX_CAPTURES_MOVE];
+	//TODO dest is only 1 now.
 	//the number of captures in this move
 	int 		num_captures;
 } move_t;
@@ -264,8 +276,8 @@ void MoveFree( void * data );
 void GetAllPieces (game_state_t * game, color_t color, piece_t * array, int * cnt_pieces);
 
 
-
-ListNode * GetSuccessiveCapturesFromMove (game_state_t * game, move_t * baseMove);
+//TODO remove, not needed for chess
+//ListNode * GetSuccessiveCapturesFromMove (game_state_t * game, move_t * baseMove);
 
 //get possible moves for 1 piece in game.
 ListNode * GetMovesForPiece (game_state_t * game, piece_t piece);
