@@ -773,59 +773,28 @@ ListNode * GetMovesForPlayer (game_state_t * game, color_t color)
 
 
 
-void ClearPiecesInBetween (game_state_t * game, position_t src, position_t dest)
-{
-	//get the direction between the two
-	direction_t direction = GetDirection (src, dest);
-	int distance = GetDistance (src, dest);
-	//start diagonally from src until dest, clear everyone in the way.
-	//(it's okay because of draughts capture rules)
-	for (int i=1; i < distance; i++)
-	{
-		//clear everyone on the way
-		SetPiece (GetPositionRelative(src, direction, i), EMPTY, game);
-	}
-}
-
 //does the move, does not check validation.
+//also does promotion if exists.
 void DoMove (move_t * move, game_state_t * game)
 {
 
-	//get identity and destinations
+	//get original identity and destinations
 	char identity = GetPiece (move->src, game);
 	position_t * destinations = move->dest;
 
 	//clear source
 	SetPiece(move->src, EMPTY, game);
 
+	//get destination
+	position_t final = destinations[0];
 
-	//clear along the way
-	int i;
-	position_t prev = move->src; 	//remember the last spot and kill in between
-	for (i=0; i<move->num_captures; i++)
+	//if promotion, get updated identity
+	if (move->promote_to_identity!=0)
 	{
-		position_t curr = destinations[i];
-
-		//perform capture (clear middle piece)
-		ClearPiecesInBetween(game, prev, curr);
-		prev = curr;
+		identity = move->promote_to_identity;
 	}
-
-	//mark final destination with identity
-
-	position_t final;
-	if (move->num_captures==0)
-	{
-		final = destinations[0];
-	}
-	else
-	{
-		final = destinations[move->num_captures-1];
-	}
-
+	//fill destination
 	SetPiece(final, identity, game);
-
-
 
 }
 
@@ -934,6 +903,7 @@ void MoveFree( void * data )
 }
 
 //returns 1 if mymove is in list, 0 otherwise
+//TODO fix this. compare move based on everything..
 int FindMoveInList (ListNode * moves, move_t * mymove)
 {
 
@@ -962,3 +932,53 @@ int FindMoveInList (ListNode * moves, move_t * mymove)
 
 	return 0;
 }
+
+position_t GetKingPosition (game_state_t * game, color_t color)
+{
+	//get player's pieces
+	int cntPiecesPlayer;//will count how many pieces player has.
+	piece_t piecesPlayer [MAX_PIECES_PLAYER]; //will be filled by pieces
+	GetAllPieces (game, color, piecesPlayer, &cntPiecesPlayer);
+
+	//iterate on pieces to find king
+	for (int i=0; i<cntPiecesPlayer; i++)
+	{
+		if (IsKing(piecesPlayer[i]) && color==GetColor(piecesPlayer[i].identity))
+		{
+			//it is color's king . return it's position
+			return piecesPlayer[i].position;
+		}
+
+	}
+
+	//return bad position (not supposed to happen)
+	return Position(0,0);
+}
+
+//return whether there is a 'check' state for player "color"
+//(if player's king is threatened).
+int IsCheckState (game_state_t * game, color_t color)
+{
+	//get opponent's moves.
+	ListNode * opp_moves = GetMovesForPlayer(game, GetOppositeColor(color));
+
+	//if one of the moves is capturing the king, return true.
+
+	//find player's king
+	position_t king_position = GetKingPosition (game, color);
+
+	//iterate through opponent's moves
+	for (; opp_moves != NULL; opp_moves = opp_moves->next)
+	{
+		//move is destined to capture the king's position
+		position_t dest = ((move_t *) opp_moves->data)->dest[0];
+		if (dest.x == king_position.x && dest.y == king_position.y)
+		{
+			return 1;
+		}
+	}
+
+	//no move captures player's king, return false.
+	return 0;
+}
+

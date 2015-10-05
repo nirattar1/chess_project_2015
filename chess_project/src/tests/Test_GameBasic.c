@@ -17,6 +17,7 @@ void Test_Pawn_Promotion_2(game_state_t * game);
 void DoMoveTest_1(game_state_t * game);
 void DoMoveTest_2_capture(game_state_t * game);
 void DoMoveTest_3_promotions(game_state_t * game);
+void Test_Check_State(game_state_t * game);
 void Test_Kings(game_state_t * game);
 void Test_GetAllPieces(game_state_t * game);
 void Test_GetAllPiecesMoves_1(game_state_t * game);
@@ -34,40 +35,42 @@ void GameTest ()
 
 
 	//GameDefaultLayout(&game);
+//
+//	GameInit(&game, (char **)board);
+//	Test_PiecesDirections(&game);
+//
+//	GameInit(&game, (char **)board);
+//	GetMovesBasicTest(&game);
+//
+//	GameInit(&game, (char **)board);
+//	GetMoves1Capture(& game);
+//
+//	GameInit(&game, (char **)board);
+//	Test_GetAllPieces(&game);
+//
+//	GameInit(&game, (char **)board);
+//	Test_GetAllPiecesMoves_1(&game);
+//
+//	GameInit(&game, (char **)board);
+//	Test_GetAllPiecesMoves_2(&game);
+//
+//	GameInit(&game, (char **)board);
+//	Test_Pawn_Promotion_1 (&game);
+//
+//	GameInit(&game, (char **)board);
+//	Test_Pawn_Promotion_2 (&game);
+//
+//	GameInit(&game, (char **)board);
+//	DoMoveTest_1(&game);
+
+//	GameInit(&game, (char **)board);
+//	DoMoveTest_2_capture(&game);
+
+//	GameInit(&game, (char **)board);
+//	DoMoveTest_3_promotions(&game);
 
 	GameInit(&game, (char **)board);
-	Test_PiecesDirections(&game);
-
-	GameInit(&game, (char **)board);
-	GetMovesBasicTest(&game);
-
-	GameInit(&game, (char **)board);
-	GetMoves1Capture(& game);
-
-	GameInit(&game, (char **)board);
-	Test_GetAllPieces(&game);
-
-	GameInit(&game, (char **)board);
-	Test_GetAllPiecesMoves_1(&game);
-
-	GameInit(&game, (char **)board);
-	Test_GetAllPiecesMoves_2(&game);
-
-	GameInit(&game, (char **)board);
-	Test_Pawn_Promotion_1 (&game);
-
-	GameInit(&game, (char **)board);
-	Test_Pawn_Promotion_2 (&game);
-
-	GameInit(&game, (char **)board);
-	DoMoveTest_1(&game);
-
-	GameInit(&game, (char **)board);
-	DoMoveTest_2_capture(&game);
-
-	GameInit(&game, (char **)board);
-	DoMoveTest_3_promotions(&game);
-
+	Test_Check_State (&game);
 
 //	GameInit(&game, (char **)board);
 //	Test_ScoringFunction(&game);
@@ -459,14 +462,23 @@ void DoMoveTest_2_capture(game_state_t * game)
 	ListNode * moves_white = GetMovesForPlayer(game, color);
 
 	printf("\n black's moves:\n");
-	MovesListPrint( moves_black);
+	MovesListPrint(moves_black);
 
 	printf("\n white's moves:\n");
-	MovesListPrint( moves_white);
+	MovesListPrint(moves_white);
 
+
+
+	//find relevant move in list
+	int move_index=5;
+	for (int i=0; i<move_index && moves_white!=NULL; i++)
+	{
+		//go on to next move
+		moves_white = moves_white->next;
+	}
 
 	//do 1 simple move (bishop)
-
+	DoMove((move_t *) moves_white->data, game);
 	PrintBoard(game);
 
 	//free list of moves.
@@ -482,12 +494,64 @@ void DoMoveTest_2_capture(game_state_t * game)
 	moves_white = GetMovesForPlayer(game, color);
 
 	printf("\n black's moves:\n");
-	MovesListPrint( moves_black);
+	MovesListPrint(moves_black);
 
 	printf("\n white's moves:\n");
-	MovesListPrint( moves_white);
+	MovesListPrint(moves_white);
 
-	//do 1 capture move (knight captures bishop)
+	//find relevant move in list
+	move_index=0;
+	for (int i=0; i<move_index && moves_black!=NULL; i++)
+	{
+		//go on to next move
+		moves_black = moves_black->next;
+	}
+
+	//do 1 capture move (black knight captures bishop)
+	DoMove((move_t *) moves_black->data, game);
+	PrintBoard(game);
+
+	//free list of moves.
+	ListFreeElements(moves_black, MoveFree);
+
+	ListFreeElements(moves_white, MoveFree);
+
+}
+
+//do 2 promotions , one by simple move and one by capture
+void DoMoveTest_3_promotions(game_state_t * game)
+{
+
+	SetPiece(Position ('h', 2), BLACK_M, game);
+	SetPiece(Position ('c', 8), BLACK_B, game);
+	SetPiece(Position ('d', 8), BLACK_Q, game);
+	SetPiece(Position ('c', 7), WHITE_M, game);
+	PrintBoard(game);
+
+	color_t color;
+	color = COLOR_BLACK;
+	ListNode * moves_black = GetMovesForPlayer(game, color);
+
+	color = COLOR_WHITE;
+	ListNode * moves_white = GetMovesForPlayer(game, color);
+
+	printf("\n black's moves:\n");
+	MovesListPrint(moves_black);
+
+	printf("\n white's moves:\n");
+	MovesListPrint(moves_white);
+
+	//find relevant move in list
+	int move_index=23;
+	for (int i=0; i<move_index && moves_black!=NULL; i++)
+	{
+		//go on to next move
+		moves_black = moves_black->next;
+	}
+
+	//do 1 promotion simple move (black man)
+	DoMove((move_t *) moves_black->data, game);
+	PrintBoard(game);
 
 	//free list of moves.
 	ListFreeElements(moves_black, MoveFree);
@@ -495,11 +559,84 @@ void DoMoveTest_2_capture(game_state_t * game)
 	ListFreeElements(moves_white, MoveFree);
 
 
+	color = COLOR_BLACK;
+	moves_black = GetMovesForPlayer(game, color);
+
+	color = COLOR_WHITE;
+	moves_white = GetMovesForPlayer(game, color);
+
+	printf("\n black's moves:\n");
+	MovesListPrint(moves_black);
+
+	printf("\n white's moves:\n");
+	MovesListPrint(moves_white);
+
+	//find relevant move in list
+	move_index=2;
+	for (int i=0; i<move_index && moves_white!=NULL; i++)
+	{
+		//go on to next move
+		moves_white = moves_white->next;
+	}
+
+	//do 1 promotion by capture move (white man captures queen)
+	DoMove((move_t *) moves_white->data, game);
+	PrintBoard(game);
+
+	//free list of moves.
+	ListFreeElements(moves_black, MoveFree);
+
+	ListFreeElements(moves_white, MoveFree);
+
+	//show moves one more time
+	color = COLOR_BLACK;
+	moves_black = GetMovesForPlayer(game, color);
+
+	color = COLOR_WHITE;
+	moves_white = GetMovesForPlayer(game, color);
+
+	printf("\n black's moves:\n");
+	MovesListPrint(moves_black);
+
+	printf("\n white's moves:\n");
+	MovesListPrint(moves_white);
+
+	//free list of moves.
+	ListFreeElements(moves_black, MoveFree);
+
+	ListFreeElements(moves_white, MoveFree);
+
+
+
 }
 
-void DoMoveTest_3_promotions(game_state_t * game)
+//test if a state considered to be check
+void Test_Check_State (game_state_t * game)
 {
-;
+	SetPiece(Position ('d', 4), WHITE_K, game);
+	SetPiece(Position ('f', 4), WHITE_R, game);
+	SetPiece(Position ('b', 5), BLACK_N, game);
+	PrintBoard(game);
+
+	printf("is check ? %d\n", IsCheckState(game, COLOR_WHITE));
+
+	GameInit(game, (char **) game->pieces);
+	SetPiece(Position ('d', 4), WHITE_K, game);
+	SetPiece(Position ('f', 4), WHITE_R, game);
+	SetPiece(Position ('b', 6), BLACK_N, game);
+	PrintBoard(game);
+
+	printf("is check ? %d\n", IsCheckState(game, COLOR_WHITE));
+
+	GameInit(game, (char **) game->pieces);
+	SetPiece(Position ('d', 4), WHITE_K, game);
+	SetPiece(Position ('f', 4), WHITE_R, game);
+	SetPiece(Position ('b', 6), BLACK_N, game);
+	SetPiece(Position ('e', 5), BLACK_M, game);
+	PrintBoard(game);
+
+	printf("is check ? %d\n", IsCheckState(game, COLOR_WHITE));
+
 }
 
 //get pieces

@@ -319,7 +319,8 @@ void DoMove (move_t * move, game_state_t * game);
 //find the move in allowed moves list (will update it's captures)
 int FindMoveInList (ListNode * moves, move_t * mymove);
 
-//will clear all the pieces in between two positions
-void ClearPiecesInBetween (game_state_t * game, position_t src, position_t dest);
+//return whether there is a 'check' state for player "color"
+//(if player's king is threatened).
+int IsCheckState (game_state_t * game, color_t color);
 
 #endif /* EX3_GAME_H_ */
