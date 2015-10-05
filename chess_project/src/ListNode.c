@@ -30,7 +30,7 @@ void ListInsertAfterLink(LINK l1, LINK l2)
 	l1-> next = l2;
 }
 
-void ListPushBackElement (LINK *head, void * data, size_t elem_size)
+void ListPushBackElement (LINK * head, void * data, size_t elem_size)
 {
 	//creates a new node around the data
 	ListNode * newnode = ListCreateNode( data , elem_size);

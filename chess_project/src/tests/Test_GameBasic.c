@@ -10,17 +10,19 @@
 #include "../Memory.h"
 
 void Test_PiecesDirections (game_state_t * game);
-void MoveTest(game_state_t * game);
-void MoveListTest(game_state_t * game);
 void GetMovesBasicTest(game_state_t * game);
 void GetMoves1Capture(game_state_t * game);
-void GetMoves1SuccessiveCapture(game_state_t * game);
-void Test_CaptureBackwards(game_state_t * game);
+void Test_Pawn_Promotion_1(game_state_t * game);
+void Test_Pawn_Promotion_2(game_state_t * game);
+void DoMoveTest_1(game_state_t * game);
+void DoMoveTest_2_capture(game_state_t * game);
+void DoMoveTest_3_promotions(game_state_t * game);
 void Test_Kings(game_state_t * game);
 void Test_GetAllPieces(game_state_t * game);
-void Test_GetAllPiecesMoves(game_state_t * game);
+void Test_GetAllPiecesMoves_1(game_state_t * game);
+void Test_GetAllPiecesMoves_2(game_state_t * game);
 void Test_ScoringFunction(game_state_t * game);
-void MovesListPerform( LINK head , game_state_t * game);
+static void MovesListPerform( LINK head , game_state_t * game);
 
 
 void GameTest ()
@@ -37,35 +39,43 @@ void GameTest ()
 	Test_PiecesDirections(&game);
 
 	GameInit(&game, (char **)board);
-	MoveTest(&game);
-
-	GameInit(&game, (char **)board);
-	MoveListTest(&game);
-
-	GameInit(&game, (char **)board);
 	GetMovesBasicTest(&game);
 
 	GameInit(&game, (char **)board);
 	GetMoves1Capture(& game);
 
 	GameInit(&game, (char **)board);
-	GetMoves1SuccessiveCapture(& game);
-
-	GameInit(&game, (char **)board);
 	Test_GetAllPieces(&game);
 
 	GameInit(&game, (char **)board);
-	Test_GetAllPiecesMoves(&game);
-
-
-	GameInit(&game, (char **)board);
-	Test_CaptureBackwards(&game);
+	Test_GetAllPiecesMoves_1(&game);
 
 	GameInit(&game, (char **)board);
-	Test_ScoringFunction(&game);
+	Test_GetAllPiecesMoves_2(&game);
 
 	GameInit(&game, (char **)board);
-	Test_Kings(&game);
+	Test_Pawn_Promotion_1 (&game);
+
+	GameInit(&game, (char **)board);
+	Test_Pawn_Promotion_2 (&game);
+
+	GameInit(&game, (char **)board);
+	DoMoveTest_1(&game);
+
+	GameInit(&game, (char **)board);
+	DoMoveTest_2_capture(&game);
+
+	GameInit(&game, (char **)board);
+	DoMoveTest_3_promotions(&game);
+
+
+//	GameInit(&game, (char **)board);
+//	Test_ScoringFunction(&game);
+//
+//	GameInit(&game, (char **)board);
+//	Test_Kings(&game);
+
+
 
 	memory_print();
 }
@@ -74,11 +84,8 @@ void GameTest ()
 void Test_PiecesDirections (game_state_t * game)
 {
 
-
 	//print empty board
 	PrintBoard(game);
-
-	//position
 
 	//put all of them on board.
 	SetPiece(Position ('h', 2), WHITE_M, game);
@@ -95,7 +102,6 @@ void Test_PiecesDirections (game_state_t * game)
 	SetPiece(Position ('f', 3), BLACK_K, game);
 	PrintBoard(game);
 
-
 	//get piece allowed directions.
 	char piece = GetPiece(Position ('c',6), game);
 	direction_t * dirs = GetPieceDirections(piece);
@@ -109,94 +115,7 @@ void Test_PiecesDirections (game_state_t * game)
 
 }
 
-void MoveTest(game_state_t * game)
-{
 
-	//position
-	// (h, 2)
-	position_t pos = Position ('a', 2);
-	//put something on board.
-	SetPiece(pos, WHITE_R, game);
-	PrintBoard(game);
-
-
-	//generate move
-	move_t * move1 = (move_t *) mymalloc(sizeof (move_t));
-	move1->src = pos;
-	move1->num_captures = 0;
-	move1->dest[0] = Position('a',5);
-
-
-	//do 1 move.
-	DoMove(move1, game);
-	PrintBoard(game);
-
-
-	myfree(move1);
-
-}
-
-
-#define NUM_TEST_MOVES 3
-void MoveListTest(game_state_t * game)
-{
-	//do list of moves
-
-	//set 1 piece.
-	position_t pos = Position('b', 4);
-	SetPiece (pos, BLACK_M, game);
-	PrintBoard(game);
-
-	move_t * moves [NUM_TEST_MOVES];
-
-	//create couple of simple moves (successive)
-	moves[0] = (move_t *) mymalloc(sizeof (move_t));
-	moves[0]->src = pos;
-	moves[0]->num_captures = 0;
-	moves[0]->dest[0] = Position('a',5);
-
-	moves[1] = (move_t *) mymalloc(sizeof (move_t));
-	moves[1]->src = moves[0]->dest[0];
-	moves[1]->num_captures = 0;
-	moves[1]->dest[0] = Position('b',6);
-
-	moves[2] = (move_t *) mymalloc(sizeof (move_t));
-	moves[2]->src = moves[1]->dest[0];
-	moves[2]->num_captures = 0;
-	moves[2]->dest[0] = Position('c',7);
-
-
-	//prepare a list for the moves.
-
-	ListNode * list = NULL;
-	//loop on array and add to list
-	for (int i=0; i<NUM_TEST_MOVES; i++)
-	{
-		//point to existing data
-		move_t * pMove = moves[i];
-
-		//create new node
-		ListNode * newnode = ListCreateNode( (void *) pMove , sizeof (move_t));
-
-		if (!list)
-		{
-			//list is empty- make node head of list.
-			list = newnode;
-		}
-		else
-		{
-			//list is not empty- concat.
-			ListNode ** listp = &list;
-			ListConcat( listp, newnode);
-			list = *listp;
-		}
-	}
-
-	MovesListPerform( list, game);
-
-	ListFreeElements(list, MoveFree);
-
-}
 
 
 void GetMovesBasicRook()
@@ -282,101 +201,55 @@ void GetMoves1Capture(game_state_t * game)
 }
 
 
-void GetMoves1SuccessiveCapture(game_state_t * game)
+
+
+
+//will test promotion of pawn.
+//pawn has 4 options - queen, bishop, rook, knight.
+void Test_Pawn_Promotion_1(game_state_t * game)
 {
-	//put a piece in position
-	position_t pos;
-	char identity;
 
-	pos = Position ('d', 4);
-	identity = WHITE_M;
-	SetPiece(pos, identity, game);
-	piece_t piece1 ;
-	piece1.identity = identity;
-	piece1.position = pos;
+	//start with 1 pawn approaching end
 
-	pos = Position ('c', 5);
-	identity = BLACK_M;
-	SetPiece(pos, identity, game);
-	piece_t piece2 ;
-	piece2.identity = identity;
-	piece2.position = pos;
-
-	pos = Position ('d', 2);
-	identity = WHITE_M;
-	SetPiece(pos, identity, game);
-	piece_t piece3 ;
-	piece3.identity = identity;
-	piece3.position = pos;
-
-	//b,2
-	pos = Position ('b', 2);
-	identity = WHITE_M;
-	SetPiece(pos, identity, game);
-
+	SetPiece(Position('a', 7), WHITE_M, game);
 	PrintBoard(game);
 
-	ListNode * list1 = GetMovesForPiece(game, piece1);
-
-	ListNode * list2 = GetMovesForPiece(game, piece2);
-
-	ListNode * list3 = GetMovesForPiece(game, piece3);
-
+	//get the moves. they should contain all the 4 options for pawn.
+	piece_t piece; 	piece.position = Position('a', 7); piece.identity = WHITE_M;
+	ListNode * list1 = GetMovesForPiece(game, piece);
 
 	MovesListPrint( list1);
 
-	MovesListPrint( list2);
-
-	MovesListPrint( list3);
-
 	ListFreeElements(list1, MoveFree);
+}
 
+
+//will test promotion of pawn.
+//this time with capture and other color
+void Test_Pawn_Promotion_2(game_state_t * game)
+{
+
+	//start with 1 pawn approaching end
+
+	SetPiece(Position('d', 2), BLACK_M, game);
+	SetPiece(Position('e', 1), WHITE_B, game);
+	PrintBoard(game);
+
+	//get the moves. they should contain all the 4 options for pawn.
+	piece_t piece1; 	piece1.position = Position('d', 2); piece1.identity = BLACK_M;
+	ListNode * list1 = GetMovesForPiece(game, piece1);
+	piece_t piece2; 	piece2.position = Position('e', 1); piece2.identity = WHITE_B;
+	ListNode * list2 = GetMovesForPiece(game, piece2);
+	MovesListPrint(list1);
+	MovesListPrint(list2);
+	ListFreeElements(list1, MoveFree);
 	ListFreeElements(list2, MoveFree);
-
-	ListFreeElements(list3, MoveFree);
 
 
 }
 
-
-
-
-
-//
-////prints moves one after the other
-//void MovesListPrint( LINK head , game_state_t * game)
-//{
-//	for ( ; head !=0; head = head->next )
-//	{
-//
-//		move_t * move = (move_t *) head->data;
-//		//print move.
-//		printf ("move: source : (%c , %d) ", move->src.x, move->src.y);
-//
-//		position_t * dest = move->dest;
-//		printf ("destinations: ");
-//		printf ("(%c , %d) ", dest[0].x, dest[0].y);
-//		if (move->num_captures>0)
-//		{
-//			printf("(CAPTURE) ");
-//		}
-//		for (int i=1; i<=(move->num_captures-1); i++)
-//		{
-//			printf ("(%c , %d) (CAPTURE) ", dest[i].x, dest[i].y);
-//		}
-//
-//		if (move->num_captures>0)
-//		{
-//			printf("total %d captures.", move->num_captures);
-//		}
-//
-//		printf ("\n");
-//	}
-//}
-
-
-//perform the moves one after the other
-void MovesListPerform( LINK head , game_state_t * game)
+//test method perform the moves one after the other
+static void MovesListPerform( LINK head , game_state_t * game)
 {
 	for ( ; head !=0; head = head->next )
 	{
@@ -442,9 +315,7 @@ void Test_GetAllPieces(game_state_t * game)
 
 
 //get all moves for color.
-
-//get pieces
-void Test_GetAllPiecesMoves(game_state_t * game)
+void Test_GetAllPiecesMoves_1(game_state_t * game)
 {
 	//put a piece in position
 	position_t pos;
@@ -500,45 +371,23 @@ void Test_GetAllPiecesMoves(game_state_t * game)
 }
 
 
-void Test_CaptureBackwards(game_state_t * game)
+//get all pieces moves - more pieces
+void Test_GetAllPiecesMoves_2(game_state_t * game)
 {
-	//put a piece in position
-	position_t pos;
-	char identity;
 
-	pos = Position ('d', 4);
-	identity = WHITE_M;
-	SetPiece(pos, identity, game);
-	piece_t piece1 ;
-	piece1.identity = identity;
-	piece1.position = pos;
-
-	pos = Position ('c', 5);
-	identity = BLACK_M;
-	SetPiece(pos, identity, game);
-	piece_t piece2 ;
-	piece2.identity = identity;
-	piece2.position = pos;
-
-	pos = Position ('d', 2);
-	identity = WHITE_M;
-	SetPiece(pos, identity, game);
-	piece_t piece3 ;
-	piece3.identity = identity;
-	piece3.position = pos;
-
-	//b,2
-	pos = Position ('b', 2);
-	identity = WHITE_M;
-	SetPiece(pos, identity, game);
-
-	pos = Position ('d', 6);
-	identity = WHITE_M;
-	SetPiece(pos, identity, game);
-	piece_t piece4 ;
-	piece4.identity = identity;
-	piece4.position = pos;
-
+	//put all of them on board.
+	SetPiece(Position ('h', 2), WHITE_M, game);
+	SetPiece(Position ('h', 3), WHITE_B, game);
+	SetPiece(Position ('h', 4), WHITE_N, game);
+	SetPiece(Position ('h', 5), WHITE_R, game);
+	SetPiece(Position ('h', 6), WHITE_Q, game);
+	SetPiece(Position ('h', 7), WHITE_K, game);
+	SetPiece(Position ('a', 8), BLACK_M, game);
+	SetPiece(Position ('b', 7), BLACK_B, game);
+	SetPiece(Position ('c', 6), BLACK_N, game);
+	SetPiece(Position ('d', 5), BLACK_R, game);
+	SetPiece(Position ('e', 4), BLACK_Q, game);
+	SetPiece(Position ('f', 3), BLACK_K, game);
 
 	PrintBoard(game);
 
@@ -563,8 +412,95 @@ void Test_CaptureBackwards(game_state_t * game)
 
 }
 
+//do move - move 1 piece (simple move).
+void DoMoveTest_1(game_state_t * game)
+{
+
+	//position
+	// (h, 2)
+	position_t pos = Position ('a', 2);
+	//put something on board.
+	SetPiece(pos, WHITE_R, game);
+	PrintBoard(game);
+
+	//generate move
+	move_t * move1 = (move_t *) mymalloc(sizeof (move_t));
+	move1->src = pos;
+	move1->num_captures = 0;
+	move1->dest[0] = Position('a',5);
+
+	//do 1 move.
+	DoMove(move1, game);
+	PrintBoard(game);
+
+	myfree(move1);
+
+}
 
 
+//do move
+//1. select move from get_moves list.
+//2. do 1 simple move, 1 capture move.
+void DoMoveTest_2_capture(game_state_t * game)
+{
+
+	position_t pos1 = Position ('e', 5);
+	SetPiece(pos1, WHITE_B, game);
+	position_t pos2 = Position ('f', 7);
+	SetPiece(pos2, BLACK_N, game);
+
+	PrintBoard(game);
+
+	color_t color;
+	color = COLOR_BLACK;
+	ListNode * moves_black = GetMovesForPlayer(game, color);
+
+	color = COLOR_WHITE;
+	ListNode * moves_white = GetMovesForPlayer(game, color);
+
+	printf("\n black's moves:\n");
+	MovesListPrint( moves_black);
+
+	printf("\n white's moves:\n");
+	MovesListPrint( moves_white);
+
+
+	//do 1 simple move (bishop)
+
+	PrintBoard(game);
+
+	//free list of moves.
+	ListFreeElements(moves_black, MoveFree);
+
+	ListFreeElements(moves_white, MoveFree);
+
+
+	color = COLOR_BLACK;
+	moves_black = GetMovesForPlayer(game, color);
+
+	color = COLOR_WHITE;
+	moves_white = GetMovesForPlayer(game, color);
+
+	printf("\n black's moves:\n");
+	MovesListPrint( moves_black);
+
+	printf("\n white's moves:\n");
+	MovesListPrint( moves_white);
+
+	//do 1 capture move (knight captures bishop)
+
+	//free list of moves.
+	ListFreeElements(moves_black, MoveFree);
+
+	ListFreeElements(moves_white, MoveFree);
+
+
+}
+
+void DoMoveTest_3_promotions(game_state_t * game)
+{
+;
+}
 
 //get pieces
 void Test_ScoringFunction(game_state_t * game)

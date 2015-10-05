@@ -52,7 +52,7 @@ void ListConcat( LINK *a, LINK b );
 //gets pointer to data, and its size.
 //creates a new node and add it at end of list.
 //may alter the head.
-void ListPushBackElement (LINK *head, void * data, size_t elem_size);
+void ListPushBackElement (LINK * head, void * data, size_t elem_size);
 
 //counts elements
 int ListCount( LINK head );

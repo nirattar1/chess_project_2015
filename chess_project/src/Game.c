@@ -40,6 +40,9 @@ direction_t allowed_directions_blackk [9] =
 	{UP_LEFT, UP_RIGHT, DOWN_LEFT, DOWN_RIGHT, UP, DOWN, LEFT, RIGHT, 0};
 
 
+char pawn_promotion_options_white[PAWN_PROMOTION_OPTIONS_SIZE] = {WHITE_Q, WHITE_R, WHITE_B, WHITE_N};
+char pawn_promotion_options_black[PAWN_PROMOTION_OPTIONS_SIZE] = {BLACK_Q, BLACK_R, BLACK_B, BLACK_N};
+
 
 void RulesInit ()
 {
@@ -336,7 +339,7 @@ void CopyGameState (game_state_t * to, game_state_t * from)
 
 }
 
-
+//TODO chess default layout
 void GameDefaultLayout (game_state_t * game)
 {
 	//place all the pieces.
@@ -375,7 +378,7 @@ int SameColor(game_state_t * game, position_t pos1, position_t pos2)
 	{
 		return 0;
 	}
-	return (GetPieceColor(game, pos1) == GetPieceColor(game, pos2));
+	return (GetColor(GetPiece(pos1,game)) == GetColor(GetPiece(pos2,game)));
 
 }
 
@@ -389,15 +392,17 @@ color_t GetOppositeColor(color_t player)
 }
 
 
-color_t GetPieceColor (game_state_t * game, position_t pos)
+color_t GetColor (char identity)
 {
-	char identity   = GetPiece(pos, game);
-	if (identity == WHITE_K || identity == WHITE_M)
+
+	if (identity == WHITE_M || identity == WHITE_B || identity == WHITE_N
+			|| identity == WHITE_R || identity == WHITE_Q || identity == WHITE_K)
 	{
 		return COLOR_WHITE;
 	}
 
-	if (identity ==	BLACK_K || identity == BLACK_M)
+	if (identity == BLACK_M || identity == BLACK_B || identity == BLACK_N
+			|| identity == BLACK_R || identity == BLACK_Q || identity == BLACK_K)
 	{
 		return COLOR_BLACK;
 	}
@@ -453,7 +458,8 @@ void GetAllPieces (game_state_t * game, color_t color, piece_t * array, int * cn
 
 			position_t pos = PositionFromMatrixCoordinates(i, j);
 			//reached user's piece
-			if (GetPiece(pos, game) != EMPTY && GetPieceColor(game, pos) == color)
+			char identity = GetPiece(pos, game);
+			if (identity != EMPTY && GetColor(identity) == color)
 			{
 				array[*cnt_pieces].position = pos;
 				array[*cnt_pieces].identity = GetPiece(pos, game);
@@ -579,13 +585,9 @@ ListNode * GetMovesForPiece (game_state_t * game, piece_t piece)
 			//position is empty. generate simple move.
 			if (GetPiece(dest, game) == EMPTY)
 			{
-				//generate new move.
-				move_t * newmove = MoveCreate(piece.position, dest);
-				//TODO do promotion for pawn.
-
-				//add move to the list.
+				//generate move (possible promotion).
 				ListNode ** listp = &list;
-				ListPushBackElement (listp, (void *) newmove, sizeof (move_t));
+				MoveAddWithPossiblePromotion (listp, piece, dest, 0); //no capture
 				list = *listp;
 			}
 
@@ -600,14 +602,10 @@ ListNode * GetMovesForPiece (game_state_t * game, piece_t piece)
 				//check validity of capture.
 				if (IsValidCapture(game, piece.position, dest))
 				{
-
-					//generate new capture move.
-					move_t * newmove = MoveCreate(piece.position, dest);
-					newmove->num_captures = 1;
-
-					//add move to the list.
+					//generate new capture move, add it to list.
+					//(promotion will not happen since it's not pawn).
 					ListNode ** listp = &list;
-					ListPushBackElement (listp, (void *) newmove, sizeof (move_t));
+					MoveAddWithPossiblePromotion (listp, piece, dest, 1); //capture
 					list = *listp;
 				}
 				//no point in going more in this direction
@@ -638,14 +636,9 @@ ListNode * GetMovesForPiece (game_state_t * game, piece_t piece)
 			//position is not empty. try to generate valid capture move.
 			if (GetPiece(dest, game) != EMPTY && IsValidCapture(game, piece.position, dest))
 			{
-				//generate new capture move.
-				//TODO do promotion for pawn.
-				move_t * newmove = MoveCreate(piece.position, dest);
-				newmove->num_captures = 1;
-
-				//add move to the list.
+				//generate new capture move (possible promotion).
 				ListNode ** listp = &list;
-				ListPushBackElement (listp, (void *) newmove, sizeof (move_t));
+				MoveAddWithPossiblePromotion (listp, piece, dest, 1); //capture
 				list = *listp;
 			}
 
@@ -836,16 +829,98 @@ void DoMove (move_t * move, game_state_t * game)
 
 }
 
+move_t * MoveCreate (position_t src, position_t dest)
+{
+	//call with defaults- no capture, no promotion.
+	return MoveCreateWithOptions (src, dest, 0, 0);
+}
+
 //generates a new move.
 //from position src to position dest.
 //(allocates and returns)
-move_t * MoveCreate (position_t src, position_t dest)
+move_t * MoveCreateWithOptions (position_t src, position_t dest,
+		int is_capture, char promote_to_identity)
 {
+	//allocate memory for move.
 	move_t * newmove = (move_t *) mymalloc(sizeof (move_t));
+	//add the source.
 	newmove->src = src;
-	newmove->num_captures = 0;
+	//add the destination.
 	newmove->dest[0] = dest;
+	//update if it's a capture (0 or 1)
+	newmove->num_captures = is_capture;
+	//add the identity to promote to (if it's a promotion).
+	newmove->promote_to_identity = promote_to_identity;
 	return newmove;
+}
+
+
+static int IsPromotionMove (piece_t piece, position_t dest)
+{
+	//not a pawn - cannot promote.
+	if (!IsMan(piece))
+	{
+		return 0;
+	}
+
+	//it is pawn, check it has reached the appropriate row.
+	if (GetColor(piece.identity) == COLOR_WHITE && dest.y==LAST_ROW_WHITE)
+	{
+		return 1;
+	}
+
+	else if (GetColor(piece.identity) == COLOR_BLACK && dest.y==LAST_ROW_BLACK)
+	{
+		return 1;
+	}
+
+	else //pawn but didn't reach last row.
+	{
+		return 0;
+	}
+
+}
+
+//will add the move by piece , to it's destination - to the list by listp.
+//the move may be a normal /capture move.
+//if the move follows promotion rules,
+//then 4 possibilities of the promotion, will be added to the list.
+static void MoveAddWithPossiblePromotion (ListNode ** listp, piece_t piece, position_t dest, int is_capture)
+{
+
+	//check promotion conditions.
+	if (IsPromotionMove(piece, dest))
+	{
+
+		//promotion move. add a list of the promotion options.
+		char promote_to_identity = 0;
+		for (int i=0; i<PAWN_PROMOTION_OPTIONS_SIZE; i++)
+		{
+			//iterate on all options (for appropriate color)
+			if (GetColor(piece.identity) == COLOR_WHITE)
+			{
+				promote_to_identity = pawn_promotion_options_white[i];
+			}
+			else
+			{
+				promote_to_identity = pawn_promotion_options_black[i];
+			}
+
+			//create a move with this option
+			move_t * newmove = MoveCreateWithOptions(piece.position, dest, is_capture, promote_to_identity); //promotion move
+
+			//add the new move
+			ListPushBackElement (listp, (void *) newmove, sizeof (move_t));
+		}
+	}
+	else
+	{
+		//no promotion, create simple/capture move.
+		move_t * newmove = MoveCreateWithOptions(piece.position, dest, is_capture, 0); //0 -no promotion
+
+		//add move to the list.
+		ListPushBackElement (listp, (void *) newmove, sizeof (move_t));
+	}
 }
 
 //free memory of 1 move.

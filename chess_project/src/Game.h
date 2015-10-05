@@ -16,6 +16,11 @@
  * BASIC GAME DEFINITIONS
  * ***********/
 #define BOARD_SIZE 8
+
+//defines the 'last row' for the 2 colors (used for promotion)
+#define LAST_ROW_WHITE BOARD_SIZE
+#define LAST_ROW_BLACK 1
+
 #define MAX_PIECES_PLAYER 20
 
 
@@ -52,7 +57,8 @@ typedef enum
 //return the opposite color to given color.
 color_t GetOppositeColor(color_t player);
 
-
+//will return the color (black/white) of the given identity.
+color_t GetColor (char identity);
 
 /*************
  * POSITIONS ON BOARD
@@ -87,6 +93,9 @@ direction_t allowed_directions_blackr [5];
 direction_t allowed_directions_blackq [9];
 direction_t allowed_directions_blackk [9];
 
+
+#define PAWN_PROMOTION_OPTIONS_SIZE 4
+char pawn_promotion_options [PAWN_PROMOTION_OPTIONS_SIZE];
 
 //fills values of all_allowed_directions based on rules.
 void RulesInit ();
@@ -205,10 +214,6 @@ char GetPiece (position_t pos, game_state_t * game);
 //puts piece in place
 void SetPiece (position_t pos, char identity, game_state_t * game);
 
-//returns the color (black/white)
-//of piece in given position, or 0 if empty.
-color_t GetPieceColor (game_state_t * game, position_t pos);
-
 //returns whether pieces in 2 positions are in same color.
 //1 = both pieces in positions exist and same color
 //0 = different colors or at least one is empty.
@@ -260,12 +265,16 @@ typedef struct
 	//TODO dest is only 1 now.
 	//the number of captures in this move
 	int 		num_captures;
+	//if this move deserves promotion, this saves the ideneity to promote to.
+	//0 default (no promotion)
+	char		promote_to_identity;
 } move_t;
 
 
 //generates a new move.
 //from position src to position dest.
 //(allocates and returns)
+move_t * MoveCreateWithOptions (position_t src, position_t dest, int is_capture, char promote_to_identity);
 move_t * MoveCreate (position_t src, position_t dest);
 
 //frees a move
@@ -290,6 +299,16 @@ ListNode * GetMovesForPiece (game_state_t * game, piece_t piece);
 //3. optional - sort moves by number of captures.
 ListNode * GetMovesForPlayer (game_state_t * game, color_t color);
 
+
+//will add the move by piece , to it's destination - to the list by listp.
+//the move may be a normal /capture move.
+//if the move follows promotion rules,
+//then 4 possibilities of the promotion, will be added to the list.
+static void MoveAddWithPossiblePromotion (ListNode ** listp, piece_t piece, position_t dest, int is_capture);
+
+
+//returns whether the hop from piece to dest, is worth promotion.
+static int IsPromotionMove (piece_t piece, position_t dest);
 
 //will perform the move pointed by "move"
 //is responsible for updating the game state afterwards:

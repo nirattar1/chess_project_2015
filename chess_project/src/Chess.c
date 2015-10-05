@@ -248,33 +248,60 @@ void DoGame(game_state_t * game)
 
 
 //prints moves one after the other
+//TODO make according to format
 void MovesListPrint( LINK head )
 {
 	for ( ; head !=0; head = head->next )
 	{
-
+		//iterate on moves in list
 		move_t * move = (move_t *) head->data;
-		//print move.
-		printf ("move: source : (%c , %d) ", move->src.x, move->src.y);
-
-		position_t * dest = move->dest;
-		printf ("destinations: ");
-		printf ("(%c , %d) ", dest[0].x, dest[0].y);
-		if (move->num_captures>0)
-		{
-			printf("(CAPTURE) ");
-		}
-		for (int i=1; i<=(move->num_captures-1); i++)
-		{
-			printf ("(%c , %d) (CAPTURE) ", dest[i].x, dest[i].y);
-		}
-
-		if (move->num_captures>0)
-		{
-			printf("total %d captures.", move->num_captures);
-		}
-
+		//print each move
+		MovePrint (move);
 		printf ("\n");
 	}
 }
 
+//will print the move
+void MovePrint (move_t * move)
+{
+	//print move src.
+	printf ("<%c,%d>", move->src.x, move->src.y);
+
+	position_t * dest = move->dest;
+	printf (" to ");
+	//print move destination.
+	printf ("<%c,%d>", dest[0].x, dest[0].y);
+
+	if (move->promote_to_identity != 0)
+	{
+		printf (" %s", GetIdentityName(move->promote_to_identity));
+	}
+
+	if (move->num_captures>0)
+	{
+		DEBUG_PRINT((" (CAPTURE)"));
+	}
+
+}
+
+
+char * GetIdentityName (char identity)
+{
+	if (identity==WHITE_Q || identity==BLACK_Q)
+	{
+		return "queen";
+	}
+	if (identity==WHITE_B || identity==BLACK_B)
+	{
+		return "bishop";
+	}
+	if (identity==WHITE_R || identity==BLACK_R)
+	{
+		return "rook";
+	}
+	if (identity==WHITE_N || identity==BLACK_N)
+	{
+		return "knight";
+	}
+	return NULL;
+}

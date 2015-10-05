@@ -9,9 +9,7 @@
 #include "Files.h"
 #include "Game.h"
 
-#define CHESS_XML_NODE_MAIN "game"
-#define CHESS_XML_NODE_BOARD "board"
-#define CHESS_XML_NODE_ROW_FORMAT "row_%d"
+
 void SaveGame(const game_state_t * game,char * FileName)
 {
 
@@ -83,6 +81,7 @@ void SaveGame(const game_state_t * game,char * FileName)
 static void GetRowAsString (const game_state_t * game, int row_index, char * row_content_chars)
 {
 
+	//iterate on all columns to get their pieces
 	for (int j=0; j<BOARD_SIZE; j++)
 	{
 		char column = 'a' + j;
@@ -90,8 +89,10 @@ static void GetRowAsString (const game_state_t * game, int row_index, char * row
 		char piece_identity = GetPiece(Position(column, row_index), (game_state_t *) game);
 		if (piece_identity==EMPTY)
 		{
-			piece_identity = '_';
+			//empty has different represenataion in xml
+			piece_identity = CHESS_XML_NODE_ROW_EMPTY_PIECE;
 		}
+		//add piece's char to string.
 		row_content_chars[j] = piece_identity;
 	}
 
