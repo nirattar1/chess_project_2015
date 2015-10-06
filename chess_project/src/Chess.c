@@ -141,6 +141,60 @@ int GameWinning(game_state_t * game, color_t color)
 	return 0;
 }
 
+//TODO maybe refine - with next player.
+play_status_t GetPlayStatus (game_state_t * game)
+{
+
+	//get the moves for both players.
+	ListNode * moves_white = GetMovesForPlayer(game, COLOR_WHITE);
+	ListNode * moves_black = GetMovesForPlayer(game, COLOR_BLACK);
+
+	//check if there is "check" state on either side.
+	int is_white_in_check = IsCheckState(game, COLOR_WHITE);
+	int is_black_in_check = IsCheckState(game, COLOR_BLACK);
+
+	//tie situations
+	if (!moves_white && !moves_black) 	//if none have legal moves- tie.
+	{
+		return STATUS_TIE;
+	}
+	if (!moves_white && !is_white_in_check) //white can't move, but not in check
+	{
+		return STATUS_TIE;
+	}
+	if (!moves_black && !is_black_in_check) //black can't move, but not in check
+	{
+		return STATUS_TIE;
+	}
+
+	//'check' situations
+	if (is_white_in_check)
+	{
+		if (!moves_white) //white in check but has no moves (checkmate). black wins.
+		{
+			return STATUS_WHITE_IN_CHECKMATE;
+		}
+		else
+		{
+			return STATUS_WHITE_IN_CHECK;
+		}
+	}
+	if (is_black_in_check)
+	{
+		if (!moves_black) //black in check but has no moves (checkmate). white wins.
+		{
+			return STATUS_BLACK_IN_CHECKMATE;
+		}
+		else
+		{
+			return STATUS_BLACK_IN_CHECK;
+		}
+	}
+
+	//didn't answer any of end game conditions.
+	//can continue play.
+	return STATUS_CONTINUE_PLAY;
+}
 
 //one turn of the CPU.
 void CPUTurn (game_state_t * game)

@@ -153,7 +153,6 @@ position_t GetPositionRelative
 
 //determine direction and distance between two positions
 direction_t GetDirection (position_t src, position_t dest);
-int GetDistance (position_t src, position_t dest);
 
 
 //return whether position is inside board boundaries.

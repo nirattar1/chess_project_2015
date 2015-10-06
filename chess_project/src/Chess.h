@@ -77,6 +77,22 @@ void Settings_MaxDepth_Set(int max_depth);
 //prints the board
 void PrintBoard(game_state_t * game);
 
+
+//an enum for the status of the game.
+//(such as- continue play, check, or end games)
+typedef enum {
+	STATUS_CONTINUE_PLAY,
+	STATUS_TIE,
+	STATUS_WHITE_IN_CHECK,
+	STATUS_BLACK_IN_CHECK,
+	STATUS_WHITE_IN_CHECKMATE,
+	STATUS_BLACK_IN_CHECKMATE
+} play_status_t;
+
+
+//will return a play status, based on game state.
+play_status_t GetPlayStatus (game_state_t * game);
+
 //one turn of the CPU.
 void CPUTurn (game_state_t * game);
 

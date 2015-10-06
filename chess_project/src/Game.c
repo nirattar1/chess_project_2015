@@ -261,22 +261,7 @@ direction_t GetDirection (position_t src, position_t dest)
 	return DOWN_LEFT;
 }
 
-//TODO fix for chess
-int GetDistance (position_t src, position_t dest)
-{
 
-	//only the x distance matters (diagonal moves only)
-	if (dest.x > src.x )
-	{
-		return (dest.x - src.x);
-	}
-	else
-	{
-		return (src.x - dest.x);
-	}
-
-
-}
 
 int PositionInBounds (position_t pos)
 {
