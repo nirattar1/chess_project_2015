@@ -304,7 +304,7 @@ ListNode * GetMovesForPlayer (game_state_t * game, color_t color);
 //the move may be a normal /capture move.
 //if the move follows promotion rules,
 //then 4 possibilities of the promotion, will be added to the list.
-static void MoveAddWithPossiblePromotion (ListNode ** listp, piece_t piece, position_t dest, int is_capture);
+static void MoveAddWithPossiblePromotion (game_state_t * game, ListNode ** listp, piece_t piece, position_t dest, int is_capture);
 
 
 //returns whether the hop from piece to dest, is worth promotion.
@@ -319,8 +319,17 @@ void DoMove (move_t * move, game_state_t * game);
 //find the move in allowed moves list (will update it's captures)
 int FindMoveInList (ListNode * moves, move_t * mymove);
 
-//return whether there is a 'check' state for player "color"
+//returns the position of the king belonging to player "color" in game.
+position_t GetKingPosition (game_state_t * game, color_t color);
+
+//return whether there is a 'check' state against player "color"
 //(if player's king is threatened).
 int IsCheckState (game_state_t * game, color_t color);
+
+
+//will check if the following move from player "color", will reveal it's king
+//(lead to check state).
+//if so will return 1 , otherwise 0.
+int IsMoveRevealingKing (game_state_t * state, color_t player, move_t * move);
 
 #endif /* EX3_GAME_H_ */

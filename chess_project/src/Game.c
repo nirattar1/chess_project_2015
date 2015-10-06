@@ -587,7 +587,7 @@ ListNode * GetMovesForPiece (game_state_t * game, piece_t piece)
 			{
 				//generate move (possible promotion).
 				ListNode ** listp = &list;
-				MoveAddWithPossiblePromotion (listp, piece, dest, 0); //no capture
+				MoveAddWithPossiblePromotion (game, listp, piece, dest, 0); //no capture
 				list = *listp;
 			}
 
@@ -605,7 +605,7 @@ ListNode * GetMovesForPiece (game_state_t * game, piece_t piece)
 					//generate new capture move, add it to list.
 					//(promotion will not happen since it's not pawn).
 					ListNode ** listp = &list;
-					MoveAddWithPossiblePromotion (listp, piece, dest, 1); //capture
+					MoveAddWithPossiblePromotion (game, listp, piece, dest, 1); //capture
 					list = *listp;
 				}
 				//no point in going more in this direction
@@ -638,7 +638,7 @@ ListNode * GetMovesForPiece (game_state_t * game, piece_t piece)
 			{
 				//generate new capture move (possible promotion).
 				ListNode ** listp = &list;
-				MoveAddWithPossiblePromotion (listp, piece, dest, 1); //capture
+				MoveAddWithPossiblePromotion (game, listp, piece, dest, 1); //capture
 				list = *listp;
 			}
 
@@ -854,7 +854,7 @@ static int IsPromotionMove (piece_t piece, position_t dest)
 //the move may be a normal /capture move.
 //if the move follows promotion rules,
 //then 4 possibilities of the promotion, will be added to the list.
-static void MoveAddWithPossiblePromotion (ListNode ** listp, piece_t piece, position_t dest, int is_capture)
+static void MoveAddWithPossiblePromotion (game_state_t * game, ListNode ** listp, piece_t piece, position_t dest, int is_capture)
 {
 
 	//check promotion conditions.
@@ -878,17 +878,30 @@ static void MoveAddWithPossiblePromotion (ListNode ** listp, piece_t piece, posi
 			//create a move with this option
 			move_t * newmove = MoveCreateWithOptions(piece.position, dest, is_capture, promote_to_identity); //promotion move
 
-			//add the new move
-			ListPushBackElement (listp, (void *) newmove, sizeof (move_t));
+			//add the move only if it's legal
+			//(not revealing king)
+			//TODO maybe more conditions ?
+			if (!IsMoveRevealingKing(game, GetColor(piece.identity), newmove))
+			{
+				//add the new move
+				ListPushBackElement (listp, (void *) newmove, sizeof (move_t));
+			}
 		}
 	}
 	else
 	{
+
 		//no promotion, create simple/capture move.
 		move_t * newmove = MoveCreateWithOptions(piece.position, dest, is_capture, 0); //0 -no promotion
 
-		//add move to the list.
-		ListPushBackElement (listp, (void *) newmove, sizeof (move_t));
+		//add the move only if it's legal
+		//(not revealing king)
+		//TODO maybe more conditions ?
+		if (!IsMoveRevealingKing(game, GetColor(piece.identity), newmove))
+		{
+			//add move to the list.
+			ListPushBackElement (listp, (void *) newmove, sizeof (move_t));
+		}
 	}
 }
 
@@ -982,3 +995,18 @@ int IsCheckState (game_state_t * game, color_t color)
 	return 0;
 }
 
+int IsMoveRevealingKing (game_state_t * state, color_t player, move_t * move)
+{
+	//create a stack copy of the game state, and perform the move on it.
+	game_state_t newState;
+	char newBoard [BOARD_SIZE][BOARD_SIZE];
+	newState.pieces = (board_column *) newBoard;
+
+	CopyGameState(&newState, state);
+	//update state based on move (play move)
+	DoMove( move , &newState);
+
+	//check if the new state is a check state for player
+	return (IsCheckState(&newState, player));
+
+}

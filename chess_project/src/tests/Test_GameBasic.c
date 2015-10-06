@@ -18,6 +18,7 @@ void DoMoveTest_1(game_state_t * game);
 void DoMoveTest_2_capture(game_state_t * game);
 void DoMoveTest_3_promotions(game_state_t * game);
 void Test_Check_State(game_state_t * game);
+void Test_MoveRevealingKing(game_state_t * game);
 void Test_Kings(game_state_t * game);
 void Test_GetAllPieces(game_state_t * game);
 void Test_GetAllPiecesMoves_1(game_state_t * game);
@@ -69,8 +70,11 @@ void GameTest ()
 //	GameInit(&game, (char **)board);
 //	DoMoveTest_3_promotions(&game);
 
+//	GameInit(&game, (char **)board);
+//	Test_Check_State (&game);
+
 	GameInit(&game, (char **)board);
-	Test_Check_State (&game);
+	Test_MoveRevealingKing(&game);
 
 //	GameInit(&game, (char **)board);
 //	Test_ScoringFunction(&game);
@@ -636,6 +640,73 @@ void Test_Check_State (game_state_t * game)
 	PrintBoard(game);
 
 	printf("is check ? %d\n", IsCheckState(game, COLOR_WHITE));
+
+	GameInit(game, (char **) game->pieces);
+	SetPiece(Position ('d', 4), WHITE_K, game);
+	SetPiece(Position ('f', 4), WHITE_R, game);
+	SetPiece(Position ('b', 6), BLACK_N, game);
+	SetPiece(Position ('d', 5), BLACK_M, game);
+	SetPiece(Position ('h', 8), BLACK_K, game);
+	SetPiece(Position ('b', 8), WHITE_Q, game);
+	PrintBoard(game);
+	printf("is check against white? %d\n", IsCheckState(game, COLOR_WHITE));
+	printf("is check against black? %d\n", IsCheckState(game, COLOR_BLACK));
+
+}
+
+void Test_MoveRevealingKing (game_state_t * game)
+{
+	GameInit(game, (char **) game->pieces);
+	SetPiece(Position ('h', 1), WHITE_K, game);
+	SetPiece(Position ('g', 2), WHITE_Q, game);
+	SetPiece(Position ('g', 5), WHITE_M, game);
+	SetPiece(Position ('d', 2), WHITE_M, game);
+	SetPiece(Position ('f', 3), BLACK_B, game);
+	SetPiece(Position ('f', 5), BLACK_K, game);
+	PrintBoard(game);
+
+
+	//create move . see if it's reveals king.
+	move_t move ;
+	move.src = Position('g', 2);
+	move.dest[0] = Position('h',3);
+	move.num_captures = 0;
+	move.promote_to_identity = 0;
+	printf("try perform move:");
+	MovePrint(&move);
+	printf("\ndoes reveal king of white ? %d \n", IsMoveRevealingKing(game, COLOR_WHITE, &move));
+
+	//create move that doesn't reveal king.
+	move.src = Position('h', 1);
+	move.dest[0] = Position('g', 1);
+	move.num_captures = 0;
+	move.promote_to_identity = 0;
+	printf("try perform move:");
+	MovePrint(&move);
+	printf("\ndoes reveal king of white? %d \n", IsMoveRevealingKing(game, COLOR_WHITE, &move));
+
+	//create move that reveals black's king.
+	move.src = Position('f', 5);
+	move.dest[0] = Position('f', 6);
+	move.num_captures = 0;
+	move.promote_to_identity = 0;
+	printf("try perform move:");
+	MovePrint(&move);
+	printf("\ndoes reveal king of black? %d \n", IsMoveRevealingKing(game, COLOR_BLACK, &move));
+
+	//revealing move should not be in list of moves
+	color_t color = COLOR_BLACK;
+	ListNode * moves_black = GetMovesForPlayer(game, color);
+
+	color = COLOR_WHITE;
+	ListNode * moves_white = GetMovesForPlayer(game, color);
+
+	printf("\n black's moves:\n");
+	MovesListPrint(moves_black);
+
+	printf("\n white's moves:\n");
+	MovesListPrint(moves_white);
+
 
 }
 
