@@ -70,8 +70,8 @@ void GameTest ()
 //	GameInit(&game, (char **)board);
 //	DoMoveTest_3_promotions(&game);
 
-//	GameInit(&game, (char **)board);
-//	Test_Check_State (&game);
+	GameInit(&game, (char **)board);
+	Test_Check_State (&game);
 
 	GameInit(&game, (char **)board);
 	Test_MoveRevealingKing(&game);

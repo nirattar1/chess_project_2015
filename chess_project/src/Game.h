@@ -92,7 +92,7 @@ direction_t allowed_directions_blackn [9];
 direction_t allowed_directions_blackr [5];
 direction_t allowed_directions_blackq [9];
 direction_t allowed_directions_blackk [9];
-
+direction_t allowed_directions_array_of_all [17];
 
 #define PAWN_PROMOTION_OPTIONS_SIZE 4
 char pawn_promotion_options [PAWN_PROMOTION_OPTIONS_SIZE];
@@ -103,6 +103,9 @@ void RulesInit ();
 
 //will receive identity and return its allowed directions.
 direction_t * GetPieceDirections (char identity);
+
+//return whether given identity can do a CAPTURE move in given direction.
+int IsDirectionAllowedForPieceCapture(char identity, direction_t direction);
 
 //will receive identity of pawn, and return its allowed directions FOR A CAPTURE MOVE.
 //(diagonal, based on black or white pawn).
@@ -250,6 +253,13 @@ int GameWinning(game_state_t * game, color_t color);
 //3. destination has a piece of opposite color.
 //returns 1 if valid, return 0 if not valid.
 int IsValidCapture (game_state_t * game, position_t source, position_t newDest);
+
+//checks if move represented by 2 positions is valid.
+//performs all the checks of IsValidCapture, and also:
+//1. checks that piece in source is allowed to move in the direction.
+//2. checks that distance is ok.
+//! assumes that there are no pieces in between.
+int IsValidCaptureMoreChecks(game_state_t * game, position_t source, position_t newDest, int distance);
 
 //maximum captures in 1 move (if eat all opponents).
 #define MAX_CAPTURES_MOVE 20

@@ -39,7 +39,12 @@ direction_t allowed_directions_blackq [9] =
 direction_t allowed_directions_blackk [9] =
 	{UP_LEFT, UP_RIGHT, DOWN_LEFT, DOWN_RIGHT, UP, DOWN, LEFT, RIGHT, 0};
 
+//an array of all directions.
+direction_t allowed_directions_array_of_all [17] =
+	{UP_LEFT, UP_RIGHT, DOWN_LEFT, DOWN_RIGHT, UP, DOWN, LEFT, RIGHT,
+	KNIGHT_1, KNIGHT_2, KNIGHT_3, KNIGHT_4, KNIGHT_5, KNIGHT_6, KNIGHT_7, KNIGHT_8, 0};
 
+//promotion options.
 char pawn_promotion_options_white[PAWN_PROMOTION_OPTIONS_SIZE] = {WHITE_Q, WHITE_R, WHITE_B, WHITE_N};
 char pawn_promotion_options_black[PAWN_PROMOTION_OPTIONS_SIZE] = {BLACK_Q, BLACK_R, BLACK_B, BLACK_N};
 
@@ -181,13 +186,49 @@ position_t GetPositionRelative
 	return dest;
 }
 
+
 direction_t GetDirection (position_t src, position_t dest)
 {
+	//check knight directions.
+	if (dest.x==src.x+1 && dest.y==src.y+2)
+	{
+		return KNIGHT_1;
+	}
+	if (dest.x==src.x+2 && dest.y==src.y+1)
+	{
+		return KNIGHT_2;
+	}
+	if (dest.x==src.x+2 && dest.y==src.y-1)
+	{
+		return KNIGHT_3;
+	}
+	if (dest.x==src.x+1 && dest.y==src.y-2)
+	{
+		return KNIGHT_4;
+	}
+	if (dest.x==src.x-1 && dest.y==src.y-2)
+	{
+		return KNIGHT_5;
+	}
+	if (dest.x==src.x-2 && dest.y==src.y-1)
+	{
+		return KNIGHT_6;
+	}
+	if (dest.x==src.x-2 && dest.y==src.y+1)
+	{
+		return KNIGHT_7;
+	}
+	if (dest.x==src.x-1 && dest.y==src.y+2)
+	{
+		return KNIGHT_8;
+	}
+
+	//check all other directions
 	if (dest.x > src.x && dest.y > src.y)
 	{
 		return UP_RIGHT;
 	}
-	else if (dest.x < src.x && dest.y > src.y)
+	if (dest.x < src.x && dest.y > src.y)
 	{
 		return UP_LEFT;
 	}
@@ -195,14 +236,32 @@ direction_t GetDirection (position_t src, position_t dest)
 	{
 		return DOWN_RIGHT;
 	}
-	else if (dest.x < src.x && dest.y < src.y)
+	if (dest.x < src.x && dest.y < src.y)
 	{
 		return DOWN_LEFT;
 	}
+	if (dest.x == src.x && dest.y > src.y)
+	{
+		return UP;
+	}
+	if (dest.x == src.x && dest.y < src.y)
+	{
+		return DOWN;
+	}
+	if (dest.x > src.x && dest.y == src.y)
+	{
+		return RIGHT;
+	}
+	if (dest.x < src.x && dest.y == src.y)
+	{
+		return LEFT;
+	}
 
+	//TODO check option to return null (does not interfere allowed arrays?)
 	return DOWN_LEFT;
 }
 
+//TODO fix for chess
 int GetDistance (position_t src, position_t dest)
 {
 
@@ -251,6 +310,35 @@ direction_t * GetPieceDirections (char identity)
 	if (identity == BLACK_K) {	return all_allowed_directions[11];};
 
 	return NULL;
+}
+
+int IsDirectionAllowedForPieceCapture(char identity, direction_t direction)
+{
+	//find the allowed directions to capture, for this identity.
+	direction_t * allowed_directions = NULL;
+
+	//handle pawn cases.
+	if (identity==WHITE_M || identity==BLACK_M)
+	{
+		allowed_directions = GetPawnCaptureDirections(identity);
+	}
+	else
+	{
+		//non-pawn, the directions are same as in simple move.
+		allowed_directions = GetPieceDirections(identity);
+	}
+
+	//try to find given direction in this array
+	for (; *allowed_directions != 0; allowed_directions++)
+	{
+		if (*allowed_directions == direction)
+		{
+			return 1;
+		}
+	}
+
+	//if reached here then the direction is not allowed for this identity
+	return 0;
 }
 
 direction_t * GetPawnCaptureDirections (char identity)
@@ -543,6 +631,35 @@ int IsValidCapture (game_state_t * game, position_t source, position_t newDest)
 }
 
 
+int IsValidCaptureMoreChecks(game_state_t * game, position_t src, position_t dest, int distance)
+{
+	//do all the trivial checks
+	if (!IsValidCapture(game, src, dest))
+	{
+		return 0;
+	}
+
+	//get the 2 pieces.
+	char src_identity = GetPiece(src, game);
+
+	//check that source is allowed to walk the distance.
+	if (distance > GetPieceMaxNumOfHops(src_identity))
+	{
+		return 0;
+	}
+
+	//get direction between them
+	direction_t direction = GetDirection(src, dest);
+	//check that source can capture in this direction.
+	if (!IsDirectionAllowedForPieceCapture(src_identity, direction))
+	{
+		return 0;
+	}
+
+
+	return 1;
+}
+
 /**
 // Get (generate) all the allowed moves for 1 piece on board.
 //@param game the game state.
@@ -616,7 +733,6 @@ ListNode * GetMovesForPiece (game_state_t * game, piece_t piece)
 		}
 	}
 
-	//TODO generate capture moves for pawn.
 	if (IsMan(piece))
 	{
 		//get possible directions for pawn capture.
@@ -972,26 +1088,60 @@ position_t GetKingPosition (game_state_t * game, color_t color)
 //(if player's king is threatened).
 int IsCheckState (game_state_t * game, color_t color)
 {
-	//get opponent's moves.
-	ListNode * opp_moves = GetMovesForPlayer(game, GetOppositeColor(color));
-
-	//if one of the moves is capturing the king, return true.
 
 	//find player's king
 	position_t king_position = GetKingPosition (game, color);
 
-	//iterate through opponent's moves
-	for (; opp_moves != NULL; opp_moves = opp_moves->next)
+	//try to find a threatening piece on king
+
+	//iterate on all directions
+	direction_t * directions = allowed_directions_array_of_all;
+	for (; *directions != 0; directions++)
 	{
-		//move is destined to capture the king's position
-		position_t dest = ((move_t *) opp_moves->data)->dest[0];
-		if (dest.x == king_position.x && dest.y == king_position.y)
+		//try to find a threatening piece on direction
+		direction_t direction = *directions;
+
+		//determine max distance. 1 if direction is a knight's, or otherwise - the farthest.
+		int max_distance = (direction>=KNIGHT_1 && direction<=KNIGHT_8) ? 1 : (BOARD_SIZE-1);
+
+		//loop through all the distances.
+		for (int distance = 1; distance <= max_distance ; distance++)
 		{
-			return 1;
+			//get 1 possible position.
+			position_t piece_position = GetPositionRelative(king_position, direction, distance);
+			if (!PositionInBounds(piece_position))
+			{
+				//out of bounds, move on to next direction
+				break;
+			}
+			//in bounds, find the piece in that position
+			char identity = GetPiece(piece_position, game);
+
+			if (identity == EMPTY)
+			{
+				//empty square, move on to next hop
+				continue;
+			}
+			else
+			{
+				//non-empty square, check if piece can capture the king.
+				if (IsValidCaptureMoreChecks(game, piece_position, king_position,distance))
+				{
+					return 1;
+				}
+
+				//if reached here, then the piece does not threat the king.
+				//meaning- we finished with this direction, move on to next direction.
+				break;
+			}
+
 		}
+
+		//there must be nothing here. (due to breaks)
 	}
 
-	//no move captures player's king, return false.
+
+	//no piece can capture player's king, return false.
 	return 0;
 }
 
@@ -1004,7 +1154,7 @@ int IsMoveRevealingKing (game_state_t * state, color_t player, move_t * move)
 
 	CopyGameState(&newState, state);
 	//update state based on move (play move)
-	DoMove( move , &newState);
+	DoMove(move, &newState);
 
 	//check if the new state is a check state for player
 	return (IsCheckState(&newState, player));
