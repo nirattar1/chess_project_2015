@@ -9,6 +9,7 @@
 #define SRC_TESTS_TEST_MAIN_H_
 
 #include "Test_GameBasic.h"
+#include "Test_Gui_framework.h"
 
 //will execute all the tests
 void Test_Main ();

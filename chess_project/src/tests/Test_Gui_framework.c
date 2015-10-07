@@ -6,26 +6,24 @@
  */
 
 #include "../Gui_framework.h"
+#include "Test_Gui_framework.h"
 
 Control * TestNotifyRelevantControl (SDL_Event * e,
 		Control * b1, Control * b2);
 
 void TestHandleEvents(Control * b1,Control * b2);
 
-void window_2_buttons_stupid();
 
 
-////test
-//int main ()
-//{
-//
-//	//window_2_buttons_stupid();
-//
-//	window_buttons_tree();
-//
-//
-//	return 0;
-//}
+//test
+void Test_Gui_framework ()
+{
+
+	//window_2_buttons_stupid();
+
+	window_buttons_tree();
+
+}
 
 void testfunction1()
 {
