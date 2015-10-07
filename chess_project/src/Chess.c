@@ -134,14 +134,14 @@ void Settings_MaxDepth_Set(int max_depth)
 int GameWinning(game_state_t * game, color_t color)
 {
 
-	if (DraughtsScoringFunction(game, color)==SCORE_WIN_PLAYER)
+	if (BasicScoringFunction(game, color)==SCORE_WIN_PLAYER)
 	{
 		return 1;
 	}
 	return 0;
 }
 
-//TODO maybe refine - with next player.
+//TODO need refine - with next player.
 play_status_t GetPlayStatus (game_state_t * game)
 {
 
@@ -153,42 +153,44 @@ play_status_t GetPlayStatus (game_state_t * game)
 	int is_white_in_check = IsCheckState(game, COLOR_WHITE);
 	int is_black_in_check = IsCheckState(game, COLOR_BLACK);
 
-	//tie situations
-	if (!moves_white && !moves_black) 	//if none have legal moves- tie.
+	//end game situations (checkmate/tie)
+	if (!moves_white) //white can't move
 	{
-		return STATUS_TIE;
-	}
-	if (!moves_white && !is_white_in_check) //white can't move, but not in check
-	{
-		return STATUS_TIE;
-	}
-	if (!moves_black && !is_black_in_check) //black can't move, but not in check
-	{
-		return STATUS_TIE;
-	}
-
-	//'check' situations
-	if (is_white_in_check)
-	{
-		if (!moves_white) //white in check but has no moves (checkmate). black wins.
+		if (is_white_in_check) //if white in check, then checkmate
 		{
 			return STATUS_WHITE_IN_CHECKMATE;
 		}
-		else
+		else	//white can't move, it is just tie for white.
 		{
-			return STATUS_WHITE_IN_CHECK;
+			return STATUS_TIE;
+			//TODO return speicfic tie for player ?
 		}
 	}
-	if (is_black_in_check)
+
+	if (!moves_black) //black can't move
 	{
-		if (!moves_black) //black in check but has no moves (checkmate). white wins.
+		if (is_black_in_check) //if black in check, then checkmate
 		{
 			return STATUS_BLACK_IN_CHECKMATE;
 		}
-		else
+		else	//black can't move, it is just tie for black.
 		{
-			return STATUS_BLACK_IN_CHECK;
+			return STATUS_TIE;
+			//TODO return speicfic tie for player ?
 		}
+	}
+
+
+	//'check' situations
+	if (is_white_in_check && moves_white)
+	{
+		//white in check but still has moves.
+		return STATUS_WHITE_IN_CHECK;
+	}
+	if (is_black_in_check && moves_black)
+	{
+		//black in check but still has moves.
+		return STATUS_BLACK_IN_CHECK;
 	}
 
 	//didn't answer any of end game conditions.
@@ -219,7 +221,7 @@ void CPUTurn (game_state_t * game)
 	MinimaxChoose (game,  RootChildren, 0, max_depth,
 				1, MIN_SCORE, MAX_SCORE,	//pruning=true
 				color,1,					//define CPU color as maximizing, start as maximizer
-				DraughtsScoringFunction, GetMovesForPlayer,
+				BasicScoringFunction, GetMovesForPlayer,
 				&childIndex, &childScore);
 
 	DEBUG_PRINT( ("index %d was chosen. will lead to score of %d\n", childIndex, childScore));

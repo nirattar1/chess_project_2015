@@ -746,10 +746,10 @@ void Test_ScoringFunction(game_state_t * game)
 	PrintBoard(game);
 
 
-	int score = DraughtsScoringFunction(game, COLOR_BLACK);
+	int score = BasicScoringFunction(game, COLOR_BLACK);
 	printf("score for black: %d\n", score);
 
-	score = DraughtsScoringFunction(game, COLOR_WHITE);
+	score = BasicScoringFunction(game, COLOR_WHITE);
 	printf("score for white: %d\n", score);
 
 }

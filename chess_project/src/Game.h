@@ -237,7 +237,7 @@ void GameDefaultLayout (game_state_t * game);
 
 //scoring function to use with minimax.
 //based on player and game state.
-int DraughtsScoringFunction (game_state_t * game, color_t player);
+int BasicScoringFunction (game_state_t * game, color_t player);
 
 //did someone win game
 int GameWinning(game_state_t * game, color_t color);

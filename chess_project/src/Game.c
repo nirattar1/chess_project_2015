@@ -545,7 +545,7 @@ void GetAllPieces (game_state_t * game, color_t color, piece_t * array, int * cn
 
 //scoring function to use with minimax.
 //based on player color and game state.
-int DraughtsScoringFunction (game_state_t * game, color_t maximizing_player)
+int BasicScoringFunction (game_state_t * game, color_t maximizing_player)
 {
 
 	int player_score=0, opposite_score=0;
