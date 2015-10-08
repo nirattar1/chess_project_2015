@@ -24,10 +24,6 @@
 #define MAX_PIECES_PLAYER 20
 
 
-#define SCORE_WIN_PLAYER 	100
-#define SCORE_WIN_OPPONENT 	-100
-
-
 //pieces identities
 #define MAX_IDENTITIES 12
 #define WHITE_M 'm'
@@ -221,9 +217,16 @@ void SetPiece (position_t pos, char identity, game_state_t * game);
 //0 = different colors or at least one is empty.
 int SameColor(game_state_t * game, position_t pos1, position_t pos2);
 
-//will return 1 if piece is man, 0 otherwise.
+//will return 1 if piece is man (pawn), 0 otherwise.
 int IsMan (piece_t piece);
-
+//will return 1 if piece is bishop, 0 otherwise.
+int IsBishop (piece_t piece);
+//will return 1 if piece is knight, 0 otherwise.
+int IsKnight (piece_t piece);
+//will return 1 if piece is rook, 0 otherwise.
+int IsRook (piece_t piece);
+//will return 1 if piece is queen, 0 otherwise.
+int IsQueen (piece_t piece);
 //will return 1 if piece is king, 0 otherwise.
 int IsKing (piece_t piece);
 
@@ -234,10 +237,6 @@ void GameInit (game_state_t * game, char ** board );
 //will initialize the game
 void GameDefaultLayout (game_state_t * game);
 
-
-//scoring function to use with minimax.
-//based on player and game state.
-int BasicScoringFunction (game_state_t * game, color_t player);
 
 //did someone win game
 int GameWinning(game_state_t * game, color_t color);
@@ -340,5 +339,21 @@ int IsCheckState (game_state_t * game, color_t color);
 //(lead to check state).
 //if so will return 1 , otherwise 0.
 int IsMoveRevealingKing (game_state_t * state, color_t player, move_t * move);
+
+
+//an enum for the status of the game.
+//(such as- continue play, check, or end games)
+typedef enum {
+	STATUS_CONTINUE_PLAY,
+	STATUS_TIE,
+	STATUS_PLAYER_IN_CHECK,
+	STATUS_OPPONENT_IN_CHECK,
+	STATUS_PLAYER_IN_CHECKMATE,
+	STATUS_OPPONENT_IN_CHECKMATE
+} play_status_t;
+
+
+//will return a play status, based on game state.
+play_status_t GetPlayStatus (game_state_t * game, color_t current_player);
 
 #endif /* EX3_GAME_H_ */

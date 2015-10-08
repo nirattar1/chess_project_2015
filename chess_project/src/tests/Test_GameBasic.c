@@ -76,9 +76,9 @@ void GameTest ()
 	GameInit(&game, (char **)board);
 	Test_MoveRevealingKing(&game);
 
-//	GameInit(&game, (char **)board);
-//	Test_ScoringFunction(&game);
-//
+	GameInit(&game, (char **)board);
+	Test_ScoringFunction(&game);
+
 //	GameInit(&game, (char **)board);
 //	Test_Kings(&game);
 
@@ -717,40 +717,24 @@ void Test_ScoringFunction(game_state_t * game)
 	position_t pos;
 	char identity;
 
-	pos = Position ('d', 4);
-	identity = WHITE_M;
-	SetPiece(pos, identity, game);
-	piece_t piece1 ;
-	piece1.identity = identity;
-	piece1.position = pos;
+	SetPiece(Position ('d', 4), WHITE_M, game);
+	SetPiece(Position ('d', 2), WHITE_K, game);
+	SetPiece(Position ('h', 8), WHITE_B, game);
 
-	pos = Position ('c', 5);
-	identity = BLACK_M;
-	SetPiece(pos, identity, game);
-	piece_t piece2 ;
-	piece2.identity = identity;
-	piece2.position = pos;
-
-	pos = Position ('d', 2);
-	identity = WHITE_K;
-	SetPiece(pos, identity, game);
-	piece_t piece3 ;
-	piece3.identity = identity;
-	piece3.position = pos;
-
-	//b,2
-	pos = Position ('b', 2);
-	identity = WHITE_K;
-	SetPiece(pos, identity, game);
+	SetPiece(Position ('c', 5), BLACK_M, game);
+	SetPiece(Position ('b', 2), BLACK_K, game);
+	SetPiece(Position ('b', 3), BLACK_Q, game);
 
 	PrintBoard(game);
 
-
-	int score = BasicScoringFunction(game, COLOR_BLACK);
+	int maximizing_player = COLOR_BLACK;
+	int current_player = COLOR_BLACK;
+	int score = BasicScoringFunction(game, maximizing_player, current_player);
 	printf("score for black: %d\n", score);
 
-	score = BasicScoringFunction(game, COLOR_WHITE);
-	printf("score for white: %d\n", score);
+	maximizing_player = COLOR_WHITE;
+	score = BasicScoringFunction(game, maximizing_player, current_player);
+	printf("score if white maximizes: %d\n", score);
 
 }
 

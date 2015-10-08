@@ -127,76 +127,144 @@ void Settings_MaxDepth_Set(int max_depth)
 	SETTINGS_MAX_DEPTH = max_depth;
 }
 
-
+//TODO remove this function
 //return number if given color has won
 //if 	0 : nobody won (continue play).
 //		1 : given color has won.
 int GameWinning(game_state_t * game, color_t color)
 {
 
-	if (BasicScoringFunction(game, color)==SCORE_WIN_PLAYER)
-	{
-		return 1;
-	}
+
 	return 0;
 }
 
-//TODO need refine - with next player.
-play_status_t GetPlayStatus (game_state_t * game)
+
+//scoring function to use with minimax.
+//based on maximizing player color and game state.
+//evaluates the state for the given player.
+//(gives positive score to the maximizing player and negative to the minimizing player.)
+int BasicScoringFunction (game_state_t * game, color_t maximizing_player, color_t current_player)
 {
 
-	//get the moves for both players.
-	ListNode * moves_white = GetMovesForPlayer(game, COLOR_WHITE);
-	ListNode * moves_black = GetMovesForPlayer(game, COLOR_BLACK);
+	int player_score=0, opposite_score=0;
+	int current_player_is_maximizing = (current_player==maximizing_player);
 
-	//check if there is "check" state on either side.
-	int is_white_in_check = IsCheckState(game, COLOR_WHITE);
-	int is_black_in_check = IsCheckState(game, COLOR_BLACK);
+	//get player's pieces
+	int cntPiecesPlayer;//will count how many pieces player has.
+	piece_t piecesPlayer [MAX_PIECES_PLAYER]; //player can have at most 20 pieces.
+	GetAllPieces (game, maximizing_player, piecesPlayer, &cntPiecesPlayer);
 
-	//end game situations (checkmate/tie)
-	if (!moves_white) //white can't move
+	//get opposite color's pieces
+	int cntPiecesOpposite;//will count how many pieces player has.
+	piece_t piecesOpposite [MAX_PIECES_PLAYER]; //player can have at most 20 pieces.
+	GetAllPieces (game, GetOppositeColor(maximizing_player), piecesOpposite, &cntPiecesOpposite);
+
+
+	//determine end game.
+	play_status_t status = GetPlayStatus(game, current_player);
+
+	//win for current player
+	if (status==STATUS_OPPONENT_IN_CHECKMATE) //player wins
 	{
-		if (is_white_in_check) //if white in check, then checkmate
+		if (current_player_is_maximizing)
 		{
-			return STATUS_WHITE_IN_CHECKMATE;
+			return 1000;
 		}
-		else	//white can't move, it is just tie for white.
+		else
 		{
-			return STATUS_TIE;
-			//TODO return speicfic tie for player ?
+			return -1000;
+		}
+	}
+	else if (status==STATUS_PLAYER_IN_CHECKMATE)	//player loses
+	{
+		if (current_player_is_maximizing)
+		{
+			return -1000;
+		}
+		else
+		{
+			return 1000;
+		}
+	}
+	else if (status==STATUS_TIE)	//either players has no moves
+	{
+		if (current_player_is_maximizing)
+		{
+			return -800;
+		}
+		else
+		{
+			return 800;
 		}
 	}
 
-	if (!moves_black) //black can't move
+	else
 	{
-		if (is_black_in_check) //if black in check, then checkmate
+		//in any other case, count pieces to compute score
+		//iterate and add on both sides.
+		for (int i=0; i<cntPiecesPlayer; i++)
 		{
-			return STATUS_BLACK_IN_CHECKMATE;
+			if (IsMan (piecesPlayer[i]))
+			{
+				player_score += 1;
+			}
+			else if (IsKnight (piecesPlayer[i]) )
+			{
+				player_score += 3;
+			}
+			else if (IsBishop (piecesPlayer[i]) )
+			{
+				player_score += 3;
+			}
+			else if (IsRook (piecesPlayer[i]) )
+			{
+				player_score += 5;
+			}
+			else if (IsQueen (piecesPlayer[i]) )
+			{
+				player_score += 9;
+			}
+			else if (IsKing (piecesPlayer[i]) )
+			{
+				player_score += 400;
+			}
 		}
-		else	//black can't move, it is just tie for black.
+
+		//update opposite score
+		for (int i=0; i<cntPiecesOpposite; i++)
 		{
-			return STATUS_TIE;
-			//TODO return speicfic tie for player ?
+			if (IsMan (piecesOpposite[i]))
+			{
+				opposite_score += 1;
+			}
+			else if (IsKnight (piecesOpposite[i]) )
+			{
+				opposite_score += 3;
+			}
+			else if (IsBishop (piecesOpposite[i]) )
+			{
+				opposite_score += 3;
+			}
+			else if (IsRook (piecesOpposite[i]) )
+			{
+				opposite_score += 5;
+			}
+			else if (IsQueen (piecesOpposite[i]) )
+			{
+				opposite_score += 9;
+			}
+			else if (IsKing (piecesOpposite[i]) )
+			{
+				opposite_score += 400;
+			}
 		}
-	}
 
-
-	//'check' situations
-	if (is_white_in_check && moves_white)
-	{
-		//white in check but still has moves.
-		return STATUS_WHITE_IN_CHECK;
+		//return the difference between player's and opponent's score
+		return ( player_score - opposite_score ) ;
 	}
-	if (is_black_in_check && moves_black)
-	{
-		//black in check but still has moves.
-		return STATUS_BLACK_IN_CHECK;
-	}
-
-	//didn't answer any of end game conditions.
-	//can continue play.
-	return STATUS_CONTINUE_PLAY;
 }
+
+
 
 //one turn of the CPU.
 void CPUTurn (game_state_t * game)

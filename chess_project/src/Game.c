@@ -492,7 +492,38 @@ int IsMan (piece_t piece)
 	else
 		return 0;
 }
-
+//will return 1 if piece is bishop, 0 otherwise.
+int IsBishop (piece_t piece)
+{
+	if ((piece.identity == WHITE_B) || (piece.identity == BLACK_B) )
+		return 1;
+	else
+		return 0;
+}
+//will return 1 if piece is knight, 0 otherwise.
+int IsKnight (piece_t piece)
+{
+	if ((piece.identity == WHITE_N) || (piece.identity == BLACK_N) )
+		return 1;
+	else
+		return 0;
+}
+//will return 1 if piece is rook, 0 otherwise.
+int IsRook (piece_t piece)
+{
+	if ((piece.identity == WHITE_R) || (piece.identity == BLACK_R) )
+		return 1;
+	else
+		return 0;
+}
+//will return 1 if piece is queen, 0 otherwise.
+int IsQueen (piece_t piece)
+{
+	if ((piece.identity == WHITE_Q) || (piece.identity == BLACK_Q) )
+		return 1;
+	else
+		return 0;
+}
 //will return 1 if piece is king, 0 otherwise.
 int IsKing (piece_t piece)
 {
@@ -542,68 +573,6 @@ void GetAllPieces (game_state_t * game, color_t color, piece_t * array, int * cn
 	}
 
 }
-
-//scoring function to use with minimax.
-//based on player color and game state.
-int BasicScoringFunction (game_state_t * game, color_t maximizing_player)
-{
-
-	int player_score=0, opposite_score=0;
-
-	//get player's pieces
-	int cntPiecesPlayer;//will count how many pieces player has.
-	piece_t piecesPlayer [MAX_PIECES_PLAYER]; //player can have at most 20 pieces.
-	GetAllPieces (game, maximizing_player, piecesPlayer, &cntPiecesPlayer);
-
-	//get opposite color's pieces
-	int cntPiecesOpposite;//will count how many pieces player has.
-	piece_t piecesOpposite [MAX_PIECES_PLAYER]; //player can have at most 20 pieces.
-	GetAllPieces (game, GetOppositeColor(maximizing_player), piecesOpposite, &cntPiecesOpposite);
-
-
-	//determine winning score if one side has no pieces left.
-	if (cntPiecesPlayer==0)
-	{
-		return SCORE_WIN_OPPONENT;
-	}
-	else if (cntPiecesOpposite==0)
-	{
-		return SCORE_WIN_PLAYER;
-	}
-
-	//in any other case, count pieces to compute score
-	//iterate and add on both sides.
-	for (int i=0; i<cntPiecesPlayer; i++)
-	{
-		if (IsMan (piecesPlayer[i]))
-		{
-			player_score += 1;
-		}
-		else if (IsKing (piecesPlayer[i]) )
-		{
-			player_score += 3;
-		}
-	}
-
-	for (int i=0; i<cntPiecesOpposite; i++)
-	{
-		if (IsMan (piecesOpposite[i]))
-		{
-			opposite_score += 1;
-		}
-		else if (IsKing (piecesOpposite[i]) )
-		{
-			opposite_score += 3;
-		}
-	}
-
-
-	//return the difference between player's and opponent's score
-	return ( player_score - opposite_score ) ;
-
-}
-
-
 
 
 int IsValidCapture (game_state_t * game, position_t source, position_t newDest)
@@ -1144,4 +1113,63 @@ int IsMoveRevealingKing (game_state_t * state, color_t player, move_t * move)
 	//check if the new state is a check state for player
 	return (IsCheckState(&newState, player));
 
+}
+
+
+//TODO need refine - with next player.
+play_status_t GetPlayStatus (game_state_t * game, color_t current_player)
+{
+
+	color_t opponent_player = GetOppositeColor(current_player);
+	//get the moves for both players.
+	ListNode * moves_player = GetMovesForPlayer(game, current_player);
+	ListNode * moves_opponent = GetMovesForPlayer(game, opponent_player);
+
+	//check if there is "check" state on either side.
+	int is_player_in_check = IsCheckState(game, current_player);
+	int is_opponent_in_check = IsCheckState(game, opponent_player);
+
+	//end game situations (checkmate/tie)
+	if (!moves_player) //player can't move
+	{
+		if (is_player_in_check) //if player in check, then checkmate (player lost)
+		{
+			return STATUS_PLAYER_IN_CHECKMATE;
+		}
+		else	//player can't move but not treatened, it is just tie for player.
+		{
+			return STATUS_TIE;
+			//TODO return speicfic tie for player ?
+		}
+	}
+
+	if (!moves_opponent) //opponent can't move
+	{
+		if (is_opponent_in_check) //if opponent in check, then checkmate (player wins)
+		{
+			return STATUS_OPPONENT_IN_CHECKMATE;
+		}
+		else	//opponent can't move but not treatened, it is just tie for opponent.
+		{
+			return STATUS_TIE;
+			//TODO return speicfic tie for player ?
+		}
+	}
+
+
+	//'check' situations
+	if (is_player_in_check && moves_player)
+	{
+		//player in check but still has moves.
+		return STATUS_PLAYER_IN_CHECK;
+	}
+	if (is_opponent_in_check && moves_opponent)
+	{
+		//opponent in check but still has moves.
+		return STATUS_OPPONENT_IN_CHECK;
+	}
+
+	//didn't answer any of end game conditions.
+	//can continue play.
+	return STATUS_CONTINUE_PLAY;
 }

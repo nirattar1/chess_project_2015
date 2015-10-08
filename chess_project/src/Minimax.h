@@ -24,8 +24,8 @@
 extern int _NUM_LEAVES;
 
 //maximum score
-#define MAX_SCORE 10000
-#define MIN_SCORE -10000
+#define MAX_SCORE 1000000
+#define MIN_SCORE -1000000
 
 //gets a list of children. will determine the best option out of them.
 //notes:
@@ -37,7 +37,7 @@ void MinimaxChoose (
 		int current_depth, int max_depth,
 		int enable_pruning, int alpha, int beta,
 		color_t maximizing_player, int current_turn_is_maximizing,
-		int (*ScoringFunction)(STATE_TYPE *, color_t),
+		int (*ScoringFunction)(STATE_TYPE *, color_t, color_t),
 		ListNode * (*ChildGenerateFunction)(STATE_TYPE *, color_t),
 		int * chosenSon, int * chosenValue); //by reference, will update these for caller.
 

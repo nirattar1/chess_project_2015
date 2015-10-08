@@ -34,6 +34,61 @@ int readline (char * line)
 	}
 }
 
+char GetIdentityByString (char * line)
+{
+	if (strstr(line, "white pawn"))
+	{
+		return WHITE_M;
+	}
+	if (strstr(line, "white bishop"))
+	{
+		return WHITE_B;
+	}
+	if (strstr(line, "white knight"))
+	{
+		return WHITE_N;
+	}
+	if (strstr(line, "white rook"))
+	{
+		return WHITE_R;
+	}
+	if (strstr(line, "white queen"))
+	{
+		return WHITE_Q;
+	}
+	if (strstr(line, "white king"))
+	{
+		return WHITE_K;
+	}
+
+	if (strstr(line, "black pawn"))
+	{
+		return BLACK_M;
+	}
+	if (strstr(line, "black bishop"))
+	{
+		return BLACK_B;
+	}
+	if (strstr(line, "black knight"))
+	{
+		return BLACK_N;
+	}
+	if (strstr(line, "black rook"))
+	{
+		return BLACK_R;
+	}
+	if (strstr(line, "black queen"))
+	{
+		return BLACK_Q;
+	}
+	if (strstr(line, "black king"))
+	{
+		return BLACK_K;
+	}
+
+	return 0;
+}
+
 
 int Menu_Settings(game_state_t * game, char ** board)
 {
@@ -151,23 +206,7 @@ int Menu_Settings(game_state_t * game, char ** board)
 			pos.y = yInt;
 
 			//find identity - by substring
-			char identity = WHITE_M;
-			if (strstr(line, "white m"))
-			{
-				identity = WHITE_M;
-			}
-			else if (strstr(line, "black m"))
-			{
-				identity = BLACK_M;
-			}
-			else if (strstr(line, "white k"))
-			{
-				identity = WHITE_K;
-			}
-			else if (strstr(line, "black k"))
-			{
-				identity = BLACK_K;
-			}
+			char identity = GetIdentityByString (line);
 
 			if (PositionInBounds(pos))
 			{
@@ -231,7 +270,7 @@ move_t Menu_PlayUser(game_state_t * game)
 	ClearCharBuffer (line, MAX_COMMAND_LENGTH);
 
 	//print the command to enter settings to the user
-	printf("XXXXXX- enter your move !! ");
+	printf("XXXXXX- enter your move !!\n");
 
 
 	//get the list of user's moves.
@@ -241,12 +280,8 @@ move_t Menu_PlayUser(game_state_t * game)
 	//repeat until valid turn
 	while (!valid)
 	{
-
-
 		//read into buffer
 		readline(line);
-
-
 
 		//if asked for "move" command, see that exists.
 		//format - move <x,y> to <i,j>[<k,l>...]
@@ -254,7 +289,9 @@ move_t Menu_PlayUser(game_state_t * game)
 		{
 
 			move_t proposed_move;
+			//TODO always validate fields.
 			proposed_move.num_captures = 0;
+			proposed_move.promote_to_identity = 0;
 
 			//source
 			char x ;

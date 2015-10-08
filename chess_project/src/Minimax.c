@@ -45,7 +45,7 @@ void MinimaxChoose (
 		int current_depth, int max_depth,
 		int enable_pruning, int alpha, int beta,
 		color_t maximizing_player, int current_turn_is_maximizing,
-		int (*ScoringFunction)(STATE_TYPE *, color_t),
+		int (*ScoringFunction)(STATE_TYPE *, color_t, color_t),
 		ListNode * (*ChildGenerateFunction)(STATE_TYPE *, color_t),
 		int * chosenSon, int * chosenValue) //by reference, will update these for caller.
 {
@@ -54,6 +54,8 @@ void MinimaxChoose (
 	//debug (only for ints)
 	//DEBUG_PRINT(("current state: %d\n", *((int *) state)));
 
+	//get current player from argument
+	color_t current_player = (current_turn_is_maximizing) ? maximizing_player : GetOppositeColor(maximizing_player) ;
 
 	//get children of node.
 	//(on first level - from argument, otherwise generate from state.)
@@ -64,8 +66,6 @@ void MinimaxChoose (
 	}
 	else if (current_depth!=max_depth)	//compute children for any non-leaf
 	{
-		//get current player from argument
-		color_t current_player = (current_turn_is_maximizing) ? maximizing_player : GetOppositeColor(maximizing_player) ;
 		Children = ChildGenerateFunction (state, current_player);
 	}
 
@@ -77,7 +77,7 @@ void MinimaxChoose (
 	{
 		*chosenSon = 0;//has no meaning here.
 		//call scoring function to compute based on state.
-		*chosenValue = (ScoringFunction(state, maximizing_player));
+		*chosenValue = (ScoringFunction(state, maximizing_player, current_player));
 
 		//debug
 		DEBUG_PRINT(("scoring function value: %d\n", *chosenValue));
