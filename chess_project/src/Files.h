@@ -19,7 +19,7 @@
 #define CHESS_XML_NODE_ROW_FORMAT "row_%d"
 #define CHESS_XML_NODE_ROW_EMPTY_PIECE '_'
 
-void LoadGame(game_state_t * game,char * FileName);
+int LoadGame(game_state_t * game,char * filename);
 void SaveGame(const game_state_t * game,char * FileName);
 static void GetRowAsString (const game_state_t * game, int row_index, char * row_content_chars);
 

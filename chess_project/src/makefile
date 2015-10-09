@@ -30,7 +30,7 @@ Minimax.o: Minimax.h Minimax.c
 	gcc -c $(CFLAGS) $*.c
 	
 Console_ui.o: Console_ui.h Console_ui.c
-	gcc -c $(CFLAGS) $*.c
+	gcc -c $(CFLAGS) $*.c $(XML_CFLAGS)
 
 Files.o: Files.h Files.c
 	gcc -c $(CFLAGS) $*.c $(XML_CFLAGS)

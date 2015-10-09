@@ -8,7 +8,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
+#include "Files.h"
 #include "Game_Mgr.h"
 
 void ClearCharBuffer (char * buffer, int buflen)
@@ -31,6 +31,15 @@ int readline (char * line)
 	}
 	else
 	{
+		//there is line
+
+		//clean the last \n
+		char * new_line = strchr(line, '\n');
+		//replace newline, if found, with null char.
+		if (new_line!=NULL)
+		{
+			*new_line = 0;
+		}
 		return 1;
 	}
 }
@@ -100,6 +109,9 @@ static void Menu_Settings_PrintError(settings_command_error_t cmd_status)
 			break;
 		case SETTING_COMMAND_STATUS_WRONG_MINIMAX_DEPTH:
 			printf(WRONG_MINIMAX_DEPTH);
+			break;
+		case SETTING_COMMAND_STATUS_WRONG_FILE_NAME:
+			printf (WRONG_FILE_NAME);
 			break;
 		case SETTING_COMMAND_STATUS_ILLEGAL_COMMAND:
 			printf (ILLEGAL_COMMAND);
@@ -222,11 +234,25 @@ static settings_command_error_t Menu_ReadSetting_LoadGame (char * line, int star
 	char file_name [MAX_COMMAND_LENGTH];
 	strncpy(file_name, line+start_at_char, MAX_COMMAND_LENGTH);
 
-	LoadGame(game, file_name);
+	//find out first if file exists.
+	if (!DoesFileExist(file_name))
+	{
+		return SETTING_COMMAND_STATUS_WRONG_FILE_NAME;
+	}
 
-	//TODO handle file not exist
+	//trying to open with libxml2
+	if (!LoadGame(game, file_name))
+	{
+		//TODO specific libxml2 errors? currently giving only 1 error code for all problems.
+		return SETTING_COMMAND_STATUS_WRONG_FILE_NAME;
+	}
+	else
+	{
+		//reading succeeded
+		PrintBoard(game);
+		return SETTING_COMMAND_STATUS_OK;
+	}
 
-	//TODO print the board after loading.
 }
 
 int Menu_Settings(game_state_t * game, char ** board)

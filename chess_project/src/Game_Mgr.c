@@ -4,6 +4,7 @@
 #include "Console_ui.h"
 #include "Minimax.h"
 #include <string.h>
+#include <sys/stat.h>
 
 //TODO remove this include
 #include "tests/Test_Gui_framework.h"
@@ -90,6 +91,12 @@ int main (int argc, char * argv[])
 //	return 0;
 //}
 
+int DoesFileExist(const char *filename)
+{
+    struct stat st;
+    int result = stat(filename, &st);
+    return (result == 0);
+}
 
 void print_line(){
 	int i;

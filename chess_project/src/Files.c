@@ -9,11 +9,31 @@
 #include "Files.h"
 #include "Game.h"
 
-void LoadGame(game_state_t * game,char * FileName)
+/**
+ * print_element_names:
+ * @a_node: the initial xml node to consider.
+ *
+ * Prints the names of the all the xml elements
+ * that are siblings or children of a given xml node.
+ */
+static void
+print_element_names(xmlNode * a_node)
+{
+    xmlNode *cur_node = NULL;
+
+    for (cur_node = a_node; cur_node; cur_node = cur_node->next) {
+        if (cur_node->type == XML_ELEMENT_NODE) {
+            printf("node type: Element, name: %s\n", cur_node->name);
+        }
+
+        print_element_names(cur_node->children);
+    }
+}
+
+int LoadGame(game_state_t * game,char * filename)
 {
     xmlDoc *doc = NULL;
     xmlNode *root_element = NULL;
-
 
     /*
      * this initialize the library and check potential ABI mismatches
@@ -23,17 +43,28 @@ void LoadGame(game_state_t * game,char * FileName)
     LIBXML_TEST_VERSION
 
     /*parse the file and get the DOM */
-	char * filename = "test.xml";
-    doc = xmlReadFile(filename, NULL, 0);
+	//call with XML_PARSE_NOWARNING to avoid errors by libxml
+	//(assuming correct xml structure).
+    doc = xmlReadFile(filename, NULL, XML_PARSE_NOWARNING);
 
-    if (doc == NULL) {
-        printf("error: could not parse file %s\n", filename);
+    //hold status and return it at the end of func.
+    int status = 0;
+    if (doc == NULL)
+    {
+        status = 0;
     }
+    else
+    {
+    	status = 1; //parsed the file.
 
-    /*Get the root element node */
-    root_element = xmlDocGetRootElement(doc);
+    	//TODO file load - do it properly.
 
-    print_element_names(root_element);
+    	//process it.
+    	/*Get the root element node */
+        root_element = xmlDocGetRootElement(doc);
+
+        print_element_names(root_element);
+    }
 
     /*free the document */
     xmlFreeDoc(doc);
@@ -44,7 +75,8 @@ void LoadGame(game_state_t * game,char * FileName)
      */
     xmlCleanupParser();
 
-    return 0;
+    return status;
+
 }
 
 

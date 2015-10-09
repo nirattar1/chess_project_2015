@@ -80,6 +80,8 @@ typedef enum
 	SETTING_COMMAND_STATUS_ILLEGAL_COMMAND,
 	SETTING_COMMAND_STATUS_WRONG_MINIMAX_DEPTH,
 	SETTING_COMMAND_STATUS_WRONG_GAME_MODE,
+	SETTING_COMMAND_STATUS_WRONG_FILE_NAME
+
 }
 settings_command_error_t;
 
@@ -91,6 +93,8 @@ settings_command_error_t;
 //parameter 0 - "gui" or "console"
 //(default=console)
 int main (int argc, char * argv[]);
+//check whether a file exists.
+int DoesFileExist(const char *filename);
 
 #define perror_message(func_name) (perror("Error: standard function %s has failed", func_name));
 #define print_message(message) (printf("%s", message));
