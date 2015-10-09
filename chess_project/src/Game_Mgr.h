@@ -11,7 +11,7 @@
 //
 
 //debug
-#define DEBUG
+//#define DEBUG
 
 #ifdef DEBUG
 	#define IS_DEBUG 1
@@ -49,6 +49,9 @@ extern int 		SETTINGS_MAX_DEPTH;
 #define DEFAULT_USER_COLOR 		COLOR_WHITE
 #define	 DEFAULT_NEXT_PLAYER 	COLOR_WHITE
 #define DEFAULT_MAX_DEPTH 		1
+#define MAX_DEPTH_MIN_VALUE 	1
+#define MAX_DEPTH_MAX_VALUE 	4
+#define MAX_DEPTH_BEST_VALUE 	5
 
 //texts
 #define ENTER_SETTINGS "Enter game settings:\n" 
@@ -69,6 +72,16 @@ extern int 		SETTINGS_MAX_DEPTH;
 
 #define TIE "The game ends in a tie\n"
 
+
+//error codes for settings command
+typedef enum
+{
+	SETTING_COMMAND_STATUS_OK,
+	SETTING_COMMAND_STATUS_ILLEGAL_COMMAND,
+	SETTING_COMMAND_STATUS_WRONG_MINIMAX_DEPTH,
+	SETTING_COMMAND_STATUS_WRONG_GAME_MODE,
+}
+settings_command_error_t;
 
 
 //functions

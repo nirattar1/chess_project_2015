@@ -9,6 +9,44 @@
 #include "Files.h"
 #include "Game.h"
 
+void LoadGame(game_state_t * game,char * FileName)
+{
+    xmlDoc *doc = NULL;
+    xmlNode *root_element = NULL;
+
+
+    /*
+     * this initialize the library and check potential ABI mismatches
+     * between the version it was compiled for and the actual shared
+     * library used.
+     */
+    LIBXML_TEST_VERSION
+
+    /*parse the file and get the DOM */
+	char * filename = "test.xml";
+    doc = xmlReadFile(filename, NULL, 0);
+
+    if (doc == NULL) {
+        printf("error: could not parse file %s\n", filename);
+    }
+
+    /*Get the root element node */
+    root_element = xmlDocGetRootElement(doc);
+
+    print_element_names(root_element);
+
+    /*free the document */
+    xmlFreeDoc(doc);
+
+    /*
+     *Free the global variables that may
+     *have been allocated by the parser.
+     */
+    xmlCleanupParser();
+
+    return 0;
+}
+
 
 void SaveGame(const game_state_t * game,char * FileName)
 {

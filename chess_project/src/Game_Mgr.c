@@ -461,6 +461,8 @@ void MovePrint (move_t * move)
 
 char * GetIdentityName (char identity)
 {
+	//TODO enter all .
+	//TODO another function for set command. - maybe can unify.
 	if (identity==WHITE_Q || identity==BLACK_Q)
 	{
 		return "queen";

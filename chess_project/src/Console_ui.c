@@ -24,7 +24,8 @@ void ClearCharBuffer (char * buffer, int buflen)
 
 int readline (char * line)
 {
-	if ( fgets (line , MAX_COMMAND_LENGTH , stdin) == NULL ) {
+	if ( fgets (line , MAX_COMMAND_LENGTH , stdin) == NULL )
+	{
 			printf("No line\n");
 			return 0;
 	}
@@ -90,9 +91,146 @@ char GetIdentityByString (char * line)
 }
 
 
-int Menu_Settings(game_state_t * game, char ** board)
+static void Menu_Settings_PrintError(settings_command_error_t cmd_status)
+{
+	switch (cmd_status)
+	{
+		case SETTING_COMMAND_STATUS_WRONG_GAME_MODE:
+			printf(WRONG_GAME_MODE);
+			break;
+		case SETTING_COMMAND_STATUS_WRONG_MINIMAX_DEPTH:
+			printf(WRONG_MINIMAX_DEPTH);
+			break;
+		case SETTING_COMMAND_STATUS_ILLEGAL_COMMAND:
+			printf (ILLEGAL_COMMAND);
+			break;
+		default:
+			printf (ILLEGAL_COMMAND);
+			break;
+	}
+
+
+}
+//prompt user and set game mode
+//possible values - 1, 2 .
+static settings_command_error_t Menu_ReadSetting_GameMode
+	(char * line, int start_at_char, game_state_t * game)
 {
 
+	//parse and process
+	char d [2];
+	strncpy(d, line+start_at_char, 1);
+	d[1] = '\0';
+
+	int mode = atoi(d);
+	if (mode!=GAME_MODE_PLAYER_VS_PLAYER && mode!=GAME_MODE_PLAYER_VS_CPU)
+	{
+		return SETTING_COMMAND_STATUS_WRONG_GAME_MODE;
+	}
+	else
+	{
+		//success, set and print
+		Settings_GameMode_Set(mode);
+		if (mode == GAME_MODE_PLAYER_VS_PLAYER)
+		{
+			printf(TWO_PLAYERS_GAME_MODE);
+		}
+		else if (mode == GAME_MODE_PLAYER_VS_CPU)
+		{
+			printf(PLAYER_VS_AI_GAME_MODE);
+		}
+		return SETTING_COMMAND_STATUS_OK;
+	}
+
+}
+
+static settings_command_error_t Menu_ReadSetting_Difficulty(char * line, int start_at_char, game_state_t * game)
+{
+	//check that game mode is indeed against CPU. otherwise we return as illegal command.
+	if (Settings_GameMode_Get() != GAME_MODE_PLAYER_VS_CPU)
+	{
+		return SETTING_COMMAND_STATUS_ILLEGAL_COMMAND;
+	}
+
+	if (strncmp(line+start_at_char, "best", 4)==0)
+	{
+		//user defined "best" difficulty.
+		Settings_MaxDepth_Set(MAX_DEPTH_BEST_VALUE);
+		return SETTING_COMMAND_STATUS_OK;
+	}
+
+	else if (strncmp(line+start_at_char, "depth", 5)==0)
+	{
+		//user defined a constant depth
+
+		//parse and process
+		char d [2];
+		strncpy(d, line+start_at_char+6, 1);
+		d[1] = '\0';
+		int depth = atoi(d);
+		if (depth<MAX_DEPTH_MIN_VALUE || depth > MAX_DEPTH_MAX_VALUE)
+		{
+			return SETTING_COMMAND_STATUS_WRONG_MINIMAX_DEPTH;
+		}
+		else
+		{
+			//valid depth, set it.
+			Settings_MaxDepth_Set(depth);
+			return SETTING_COMMAND_STATUS_OK;
+		}
+	}
+
+
+	//if reached here it is an error.
+	return SETTING_COMMAND_STATUS_ILLEGAL_COMMAND;
+
+}
+
+static settings_command_error_t Menu_ReadSetting_UserColor (char * line, int start_at_char, game_state_t * game)
+{
+
+	//check that game mode is indeed against CPU. otherwise we return as illegal command.
+	if (Settings_GameMode_Get() != GAME_MODE_PLAYER_VS_CPU)
+	{
+		return SETTING_COMMAND_STATUS_ILLEGAL_COMMAND;
+	}
+
+	//read black or white
+	if (strncmp(line+start_at_char, "black", 5)==0)
+	{
+		Settings_UserColor_Set(COLOR_BLACK);
+		DEBUG_PRINT(("user color is %d\n", Settings_UserColor_Get()));
+		return SETTING_COMMAND_STATUS_OK;
+	}
+	else if (strncmp(line+start_at_char, "white", 5)==0)
+	{
+		Settings_UserColor_Set(COLOR_WHITE);
+		DEBUG_PRINT(("user color is %d\n", Settings_UserColor_Get()));
+		return SETTING_COMMAND_STATUS_OK;
+	}
+
+	return SETTING_COMMAND_STATUS_ILLEGAL_COMMAND;
+}
+
+
+//loads the game
+static settings_command_error_t Menu_ReadSetting_LoadGame (char * line, int start_at_char, game_state_t * game)
+{
+
+	//get file name from line and store it.
+	//file name can be as long as maximum command length
+	char file_name [MAX_COMMAND_LENGTH];
+	strncpy(file_name, line+start_at_char, MAX_COMMAND_LENGTH);
+
+	LoadGame(game, file_name);
+
+	//TODO handle file not exist
+
+	//TODO print the board after loading.
+}
+
+int Menu_Settings(game_state_t * game, char ** board)
+{
 
 	//print the board
 	PrintBoard(game);
@@ -101,50 +239,42 @@ int Menu_Settings(game_state_t * game, char ** board)
 	char line[MAX_COMMAND_LENGTH];
 	ClearCharBuffer (line, MAX_COMMAND_LENGTH);
 
-	//print the command to enter settings to the user
-	printf(ENTER_SETTINGS);
-
 	//
 	int start = 0;
 	//while user does'nt enter QUIT or START
 	while (1)
 	{
 
+		//prompt user to enter input
+		printf(ENTER_SETTINGS);
 
 		readline(line);
 
-
-		if (strncmp(line, "minimax_depth", 13)==0)
+		settings_command_error_t cmd_status = SETTING_COMMAND_STATUS_ILLEGAL_COMMAND;
+		//game mode
+		if (strncmp(line, "game_mode", 9)==0)
 		{
-			//parse and give to command
-			char d [2];
-			strncpy(d, line+14, 1);
-			d[1] = '\0';
-			int depth = atoi(d);
-			if (depth<1 || depth > 6)
-			{
-				printf(WRONG_MINIMAX_DEPTH);
-			}
-			else
-			{
-				Settings_MaxDepth_Set(depth);
-			}
+			//TODO move print error to print function
+			cmd_status = Menu_ReadSetting_GameMode(line, 10, game);
 		}
 
+		else if (strncmp(line, "difficulty", 10)==0)
+		{
+			//TODO move print error to print function
+			cmd_status = Menu_ReadSetting_Difficulty(line, 11, game);
+		}
 
 		else if (strncmp(line, "user_color", 10)==0)
 		{
-			color_t color = DEFAULT_USER_COLOR;
-			if (strncmp(line+11, "black", 5)==0)
-			{
-				color = COLOR_BLACK;
-			}
-			if (strncmp(line+11, "white", 5)==0)
-			{
-				color = COLOR_WHITE;
-			}
-			Settings_UserColor_Set(color);
+			cmd_status = Menu_ReadSetting_UserColor(line, 11, game);
 		}
+
+		//load game
+		else if (strncmp(line, "load", 4)==0)
+		{
+			cmd_status = Menu_ReadSetting_LoadGame(line, 5, game);
+		}
+
 
 		//rm
 		//format:rm <x,y>
@@ -242,8 +372,16 @@ int Menu_Settings(game_state_t * game, char ** board)
 			exit (1);
 		}
 
+		//handle unsuccessful commands.
+		//(print the appropriate error)
+		if (cmd_status!=SETTING_COMMAND_STATUS_OK)
+		{
+			Menu_Settings_PrintError(cmd_status);
+		}
+
 	}
 
+	//after settings loop, either start game or quit.
 	if (start)
 	{
 		DoGame (game);
