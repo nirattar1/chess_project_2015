@@ -7,7 +7,8 @@
 
 #include "../Files.h"
 #include "Test_Files.h"
-#include "../Chess.h"
+
+#include "../Game_Mgr.h"
 
 void Test_Files ()
 {

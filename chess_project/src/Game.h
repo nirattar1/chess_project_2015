@@ -293,10 +293,13 @@ void MoveFree( void * data );
 void GetAllPieces (game_state_t * game, color_t color, piece_t * array, int * cnt_pieces);
 
 
-//TODO remove, not needed for chess
-//ListNode * GetSuccessiveCapturesFromMove (game_state_t * game, move_t * baseMove);
-
 //get possible moves for 1 piece in game.
+//get all the possible moves for player 'color' in game.
+//will generate and return a list of the moves.
+//basic algorithm:
+//1. iterate on all pieces of the player in the game.
+//2. for each piece, run GetMovesForPiece and collect the moves.
+//3. TODO - sort moves by number of captures.
 ListNode * GetMovesForPiece (game_state_t * game, piece_t piece);
 
 //get all the possible moves for player in game.

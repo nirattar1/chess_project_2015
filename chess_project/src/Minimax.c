@@ -11,7 +11,7 @@
 #include "tests/Test_Minimax.h"
 #include <math.h>
 
-#include "Chess.h"
+#include "Game_Mgr.h"
 //initialize global
 int _NUM_LEAVES = 0;
 

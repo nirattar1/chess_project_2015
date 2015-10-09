@@ -5,8 +5,8 @@
  *      Author: nirattar
  */
 
-#include "../Chess.h"
 #include "../Game.h"
+#include "../Game_Mgr.h"
 #include "../Memory.h"
 
 void Test_PiecesDirections (game_state_t * game);

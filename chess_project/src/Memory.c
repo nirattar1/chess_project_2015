@@ -9,7 +9,7 @@
 #include "Memory.h"
 #include <stdio.h>
 
-#include "Chess.h"
+#include "Game_Mgr.h"
 
 int CNT_CALLS_MALLOC = 0;
 int CNT_CALLS_FREE = 0;

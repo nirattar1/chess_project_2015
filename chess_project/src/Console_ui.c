@@ -9,7 +9,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "Chess.h"
+#include "Game_Mgr.h"
 
 void ClearCharBuffer (char * buffer, int buflen)
 {
@@ -20,7 +20,7 @@ void ClearCharBuffer (char * buffer, int buflen)
 }
 
 
-#define MAX_COMMAND_LENGTH 1024
+#define MAX_COMMAND_LENGTH 51
 
 int readline (char * line)
 {

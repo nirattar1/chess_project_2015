@@ -5,7 +5,7 @@ XML_CFLAGS=`xml2-config --cflags`
 SDL_CFLAGS=`sdl-config --cflags`
 LIBS=`xml2-config --libs` `sdl-config --libs`
 
-O_FILES=Chess.o Game.o ListNode.o Memory.o Minimax.o Console_ui.o Files.o Gui_framework.o
+O_FILES=Game_Mgr.o Game.o ListNode.o Memory.o Minimax.o Console_ui.o Files.o Gui_framework.o
 TEST_O_FILES=Test_Main.o Test_GameBasic.o Test_Files.o Test_Gui_framework.o
 
 clean:
@@ -14,7 +14,7 @@ clean:
 chessprog: $(O_FILES) $(TEST_O_FILES)
 	gcc $(CFLAGS) -o $@ $^ $(LIBS)
 
-Chess.o: Chess.h Chess.c
+Game_Mgr.o: Game_Mgr.h Game_Mgr.c
 	gcc -c $(CFLAGS) $*.c
 
 Game.o: Game.h Game.c

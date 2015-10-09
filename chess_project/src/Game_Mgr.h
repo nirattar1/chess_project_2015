@@ -1,6 +1,15 @@
 #ifndef DRAUGHTS_
 #define DRAUGHTS_
 
+
+//the "game manager" is responsible for managing a game.
+//contains the program's "main" function.
+//they are responsible for:
+//1. launching console/graphic UI,
+//2. determining settings, managing turns,
+//3. and also serves as an interaction with the minimax. (contains scoring funcs.)
+//
+
 //debug
 #define DEBUG
 
@@ -22,26 +31,26 @@
 //#define TESTING
 
 
-
+//includes
 #include <stdlib.h>
 #include <stdio.h>
 #include "Game.h"
 
 
-//main class.
-//will also include the settings.
-
-
-
 //settings + defaults
-extern color_t SETTINGS_USER_COLOR;
-extern int SETTINGS_MAX_DEPTH;
+extern int			SETTINGS_GAME_MODE;
+extern color_t 		SETTINGS_USER_COLOR;
+extern	color_t		SETTINGS_NEXT_PLAYER;
+extern int 		SETTINGS_MAX_DEPTH;
 
-#define DEFAULT_USER_COLOR COLOR_WHITE
-#define DEFAULT_MAX_DEPTH 1
+#define GAME_MODE_PLAYER_VS_PLAYER 	1
+#define GAME_MODE_PLAYER_VS_CPU 	2
+#define	 DEFAULT_GAME_MODE		GAME_MODE_PLAYER_VS_PLAYER
+#define DEFAULT_USER_COLOR 		COLOR_WHITE
+#define	 DEFAULT_NEXT_PLAYER 	COLOR_WHITE
+#define DEFAULT_MAX_DEPTH 		1
 
-//
-
+//texts
 #define ENTER_SETTINGS "Enter game settings:\n" 
 #define WRONG_GAME_MODE "Wrong game mode\n"
 #define TWO_PLAYERS_GAME_MODE "Running game in 2 players mode\n"
@@ -60,17 +69,27 @@ extern int SETTINGS_MAX_DEPTH;
 
 #define TIE "The game ends in a tie\n"
 
+
+
+//functions
+
+//program's main.
+//launches the game in console/graphic UI.
+//parameter 0 - "gui" or "console"
+//(default=console)
+int main (int argc, char * argv[]);
+
 #define perror_message(func_name) (perror("Error: standard function %s has failed", func_name));
 #define print_message(message) (printf("%s", message));
 
-
-//get color of user/CPU.
+//getters and setters for all settings
+int Settings_GameMode_Get();
+void Settings_GameMode_Set(int mode);
+color_t Settings_NextPlayer_Get();
+void Settings_NextPlayer_Set(color_t player);
 color_t Settings_UserColor_Get();
 color_t Settings_CPUColor_Get();
-//set color of user
 void Settings_UserColor_Set(color_t color);
-
-//get/set max depth for minimax.
 int Settings_MaxDepth_Get();
 void Settings_MaxDepth_Set(int max_depth);
 

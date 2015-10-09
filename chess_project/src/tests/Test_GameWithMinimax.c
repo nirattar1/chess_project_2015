@@ -1,5 +1,5 @@
-#include "../Chess.h"
 #include "../Game.h"
+#include "../Game_Mgr.h"
 #include "../Minimax.h"
 
 void CPUTurn (game_state_t * game);

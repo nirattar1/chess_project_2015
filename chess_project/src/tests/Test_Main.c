@@ -5,9 +5,10 @@
  *      Author: nirattar
  */
 
-#include "../Chess.h"
 #include "Test_Minimax.h"
 #include "Test_Main.h"
+
+#include "../Game_Mgr.h"
 #include "../Memory.h"
 #include "Test_Files.h"
 

@@ -412,33 +412,36 @@ void CopyGameState (game_state_t * to, game_state_t * from)
 
 }
 
-//TODO chess default layout
 void GameDefaultLayout (game_state_t * game)
 {
 	//place all the pieces.
-	int i,j;
-	for (i = 0; i < BOARD_SIZE; i++){
-		for (j = 0; j < BOARD_SIZE; j++){
-			if ((i + j) % 2 == 0){
-				if (j <= 3){
-					game->pieces[i][j] = WHITE_M;
-				}
-				else if (j >= 6){
-					game->pieces[i][j] = BLACK_M;
-				}
-				else{
-					game->pieces[i][j] = EMPTY;
-				}
-			}
-			else{
-				game->pieces[i][j] = EMPTY;
-			}
-		}
-	}
 
-	//define counts
-	game->piecesCount[COLOR_BLACK]  = 20;
-	game->piecesCount[COLOR_WHITE]  = 20;
+	//black
+	SetPiece(Position('a',8), BLACK_R, game);
+	SetPiece(Position('b',8), BLACK_N, game);
+	SetPiece(Position('c',8), BLACK_B, game);
+	SetPiece(Position('d',8), BLACK_Q, game);
+	SetPiece(Position('e',8), BLACK_K, game);
+	SetPiece(Position('f',8), BLACK_B, game);
+	SetPiece(Position('g',8), BLACK_N, game);
+	SetPiece(Position('h',8), BLACK_R, game);
+	for (int i=0; i<BOARD_SIZE; i++)
+	{
+		SetPiece(Position('a'+i,7), BLACK_M, game);
+	}
+	//white
+	SetPiece(Position('a',1), WHITE_R, game);
+	SetPiece(Position('b',1), WHITE_N, game);
+	SetPiece(Position('c',1), WHITE_B, game);
+	SetPiece(Position('d',1), WHITE_Q, game);
+	SetPiece(Position('e',1), WHITE_K, game);
+	SetPiece(Position('f',1), WHITE_B, game);
+	SetPiece(Position('g',1), WHITE_N, game);
+	SetPiece(Position('h',1), WHITE_R, game);
+	for (int i=0; i<BOARD_SIZE; i++)
+	{
+		SetPiece(Position('a'+i,2), WHITE_M, game);
+	}
 
 }
 
@@ -745,101 +748,6 @@ ListNode * GetMovesForPlayer (game_state_t * game, color_t color)
 
 	return allMoves;
 }
-
-//TODO remove, not needed for chess
-////gets a capture move (move with num_captures > 0).
-////returns a list of ALL the capture moves, that are based on this move.
-////recursive function. it will try to generate routes until no more captures can be done.
-////(all these moves will have num_captures >= 1).
-//ListNode * GetSuccessiveCapturesFromMove (game_state_t * game, move_t * baseMove)
-//{
-//	//get the last position from move.
-//	position_t source = baseMove->dest [(baseMove->num_captures - 1)];
-//
-//	//build moves list.
-//	ListNode * list = NULL;
-//	int foundCaptures = 0;
-//
-//	//get possible directions
-//	//ALL directions are valid in successive captures (equal to king).
-//	//note: possible distances are only 1
-//	direction_t * directions = GetPieceDirections(WHITE_K);
-//
-//	//generate moves.
-//
-//	//for each direction
-//	for (; *directions != 0; directions++)
-//	{
-//
-//		direction_t direction = *directions;
-//
-//		//get destination
-//		position_t middlePos = GetPositionRelative(source, direction, 1);
-//		position_t newDest = GetPositionRelative(source, direction, 2);
-//		//if possible to eat:
-//
-//		if (baseMove->num_captures>=2)
-//		{
-//			//check if moves are equal.
-//			//TODO use memcmp
-//			if (newDest.x == baseMove->dest [(baseMove->num_captures - 2)].x
-//					&& newDest.y == baseMove->dest [(baseMove->num_captures - 2)].y)
-//				continue;
-//		}
-//		if (IsValidCapture (game, source, middlePos, newDest))
-//		{
-//			//report found.
-//			foundCaptures = 1;
-//
-//			//duplicate baseMove into newMove.
-//			move_t * newMove = (move_t *) mymalloc(sizeof (move_t));
-//			memcpy((void *)newMove, (void *) baseMove, sizeof (move_t));
-//
-//			//add new_dest to destinations of newMove.
-//			newMove->dest[newMove->num_captures] = newDest;
-//
-//			//increment capture counts
-//			newMove->num_captures++;
-//
-//			//call recursively with newMove.
-//			ListNode * Captures = GetSuccessiveCapturesFromMove(game, newMove);
-//
-//
-//			//if call returned null - create a list with one move (this destination) and return it.
-//			ListNode ** listp = &list;
-//			if (!Captures)
-//			{
-//				//add move to the list.
-//				ListPushBackElement (listp, (void *) newMove, sizeof (move_t));
-//			}
-//			//if call returned a not null (list) - concat with main list
-//			else
-//			{
-//				ListConcat(listp, Captures);
-//			}
-//			//update list pointer
-//			list = *listp;
-//
-//
-//		}
-//	}
-//	//if haven't found any successive capture - return null.
-//	if (!foundCaptures)
-//	{
-//		return NULL;
-//		//caller will be responsible for freeing base move.
-//	}
-//
-//	return list;
-//}
-
-
-//get all the possible moves for player 'color' in game.
-//will generate and return a list of the moves.
-//basic algorithm:
-//1. iterate on all pieces of the player in the game.
-//2. for each piece, run GetMovesForPiece and collect the moves.
-//3. optional - sort moves by number of captures.
 
 
 

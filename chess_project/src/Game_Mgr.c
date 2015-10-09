@@ -1,9 +1,12 @@
-#include "Chess.h"
+#include "Game_Mgr.h"
 #include "Game.h"
 #include "Memory.h"
 #include "Console_ui.h"
 #include "Minimax.h"
+#include <string.h>
 
+//TODO remove this include
+#include "tests/Test_Gui_framework.h"
 
 #ifdef TESTING
 	#include "tests/Test_Main.h"
@@ -11,9 +14,11 @@
 
 
 //default settings initialization.
+int			SETTINGS_GAME_MODE		= DEFAULT_GAME_MODE;
+color_t 	SETTINGS_USER_COLOR 	= DEFAULT_USER_COLOR;
+color_t		SETTINGS_NEXT_PLAYER 	= DEFAULT_NEXT_PLAYER;
+int 		SETTINGS_MAX_DEPTH 		= DEFAULT_MAX_DEPTH;
 
-color_t SETTINGS_USER_COLOR = DEFAULT_USER_COLOR;
-int SETTINGS_MAX_DEPTH = DEFAULT_MAX_DEPTH;
 
 
 
@@ -25,8 +30,6 @@ int main (int argc, char * argv[])
 	Test_Main();
 	exit (0);
 #endif
-
-
 
 	//init game rules
 	RulesInit();
@@ -40,8 +43,35 @@ int main (int argc, char * argv[])
 	GameInit(&game, (char **) board);
 	GameDefaultLayout(&game);
 
-	//start console ui
-	Menu_Settings(&game, (char **) board);
+	//determine wanted game mode from argument
+	int is_gui = 0; //default=console
+	if (argc==2)
+	{
+		if (strcmp(argv[1], "gui")==0)
+		{
+			is_gui = 1;
+		}
+		else if (strcmp(argv[1], "console")==0)
+		{
+			is_gui = 0;
+		}
+		else
+		{
+			//invalid game mode
+		}
+	}
+
+	//start game in correct ui
+	if (is_gui)
+	{
+		//start GUI
+		Test_Gui_framework();
+	}
+	else
+	{
+		//start console ui
+		Menu_Settings(&game, (char **) board);
+	}
 
 	memory_print();
 
@@ -91,6 +121,29 @@ void PrintBoard(game_state_t * game)
 	}
 	printf("\n");
 }
+
+//get/set game mode.
+int Settings_GameMode_Get()
+{
+	return SETTINGS_GAME_MODE;
+}
+
+void Settings_GameMode_Set(int mode)
+{
+	SETTINGS_GAME_MODE = mode;
+}
+
+//get/set next player.
+color_t Settings_NextPlayer_Get()
+{
+	return SETTINGS_NEXT_PLAYER;
+}
+
+void Settings_NextPlayer_Set(color_t player)
+{
+	SETTINGS_NEXT_PLAYER = player;
+}
+
 
 //get color of user
 color_t Settings_UserColor_Get()
@@ -323,8 +376,6 @@ void CPUTurn (game_state_t * game)
 
 void UserTurn (game_state_t * game)
 {
-
-
 	move_t userMove = Menu_PlayUser(game);
 	DoMove(&userMove, game);
 }
@@ -332,16 +383,15 @@ void UserTurn (game_state_t * game)
 void DoGame(game_state_t * game)
 {
 
-	//white always start
-	color_t current_player = COLOR_WHITE;
-
 	//print board first time
 	PrintBoard(game);
 
 	//play until somebody won
 	while (!GameWinning(game,COLOR_BLACK) && !GameWinning(game,COLOR_WHITE))
 	{
-		if (Settings_UserColor_Get()==current_player)
+		//do turn of next player.
+		color_t next_player = Settings_NextPlayer_Get();
+		if (next_player==Settings_UserColor_Get())
 		{
 			UserTurn (game);
 		}
@@ -354,7 +404,7 @@ void DoGame(game_state_t * game)
 		PrintBoard(game);
 
 		//switch player
-		current_player = (current_player==COLOR_WHITE) ? COLOR_BLACK : COLOR_WHITE;
+		Settings_NextPlayer_Set(GetOppositeColor(next_player));
 	}
 
 	//print winning side
