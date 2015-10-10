@@ -476,7 +476,8 @@ int Menu_Settings(game_state_t * game, char ** board)
 	}
 
 
-	return 1;
+	//game has ended.
+	return 0;
 
 
 }
@@ -490,14 +491,23 @@ move_t Menu_PlayUser(game_state_t * game)
 	char line[MAX_COMMAND_LENGTH];
 	ClearCharBuffer (line, MAX_COMMAND_LENGTH);
 
-	//print the command to enter settings to the user
-	printf("XXXXXX- enter your move !!\n");
-
+	//print message based on player.
+	color_t current_player = Settings_NextPlayer_Get();
+	if (current_player==COLOR_WHITE)
+	{
+		printf("White player - enter your move:\n");
+	}
+	else if (current_player==COLOR_BLACK)
+	{
+		printf("Black player - enter your move:\n");
+	}
 
 	//get the list of user's moves.
-	ListNode * moves = GetMovesForPlayer(game, Settings_UserColor_Get());
+	ListNode * moves = GetMovesForPlayer(game, current_player);
 
+	//TODO free list !
 	int valid = 0;
+
 	//repeat until valid turn
 	while (!valid)
 	{

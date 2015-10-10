@@ -187,16 +187,6 @@ void Settings_MaxDepth_Set(int max_depth)
 	SETTINGS_MAX_DEPTH = max_depth;
 }
 
-//TODO remove this function
-//return number if given color has won
-//if 	0 : nobody won (continue play).
-//		1 : given color has won.
-int GameWinning(game_state_t * game, color_t color)
-{
-
-
-	return 0;
-}
 
 
 //scoring function to use with minimax.
@@ -372,11 +362,15 @@ void CPUTurn (game_state_t * game)
 
 		//print
 		//"Computer: move <x,y> to <i,j>[<k,l>...]\n".
+		//TODO print right message on promotion, castling.
 		printf("Computer: move <%c,%d> to <%c,%d>",
 				move->src.x, move->src.y, move->dest[0].x, move->dest[0].y);
 		printf("\n");
 
 	}
+
+	//free moves list
+	ListFreeElements(RootChildren, MoveFree);
 
 }
 
@@ -395,43 +389,90 @@ void DoGame(game_state_t * game)
 
 	//TODO can start a game when 1 side loses/tie.
 
-	//play until somebody won
-	while (!GameWinning(game,COLOR_BLACK) && !GameWinning(game,COLOR_WHITE))
+	//find out who starts
+	color_t next_player = Settings_NextPlayer_Get();
+
+	//play while you can
+	//(allow one side to be in "check").
+	play_status_t play_status = GetPlayStatus(game, next_player);
+	while (play_status==STATUS_CONTINUE_PLAY
+			|| play_status==STATUS_OPPONENT_IN_CHECK
+			|| play_status==STATUS_PLAYER_IN_CHECK)
 	{
-		//do turn of next player.
-		color_t next_player = Settings_NextPlayer_Get();
-		if (next_player==Settings_UserColor_Get())
+
+		//do turn of next player. determine if it's of User or CPU.
+		if (Settings_GameMode_Get()==GAME_MODE_PLAYER_VS_CPU
+				&& Settings_CPUColor_Get()==next_player)
 		{
-			UserTurn (game);
+			//if we are in player vs.cpu mode, and it is CPU's turn.
+			CPUTurn(game);
 		}
 		else
 		{
-			CPUTurn(game);
+			//in any other case, it is user turn.
+			UserTurn (game);
 		}
 
 		//print board after turn
 		PrintBoard(game);
 
-		//switch player
-		Settings_NextPlayer_Set(GetOppositeColor(next_player));
+		//switch player (also save on global)
+		next_player = GetOppositeColor(next_player);
+		Settings_NextPlayer_Set(next_player);
+
+		//update play status for the new player
+		play_status=GetPlayStatus(game, next_player);
+
+		//handle "check" state for new player (if it is).
+		//will not print on checkmate.
+		GameHandleCheck(play_status, next_player);
 	}
 
-	//print winning side
-	if (GameWinning(game,COLOR_BLACK))
+	//handle end game.
+	GameHandleEnd(game, play_status, next_player);
+
+}
+
+void GameHandleEnd
+	(game_state_t * game, play_status_t play_status, color_t next_player)
+{
+	if (play_status==STATUS_TIE)
 	{
-		printf("black player wins!\n");
+		printf(TIE);
+	}
+	//if next player is in checkmate - end game.
+	else if (play_status==STATUS_PLAYER_IN_CHECKMATE)
+	{
+		if (next_player==COLOR_WHITE)
+		{
+			//white lost (black wins)
+			printf("Mate! Black player wins the game\n");
+		}
+		else if (next_player==COLOR_BLACK)
+		{
+			//black lost (white wins)
+			printf("Mate! White player wins the game\n");
+		}
 	}
 	else
 	{
-		printf("white player wins!\n");
+		//not supposed to happen
 	}
 }
 
+void GameHandleCheck (play_status_t play_status, color_t next_player)
+{
+	if (play_status==STATUS_PLAYER_IN_CHECK)
+	{
+		printf("Check!\n");
+	}
+	else if (play_status==STATUS_OPPONENT_IN_CHECK)
+	{
+		//not supposed to happen
+	}
+}
 
-
-
-//prints moves one after the other
-//TODO make according to format
+//prints moves one after the other, according to format.
 void MovesListPrint( LINK head )
 {
 	for ( ; head !=0; head = head->next )

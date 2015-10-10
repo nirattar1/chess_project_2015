@@ -579,6 +579,46 @@ void GetAllPieces (game_state_t * game, color_t color, piece_t * array, int * cn
 }
 
 
+board_validation_status_t IsValidBoard (game_state_t * game)
+{
+
+	//check if one of kings are missing.
+	position_t king_position;
+	if (!GetKingPosition(game, COLOR_WHITE, &king_position)
+			|| !GetKingPosition(game, COLOR_BLACK, &king_position) )
+	{
+		return BOARD_VALIDITY_KING_IS_MISSING;
+	}
+
+	//TODO check if piece counts by types do not exceed limits.
+
+
+	return BOARD_VALIDITY_OK;
+}
+
+//checks if it is valid to set piece of certain identity and position, to game.
+//returns 1 if valid, 0 if not valid.
+int IsValidPieceAddition (game_state_t * game, position_t position, char identity)
+{
+	//create a stack copy of the game state, and perform the add on it.
+	game_state_t newState;
+	char newBoard [BOARD_SIZE][BOARD_SIZE];
+	newState.pieces = (board_column *) newBoard;
+	CopyGameState(&newState, game);
+
+	//add the piece
+	SetPiece(position, identity, &newState);
+
+	//return if new board piece count is OK.
+	//(not checking other checks)
+	if (IsValidBoard(&newState)==BOARD_VALIDITY_TOO_MANY_PIECES_OF_TYPE)
+	{
+		return 0;
+	}
+
+	return 1;
+}
+
 int IsValidCapture (game_state_t * game, position_t source, position_t newDest)
 {
 
@@ -1078,6 +1118,7 @@ play_status_t GetPlayStatus (game_state_t * game, color_t current_player)
 
 
 	//'check' situations
+	//(if 'checkmate' then already handled.)
 	if (is_player_in_check && moves_player)
 	{
 		//player in check but still has moves.
@@ -1095,42 +1136,4 @@ play_status_t GetPlayStatus (game_state_t * game, color_t current_player)
 }
 
 
-board_validation_status_t IsValidBoard (game_state_t * game)
-{
 
-	//check if one of kings are missing.
-	position_t king_position;
-	if (!GetKingPosition(game, COLOR_WHITE, &king_position)
-			|| !GetKingPosition(game, COLOR_BLACK, &king_position) )
-	{
-		return BOARD_VALIDITY_KING_IS_MISSING;
-	}
-
-	//TODO check if piece counts by types do not exceed limits.
-
-
-	return BOARD_VALIDITY_OK;
-}
-
-//checks if it is valid to set piece of certain identity and position, to game.
-//returns 1 if valid, 0 if not valid.
-int IsValidPieceAddition (game_state_t * game, position_t position, char identity)
-{
-	//create a stack copy of the game state, and perform the add on it.
-	game_state_t newState;
-	char newBoard [BOARD_SIZE][BOARD_SIZE];
-	newState.pieces = (board_column *) newBoard;
-	CopyGameState(&newState, game);
-
-	//add the piece
-	SetPiece(position, identity, &newState);
-
-	//return if new board piece count is OK.
-	//(not checking other checks)
-	if (IsValidBoard(&newState)==BOARD_VALIDITY_TOO_MANY_PIECES_OF_TYPE)
-	{
-		return 0;
-	}
-
-	return 1;
-}

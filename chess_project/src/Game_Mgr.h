@@ -133,6 +133,13 @@ void UserTurn (game_state_t * game);
 //manages game
 void DoGame(game_state_t * game);
 
+//handles end of game. will print all the appropriate messages.
+void GameHandleEnd
+	(game_state_t * game, play_status_t play_status, color_t next_player);
+
+//prints a message if there is a check (only) for next player.
+void GameHandleCheck (play_status_t play_status, color_t next_player);
+
 //print a list of moves in good format
 void MovesListPrint( LINK head);
 
