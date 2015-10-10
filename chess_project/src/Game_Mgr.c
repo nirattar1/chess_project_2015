@@ -377,7 +377,11 @@ void CPUTurn (game_state_t * game)
 
 void UserTurn (game_state_t * game)
 {
+
+	//use the UI to select a move from the user.
 	move_t userMove = Menu_PlayUser(game);
+
+	//do the selected move.
 	DoMove(&userMove, game);
 }
 

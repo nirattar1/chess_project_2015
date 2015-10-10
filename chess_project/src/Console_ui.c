@@ -100,7 +100,7 @@ char GetIdentityByString (char * line)
 }
 
 
-static void Menu_Settings_PrintError(settings_command_error_t cmd_status)
+static void Menu_Settings_PrintError(user_command_errorcode_t cmd_status)
 {
 	switch (cmd_status)
 	{
@@ -122,6 +122,9 @@ static void Menu_Settings_PrintError(settings_command_error_t cmd_status)
 		case SETTING_COMMAND_STATUS_WRONG_BOARD_INITIALIZATION:
 			printf (WRONG_BOARD_INITIALIZATION);
 			break;
+		case SETTING_COMMAND_STATUS_PIECE_NOT_OF_PLAYER:
+			printf (PIECE_NOT_OF_PLAYER);
+			break;
 		case SETTING_COMMAND_STATUS_ILLEGAL_COMMAND:
 			printf (ILLEGAL_COMMAND);
 			break;
@@ -134,7 +137,7 @@ static void Menu_Settings_PrintError(settings_command_error_t cmd_status)
 }
 //prompt user and set game mode
 //possible values - 1, 2 .
-static settings_command_error_t Menu_ReadSetting_GameMode
+static user_command_errorcode_t Menu_ReadSetting_GameMode
 	(char * line, int start_at_char, game_state_t * game)
 {
 
@@ -165,7 +168,7 @@ static settings_command_error_t Menu_ReadSetting_GameMode
 
 }
 
-static settings_command_error_t Menu_ReadSetting_Difficulty(char * line, int start_at_char, game_state_t * game)
+static user_command_errorcode_t Menu_ReadSetting_Difficulty(char * line, int start_at_char, game_state_t * game)
 {
 	//check that game mode is indeed against CPU. otherwise we return as illegal command.
 	if (Settings_GameMode_Get() != GAME_MODE_PLAYER_VS_CPU)
@@ -207,7 +210,7 @@ static settings_command_error_t Menu_ReadSetting_Difficulty(char * line, int sta
 
 }
 
-static settings_command_error_t Menu_ReadSetting_UserColor (char * line, int start_at_char, game_state_t * game)
+static user_command_errorcode_t Menu_ReadSetting_UserColor (char * line, int start_at_char, game_state_t * game)
 {
 
 	//check that game mode is indeed against CPU. otherwise we return as illegal command.
@@ -235,7 +238,7 @@ static settings_command_error_t Menu_ReadSetting_UserColor (char * line, int sta
 
 
 //loads the game
-static settings_command_error_t Menu_ReadSetting_LoadGame (char * line, int start_at_char, game_state_t * game)
+static user_command_errorcode_t Menu_ReadSetting_LoadGame (char * line, int start_at_char, game_state_t * game)
 {
 
 	//get file name from line and store it.
@@ -265,7 +268,7 @@ static settings_command_error_t Menu_ReadSetting_LoadGame (char * line, int star
 }
 
 
-static settings_command_error_t Menu_ReadSetting_NextPlayer (char * line, int start_at_char, game_state_t * game)
+static user_command_errorcode_t Menu_ReadSetting_NextPlayer (char * line, int start_at_char, game_state_t * game)
 {
 
 	//read black or white
@@ -285,7 +288,7 @@ static settings_command_error_t Menu_ReadSetting_NextPlayer (char * line, int st
 	return SETTING_COMMAND_STATUS_ILLEGAL_COMMAND;
 }
 
-static settings_command_error_t Menu_ReadSetting_RemovePiece (char * line, int start_at_char, game_state_t * game)
+static user_command_errorcode_t Menu_ReadSetting_RemovePiece (char * line, int start_at_char, game_state_t * game)
 {
 	//get x and y value of position -
 	//assuming always 1 digit (board size less than 10)
@@ -311,7 +314,7 @@ static settings_command_error_t Menu_ReadSetting_RemovePiece (char * line, int s
 }
 
 
-static settings_command_error_t Menu_ReadSetting_SetPiece (char * line, int start_at_char, game_state_t * game)
+static user_command_errorcode_t Menu_ReadSetting_SetPiece (char * line, int start_at_char, game_state_t * game)
 {
 	//get x and y value of position -
 	//assuming always 1 digit (board size less than 10)
@@ -351,6 +354,80 @@ static settings_command_error_t Menu_ReadSetting_SetPiece (char * line, int star
 
 }
 
+static user_command_errorcode_t Menu_ReadCommand_Move
+(char * line, int start_at_char, game_state_t * game, color_t current_player)
+{
+
+		//determine source and destination positions from user line.
+		//assuming always 1 digit (board size less than 10)
+		char 	src_x, dest_x;
+		int 	src_y, dest_y;
+		sscanf (line+start_at_char, "<%c,%d> to <%c,%d>",
+				&src_x, &src_y, &dest_x, &dest_y);
+
+		//build positions.
+		position_t src 	= Position(src_x, src_y);
+		position_t dest = Position(dest_x, dest_y);
+
+		//check both positions are in bounds
+		if (!PositionInBounds(src) || !PositionInBounds(dest))
+		{
+			return SETTING_COMMAND_STATUS_WRONG_POSITION;
+		}
+
+		//check that position contains user's piece
+		if (GetColor(GetPiece(src, game)) != current_player)
+		{
+			return SETTING_COMMAND_STATUS_PIECE_NOT_OF_PLAYER;
+		}
+
+
+		//move on to read promotion identity (if exists)
+		start_at_char += 15; // skip this pattern length: <a,1>_to_<b,2>_
+		char identity = GetIdentityByString (line+start_at_char);
+
+		//check validity of piece type
+		if (identity==0)
+		{
+			//
+		}
+
+
+		//check that move is indeed in user's allowed moves list.
+
+		//get moves list.
+		ListNode * moves = GetMovesForPlayer(game, current_player); //free later
+
+		//build a proposed move.
+		move_t proposed_move;
+		//TODO always validate fields.
+		proposed_move.src = src;
+		proposed_move.dest[0] = dest;
+		proposed_move.num_captures = 0;
+		proposed_move.promote_to_identity = 0;
+
+
+		//find the move in allowed moves list (will update it's captures)
+		if (FindMoveInList(moves, &proposed_move))
+		{
+
+			//mark as valid
+			valid = 1;
+
+		}
+		else
+		{
+			//print
+			printf(ILLEGAL_MOVE);
+		}
+
+		//free moves list
+		ListFreeElements(moves, MoveFree);
+
+		return proposed_move;
+
+}
+
 int Menu_Settings(game_state_t * game, char ** board)
 {
 
@@ -372,7 +449,7 @@ int Menu_Settings(game_state_t * game, char ** board)
 
 		readline(line);
 
-		settings_command_error_t cmd_status = SETTING_COMMAND_STATUS_ILLEGAL_COMMAND;
+		user_command_errorcode_t cmd_status = SETTING_COMMAND_STATUS_ILLEGAL_COMMAND;
 		//game mode
 		if (strncmp(line, "game_mode", 9)==0)
 		{
@@ -491,77 +568,33 @@ move_t Menu_PlayUser(game_state_t * game)
 	char line[MAX_COMMAND_LENGTH];
 	ClearCharBuffer (line, MAX_COMMAND_LENGTH);
 
-	//print message based on player.
+	//determine player
 	color_t current_player = Settings_NextPlayer_Get();
-	if (current_player==COLOR_WHITE)
-	{
-		printf("White player - enter your move:\n");
-	}
-	else if (current_player==COLOR_BLACK)
-	{
-		printf("Black player - enter your move:\n");
-	}
 
-	//get the list of user's moves.
-	ListNode * moves = GetMovesForPlayer(game, current_player);
-
-	//TODO free list !
 	int valid = 0;
 
 	//repeat until valid turn
 	while (!valid)
 	{
+		user_command_errorcode_t cmd_status = SETTING_COMMAND_STATUS_ILLEGAL_COMMAND;
+
+		//print prompt message based on player.
+		if (current_player==COLOR_WHITE)
+		{
+			printf("White player - enter your move:\n");
+		}
+		else if (current_player==COLOR_BLACK)
+		{
+			printf("Black player - enter your move:\n");
+		}
+
 		//read into buffer
 		readline(line);
 
-		//if asked for "move" command, see that exists.
-		//format - move <x,y> to <i,j>[<k,l>...]
-		if(strncmp(line, "move <", 6)==0)
+		//"move" command
+		if(strncmp(line, "move", 4)==0)
 		{
-
-			move_t proposed_move;
-			//TODO always validate fields.
-			proposed_move.num_captures = 0;
-			proposed_move.promote_to_identity = 0;
-
-			//source
-			char x ;
-			strncpy(&x, line+6, 1);
-			char y[2] ;
-			strncpy(y, line+8, 1);
-			y[1] = '\0';
-			int yInt = atoi(y);
-
-			position_t src;
-			src.x = x;
-			src.y = yInt;
-			proposed_move.src = src;
-
-			//destinations.
-			//15,17
-			strncpy(&x, line+15, 1);
-			strncpy(y, line+17, 1);
-			y[1] = '\0';
-			yInt = atoi(y);
-			position_t dest;
-			dest.x = x;
-			dest.y = yInt;
-
-			//mark if valid move .
-			proposed_move.dest[0] = dest;
-
-			//find the move in allowed moves list (will update it's captures)
-			if (FindMoveInList(moves, &proposed_move))
-			{
-				valid = 1;
-				return proposed_move;
-			}
-			else
-			{
-				//print
-				printf(ILLEGAL_MOVE);
-			}
-
+			cmd_status = Menu_ReadCommand_Move(line, 5, game, current_player);
 		}
 
 		//if asked for get moves, print the moves.
@@ -575,9 +608,16 @@ move_t Menu_PlayUser(game_state_t * game)
 			exit (1);
 		}
 
+		//handle unsuccessful commands.
+		//(print the appropriate error)
+		if (cmd_status!=SETTING_COMMAND_STATUS_OK)
+		{
+			Menu_Settings_PrintError(cmd_status);
+		}
 
 	}
 
+	//TODO remove this
 	move_t zero;
 	return zero;
 }

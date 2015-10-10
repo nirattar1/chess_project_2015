@@ -61,6 +61,7 @@ extern int 		SETTINGS_MAX_DEPTH;
 #define WRONG_MINIMAX_DEPTH "Wrong value for minimax depth. The value should be between 1 to 4\n"
 #define WRONG_FILE_NAME "Wrong file name\n"
 #define WRONG_POSITION "Invalid position on the board\n"
+#define PIECE_NOT_OF_PLAYER "The specified position does not contain your piece\n"
 #define NO_PIECE "Setting this piece creates an invalid board\n"
 #define WRONG_BOARD_INITIALIZATION "Wrong board initialization\n"
 
@@ -83,10 +84,11 @@ typedef enum
 	SETTING_COMMAND_STATUS_WRONG_FILE_NAME,
 	SETTING_COMMAND_STATUS_WRONG_POSITION,
 	SETTING_COMMAND_STATUS_BAD_PIECE_SET,
-	SETTING_COMMAND_STATUS_WRONG_BOARD_INITIALIZATION
+	SETTING_COMMAND_STATUS_WRONG_BOARD_INITIALIZATION,
+	SETTING_COMMAND_STATUS_PIECE_NOT_OF_PLAYER
 
 }
-settings_command_error_t;
+user_command_errorcode_t;
 
 
 //functions
