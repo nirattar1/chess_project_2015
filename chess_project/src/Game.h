@@ -232,6 +232,7 @@ int IsKing (piece_t piece);
 
 
 //will initialize the game
+//(clears board to empty layout)
 void GameInit (game_state_t * game, char ** board );
 
 //will initialize the game
@@ -240,6 +241,21 @@ void GameDefaultLayout (game_state_t * game);
 
 //did someone win game
 int GameWinning(game_state_t * game, color_t color);
+
+//error code for valid board status
+typedef enum
+{
+	BOARD_VALIDITY_OK,
+	BOARD_VALIDITY_TOO_MANY_PIECES_OF_TYPE,
+	BOARD_VALIDITY_KING_IS_MISSING
+} board_validation_status_t;
+//will return whether this board is valid, or else an appropriate error code.
+board_validation_status_t IsValidBoard (game_state_t * game);
+
+
+//checks if it is valid to set piece of certain identity and position, to game.
+//returns 1 if valid, 0 if not valid.
+int IsValidPieceAddition (game_state_t * game, position_t position, char identity);
 
 /*************
  * MOVES ON BOARD
@@ -330,8 +346,10 @@ void DoMove (move_t * move, game_state_t * game);
 //find the move in allowed moves list (will update it's captures)
 int FindMoveInList (ListNode * moves, move_t * mymove);
 
-//returns the position of the king belonging to player "color" in game.
-position_t GetKingPosition (game_state_t * game, color_t color);
+//updates the position of color's king on board (by reference).
+//if king is not found returns 0.
+//otherwise returns 1.
+int GetKingPosition (game_state_t * game, color_t color, position_t * pos);
 
 //return whether there is a 'check' state against player "color"
 //(if player's king is threatened).

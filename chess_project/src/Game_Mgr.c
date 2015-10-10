@@ -44,7 +44,7 @@ int main (int argc, char * argv[])
 	GameInit(&game, (char **) board);
 	GameDefaultLayout(&game);
 
-	//determine wanted game mode from argument
+	//determine wanted run mode from argument
 	int is_gui = 0; //default=console
 	if (argc==2)
 	{
@@ -58,7 +58,7 @@ int main (int argc, char * argv[])
 		}
 		else
 		{
-			//invalid game mode
+			//invalid run mode
 		}
 	}
 
@@ -392,6 +392,8 @@ void DoGame(game_state_t * game)
 
 	//print board first time
 	PrintBoard(game);
+
+	//TODO can start a game when 1 side loses/tie.
 
 	//play until somebody won
 	while (!GameWinning(game,COLOR_BLACK) && !GameWinning(game,COLOR_WHITE))

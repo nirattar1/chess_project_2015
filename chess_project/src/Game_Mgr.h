@@ -62,7 +62,7 @@ extern int 		SETTINGS_MAX_DEPTH;
 #define WRONG_FILE_NAME "Wrong file name\n"
 #define WRONG_POSITION "Invalid position on the board\n"
 #define NO_PIECE "Setting this piece creates an invalid board\n"
-#define WROND_BOARD_INITIALIZATION "Wrong board initialization\n"
+#define WRONG_BOARD_INITIALIZATION "Wrong board initialization\n"
 
 #define ILLEGAL_COMMAND "Illegal command, please try again\n"
 #define ILLEGAL_MOVE "Illegal move\n"
@@ -80,7 +80,10 @@ typedef enum
 	SETTING_COMMAND_STATUS_ILLEGAL_COMMAND,
 	SETTING_COMMAND_STATUS_WRONG_MINIMAX_DEPTH,
 	SETTING_COMMAND_STATUS_WRONG_GAME_MODE,
-	SETTING_COMMAND_STATUS_WRONG_FILE_NAME
+	SETTING_COMMAND_STATUS_WRONG_FILE_NAME,
+	SETTING_COMMAND_STATUS_WRONG_POSITION,
+	SETTING_COMMAND_STATUS_BAD_PIECE_SET,
+	SETTING_COMMAND_STATUS_WRONG_BOARD_INITIALIZATION
 
 }
 settings_command_error_t;

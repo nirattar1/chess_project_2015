@@ -46,52 +46,52 @@ int readline (char * line)
 
 char GetIdentityByString (char * line)
 {
-	if (strstr(line, "white pawn"))
+	if (0==strcmp(line, "white pawn"))
 	{
 		return WHITE_M;
 	}
-	if (strstr(line, "white bishop"))
+	if (0==strcmp(line, "white bishop"))
 	{
 		return WHITE_B;
 	}
-	if (strstr(line, "white knight"))
+	if (0==strcmp(line, "white knight"))
 	{
 		return WHITE_N;
 	}
-	if (strstr(line, "white rook"))
+	if (0==strcmp(line, "white rook"))
 	{
 		return WHITE_R;
 	}
-	if (strstr(line, "white queen"))
+	if (0==strcmp(line, "white queen"))
 	{
 		return WHITE_Q;
 	}
-	if (strstr(line, "white king"))
+	if (0==strcmp(line, "white king"))
 	{
 		return WHITE_K;
 	}
 
-	if (strstr(line, "black pawn"))
+	if (0==strcmp(line, "black pawn"))
 	{
 		return BLACK_M;
 	}
-	if (strstr(line, "black bishop"))
+	if (0==strcmp(line, "black bishop"))
 	{
 		return BLACK_B;
 	}
-	if (strstr(line, "black knight"))
+	if (0==strcmp(line, "black knight"))
 	{
 		return BLACK_N;
 	}
-	if (strstr(line, "black rook"))
+	if (0==strcmp(line, "black rook"))
 	{
 		return BLACK_R;
 	}
-	if (strstr(line, "black queen"))
+	if (0==strcmp(line, "black queen"))
 	{
 		return BLACK_Q;
 	}
-	if (strstr(line, "black king"))
+	if (0==strcmp(line, "black king"))
 	{
 		return BLACK_K;
 	}
@@ -112,6 +112,15 @@ static void Menu_Settings_PrintError(settings_command_error_t cmd_status)
 			break;
 		case SETTING_COMMAND_STATUS_WRONG_FILE_NAME:
 			printf (WRONG_FILE_NAME);
+			break;
+		case SETTING_COMMAND_STATUS_WRONG_POSITION:
+			printf (WRONG_POSITION);
+			break;
+		case SETTING_COMMAND_STATUS_BAD_PIECE_SET:
+			printf (NO_PIECE);
+			break;
+		case SETTING_COMMAND_STATUS_WRONG_BOARD_INITIALIZATION:
+			printf (WRONG_BOARD_INITIALIZATION);
 			break;
 		case SETTING_COMMAND_STATUS_ILLEGAL_COMMAND:
 			printf (ILLEGAL_COMMAND);
@@ -255,6 +264,93 @@ static settings_command_error_t Menu_ReadSetting_LoadGame (char * line, int star
 
 }
 
+
+static settings_command_error_t Menu_ReadSetting_NextPlayer (char * line, int start_at_char, game_state_t * game)
+{
+
+	//read black or white
+	if (strncmp(line+start_at_char, "black", 5)==0)
+	{
+		Settings_NextPlayer_Set(COLOR_BLACK);
+		DEBUG_PRINT(("next player is %d\n", Settings_NextPlayer_Get()));
+		return SETTING_COMMAND_STATUS_OK;
+	}
+	else if (strncmp(line+start_at_char, "white", 5)==0)
+	{
+		Settings_NextPlayer_Set(COLOR_WHITE);
+		DEBUG_PRINT(("next player is %d\n", Settings_NextPlayer_Get()));
+		return SETTING_COMMAND_STATUS_OK;
+	}
+
+	return SETTING_COMMAND_STATUS_ILLEGAL_COMMAND;
+}
+
+static settings_command_error_t Menu_ReadSetting_RemovePiece (char * line, int start_at_char, game_state_t * game)
+{
+	//get x and y value of position -
+	//assuming always 1 digit (board size less than 10)
+	char x;
+	int y;
+	sscanf (line+start_at_char, "<%c,%d>", &x, &y);
+
+	//build new position from x and y
+	position_t pos = Position(x, y);
+
+	//check bounds
+	if (PositionInBounds(pos))
+	{
+		//update game
+		SetPiece(pos, EMPTY, game);
+		return SETTING_COMMAND_STATUS_OK;
+	}
+	else
+	{
+		return SETTING_COMMAND_STATUS_WRONG_POSITION;
+	}
+
+}
+
+
+static settings_command_error_t Menu_ReadSetting_SetPiece (char * line, int start_at_char, game_state_t * game)
+{
+	//get x and y value of position -
+	//assuming always 1 digit (board size less than 10)
+	char x;
+	int y;
+	sscanf (line+start_at_char, "<%c,%d>", &x, &y);
+
+	//build new position from x and y
+	position_t pos = Position(x, y);
+
+	//check position in bounds
+	if (!PositionInBounds(pos))
+	{
+		return SETTING_COMMAND_STATUS_WRONG_POSITION;
+	}
+
+	//move on to read identity: <h,1>_ (skip position and space)
+	start_at_char+=6;
+	char identity = GetIdentityByString (line+start_at_char);
+
+	//check validity of piece type
+	if (identity==0)
+	{
+		return SETTING_COMMAND_STATUS_ILLEGAL_COMMAND;
+	}
+
+	//check if adding the piece is valid.
+	if (!IsValidPieceAddition(game, pos, identity))
+	{
+		return SETTING_COMMAND_STATUS_BAD_PIECE_SET;
+	}
+
+
+	//all is valid, upadte board.
+	SetPiece(pos, identity, game);
+	return SETTING_COMMAND_STATUS_OK;
+
+}
+
 int Menu_Settings(game_state_t * game, char ** board)
 {
 
@@ -265,7 +361,7 @@ int Menu_Settings(game_state_t * game, char ** board)
 	char line[MAX_COMMAND_LENGTH];
 	ClearCharBuffer (line, MAX_COMMAND_LENGTH);
 
-	//
+
 	int start = 0;
 	//while user does'nt enter QUIT or START
 	while (1)
@@ -301,100 +397,61 @@ int Menu_Settings(game_state_t * game, char ** board)
 			cmd_status = Menu_ReadSetting_LoadGame(line, 5, game);
 		}
 
-
-		//rm
-		//format:rm <x,y>
-		else if(strncmp(line, "rm <", 4)==0)
-		{
-			//get position
-			char x ;
-			strncpy(&x, line+4, 1);
-			//get 'y' value of position - either '10' (2 digits) or 1 digit
-			int yInt;
-			if (strncmp(line+6, "10", 2)==0)
-			{
-				yInt = 10;
-			}
-			else
-			{
-				char y[2] ;
-				strncpy(y, line+6, 1);
-				y[1] = '\0';
-				yInt = atoi(y);
-			}
-			position_t pos;
-			pos.x = x;
-			pos.y = yInt;
-
-			if (PositionInBounds(pos))
-			{
-				SetPiece(pos, EMPTY, game);
-			}
-			else
-			{
-				printf(WRONG_POSITION);
-			}
-		}
-
-
-		//set
-		//format: set <x,y> a b
-		else if(strncmp(line, "set <", 5)==0)
-		{
-			//get position
-			char x ;
-			strncpy(&x, line+5, 1);
-			//get 'y' value of position - either '10' (2 digits) or 1 digit
-			int yInt;
-			if (strncmp(line+7, "10", 2)==0)
-			{
-				yInt = 10;
-			}
-			else
-			{
-				char y[2] ;
-				strncpy(y, line+7, 1);
-				y[1] = '\0';
-				yInt = atoi(y);
-			}
-			position_t pos;
-			pos.x = x;
-			pos.y = yInt;
-
-			//find identity - by substring
-			char identity = GetIdentityByString (line);
-
-			if (PositionInBounds(pos))
-			{
-				SetPiece(pos, identity, game);
-			}
-			else
-			{
-				printf(WRONG_POSITION);
-			}
-		}
-
 		//clear
 		else if (strncmp(line, "clear", 5)==0)
 		{
 			GameInit(game, board);
+			cmd_status = SETTING_COMMAND_STATUS_OK;
+		}
+
+		//next player
+		else if (strncmp(line, "next_player", 11)==0)
+		{
+			cmd_status = Menu_ReadSetting_NextPlayer(line, 12, game);
+		}
+
+		//rm
+		//format:rm <x,y>
+		else if(strncmp(line, "rm", 2)==0)
+		{
+			cmd_status = Menu_ReadSetting_RemovePiece(line, 3, game);
+		}
+
+		//set
+		//format: set <x,y> a b
+		else if(strncmp(line, "set", 3)==0)
+		{
+			cmd_status = Menu_ReadSetting_SetPiece(line, 4, game);
+
 		}
 
 		//print
 		else if (strncmp(line, "print", 5)==0)
 		{
 			PrintBoard(game);
+			cmd_status = SETTING_COMMAND_STATUS_OK;
 		}
 
 		//start
 		else if (strncmp(line, "start", 5)==0)
 		{
-			start = 1;
-			break;
+			//check that board has king of each side.
+			if (IsValidBoard(game)==BOARD_VALIDITY_KING_IS_MISSING)
+			{
+				cmd_status = SETTING_COMMAND_STATUS_WRONG_BOARD_INITIALIZATION;
+			}
+			else
+			{
+				//board is ok, can start game
+				start = 1;
+				cmd_status = SETTING_COMMAND_STATUS_OK;
+				break;
+			}
 		}
 
 		else if (strncmp(line, "quit", 4)==0)
 		{
+			cmd_status = SETTING_COMMAND_STATUS_OK;
 			exit (1);
 		}
 
@@ -411,11 +468,11 @@ int Menu_Settings(game_state_t * game, char ** board)
 	if (start)
 	{
 		DoGame (game);
-
 	}
 	else
 	{
-		exit (0);
+		//should not reach here.
+		exit (1);
 	}
 
 

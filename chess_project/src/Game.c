@@ -6,6 +6,7 @@
  */
 
 #include "Game.h"
+#include "Game_Mgr.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -924,7 +925,11 @@ int FindMoveInList (ListNode * moves, move_t * mymove)
 	return 0;
 }
 
-position_t GetKingPosition (game_state_t * game, color_t color)
+
+//updates the position of color's king on board (by reference).
+//if king is not found returns 0.
+//otherwise returns 1.
+int GetKingPosition (game_state_t * game, color_t color, position_t * pos)
 {
 	//get player's pieces
 	int cntPiecesPlayer;//will count how many pieces player has.
@@ -936,14 +941,15 @@ position_t GetKingPosition (game_state_t * game, color_t color)
 	{
 		if (IsKing(piecesPlayer[i]) && color==GetColor(piecesPlayer[i].identity))
 		{
-			//it is color's king . return it's position
-			return piecesPlayer[i].position;
+			//it is color's king . update it's position in "pos" argument.
+			pos->x = piecesPlayer[i].position.x;
+			pos->y = piecesPlayer[i].position.y;
+			return 1; //success
 		}
-
 	}
 
-	//return bad position (not supposed to happen)
-	return Position(0,0);
+	//king not found, return bad status
+	return 0;
 }
 
 //return whether there is a 'check' state for player "color"
@@ -952,7 +958,13 @@ int IsCheckState (game_state_t * game, color_t color)
 {
 
 	//find player's king
-	position_t king_position = GetKingPosition (game, color);
+	position_t king_position;
+	if (!GetKingPosition (game, color, &king_position))
+	{
+		//king is not found (error)
+		DEBUG_PRINT(("ERROR: king not found.\n"));
+		return 0;
+	}
 
 	//try to find a threatening piece on king
 
@@ -1080,4 +1092,45 @@ play_status_t GetPlayStatus (game_state_t * game, color_t current_player)
 	//didn't answer any of end game conditions.
 	//can continue play.
 	return STATUS_CONTINUE_PLAY;
+}
+
+
+board_validation_status_t IsValidBoard (game_state_t * game)
+{
+
+	//check if one of kings are missing.
+	position_t king_position;
+	if (!GetKingPosition(game, COLOR_WHITE, &king_position)
+			|| !GetKingPosition(game, COLOR_BLACK, &king_position) )
+	{
+		return BOARD_VALIDITY_KING_IS_MISSING;
+	}
+
+	//TODO check if piece counts by types do not exceed limits.
+
+
+	return BOARD_VALIDITY_OK;
+}
+
+//checks if it is valid to set piece of certain identity and position, to game.
+//returns 1 if valid, 0 if not valid.
+int IsValidPieceAddition (game_state_t * game, position_t position, char identity)
+{
+	//create a stack copy of the game state, and perform the add on it.
+	game_state_t newState;
+	char newBoard [BOARD_SIZE][BOARD_SIZE];
+	newState.pieces = (board_column *) newBoard;
+	CopyGameState(&newState, game);
+
+	//add the piece
+	SetPiece(position, identity, &newState);
+
+	//return if new board piece count is OK.
+	//(not checking other checks)
+	if (IsValidBoard(&newState)==BOARD_VALIDITY_TOO_MANY_PIECES_OF_TYPE)
+	{
+		return 0;
+	}
+
+	return 1;
 }
