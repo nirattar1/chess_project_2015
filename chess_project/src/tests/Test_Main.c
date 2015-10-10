@@ -35,7 +35,7 @@ void Test_Main ()
 
 	//ListTest ();
 
-	GameTest();
+	//GameTest();
 
 	//original_main();
 
@@ -43,7 +43,7 @@ void Test_Main ()
 
 	//Test_GameWithMinimax();
 
-	//Test_Files();
+	Test_Files();
 
 	//Test_Gui_framework();
 

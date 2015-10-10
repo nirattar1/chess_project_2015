@@ -14,14 +14,18 @@
 #include <libxml/tree.h>
 #include "Game.h"
 
-#define CHESS_XML_NODE_MAIN "game"
-#define CHESS_XML_NODE_BOARD "board"
-#define CHESS_XML_NODE_ROW_FORMAT "row_%d"
+#define CHESS_XML_NODE_MAIN 		"game"
+#define CHESS_XML_NODE_NEXT_TURN 	"next_turn"
+#define CHESS_XML_NODE_GAME_MODE 	"game_mode"
+#define CHESS_XML_NODE_DIFFICULTY 	"difficulty"
+#define CHESS_XML_NODE_USER_COLOR 	"user_color"
+#define CHESS_XML_NODE_BOARD 		"board"
+#define CHESS_XML_NODE_ROW_FORMAT 	"row_%d"
 #define CHESS_XML_NODE_ROW_EMPTY_PIECE '_'
 
 int LoadGame(game_state_t * game,char * filename);
 void SaveGame(const game_state_t * game,char * FileName);
-static void GetRowAsString (const game_state_t * game, int row_index, char * row_content_chars);
-
+static void BoardRowToString (const game_state_t * game, int row_index, char * row_content_chars);
+static void BoardRowFromString (game_state_t * game, int row_index, const char * row_content_chars);
 #endif /* SRC_FILES_H_ */
 

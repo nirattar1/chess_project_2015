@@ -186,11 +186,25 @@ void Test_SaveGame()
 	//(empty layout)
 	game_state_t game;
 	char board [BOARD_SIZE][BOARD_SIZE];
-	//TODO bug in default layout
-	//GameDefaultLayout(&game);
 
-	//put some layout and print it
+
+	//save game - default game.
 	GameInit(&game, (char **)board);
+	//stay with default settings
+
+	//save the game.
+	SaveGame(&game, "mygame_def.xml");
+
+
+	//save another game
+	GameInit(&game, (char **)board);
+
+	//put non-default settings
+	Settings_NextPlayer_Set(COLOR_BLACK);
+	Settings_GameMode_Set(GAME_MODE_PLAYER_VS_CPU);
+	Settings_MaxDepth_Set(3);
+	Settings_UserColor_Set(COLOR_WHITE);
+
 
 	//put all of them on board.
 	SetPiece(Position ('h', 2), WHITE_M, &game);
@@ -207,5 +221,21 @@ void Test_SaveGame()
 	SetPiece(Position ('f', 3), BLACK_K, &game);
 	PrintBoard(&game);
 
-	SaveGame(&game, "mygame.xml");
+	//save the game.
+	SaveGame(&game, "mygame1.xml");
+
+
+	//save another game.
+	GameInit(&game, (char **)board);
+	//put non-default settings - best difficulty
+	Settings_NextPlayer_Set(COLOR_BLACK);
+	Settings_GameMode_Set(GAME_MODE_PLAYER_VS_CPU);
+	Settings_MaxDepth_Set(MAX_DEPTH_BEST_VALUE);
+	Settings_UserColor_Set(COLOR_BLACK);
+	//default layout
+	GameDefaultLayout(&game);
+
+	//save the game.
+	SaveGame(&game, "mygame2.xml");
+
 }
