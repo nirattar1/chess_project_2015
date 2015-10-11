@@ -1,9 +1,19 @@
+#ifndef SRC_GUI_FRAMEWORK_H_
+#define SRC_GUI_FRAMEWORK_H_
+
+
 #include "ListNode.h"
 #include <SDL.h>
 #include <SDL_video.h>
 
+
 #define WIN_W 800
 #define WIN_H 600
+
+
+//gui globals
+extern int _QuitCurrentWindow;
+extern int _QuitProgram;
 
 
 
@@ -48,7 +58,8 @@ typedef struct Control
 //generic constructing function for Control.
 Control * ControlCreate(char * filename, SDL_Rect * rect);
 //generic freeing function for Control.
-void ControlFree (Control * ctl) ;
+//!important: freeing control also frees all it's children nodes.
+void ControlFree (void * ctl_p) ;
 
 
 /*
@@ -59,6 +70,9 @@ void ControlAddChild(Control * control, Control * child);
 
 //visit UI tree in DFS, starting from root
 void DFSTraverseDraw(Control * root, SDL_Surface * screen);
+
+void DFSNotifyRelevantControl (SDL_Event * e, Control * window);
+
 
 //Window
 //Note: THERE'S ALWAYS ONLY ONE WINDOW, which is also the tree root.
@@ -82,7 +96,9 @@ void 		ButtonDraw (Control * button, SDL_Surface * screen);
 //find and notify relevant control of event.
 Control * NotifyRelevantControl (SDL_Event * e);
 
-//handle events
-void HandleEvents();
+//a loop for handling events.
+void HandleEventsLoop(Control * window);
 
 /////////////////////
+
+#endif //SRC_GUI_FRAMEWORK_H_

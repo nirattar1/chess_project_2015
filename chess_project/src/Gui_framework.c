@@ -8,6 +8,12 @@
 #include "Memory.h"
 #include "SDL.h"
 
+//GUI globals initializations
+int _QuitCurrentWindow = 0;
+int _QuitProgram = 0;
+
+
+
 //general functions
 
 
@@ -105,19 +111,39 @@ Control * ControlCreate(char * filename, SDL_Rect * rect)
 	return ctl;
 }
 
-void ControlFree (Control * ctl)
-{
-	if (ctl)
-	{
-		//free attached surface (if not deleted yet)
-		if (ctl->surface)
-		{
-			SDL_FreeSurface(ctl->surface);
-		}
 
-		//free the struct itself
-		myfree(ctl);
+void ControlFree (void * ctl_p)
+{
+	if (!ctl_p)
+	{
+		return;
 	}
+
+	//cast to control type.
+	Control * ctl = (Control *) ctl_p;
+
+	//free attached surface (if not deleted yet)
+	if (ctl->surface)
+	{
+		SDL_FreeSurface(ctl->surface);
+	}
+
+	//free attached rect (if exists)
+	if (ctl->rect)
+	{
+		myfree(ctl->rect);
+		ctl->rect=NULL;
+	}
+
+	//free list of children
+	//(ControlFree will be called recursively on all children).
+	if (ctl->children)
+	{
+		ListFreeElements(ctl->children, ControlFree);
+	}
+
+	//free the struct itself (with all static data).
+	myfree(ctl);
 
 }
 
@@ -130,11 +156,13 @@ void ControlAddChild(Control * control, Control * child)
 		return;
 	}
 
-
 	//add child control to the list.
 	ListNode ** listp = &control->children;
 	ListPushBackElement (listp, (void *) child, sizeof (Control *));
 	control->children = *listp;
+
+	//link child to its parent
+	child->parent = control;
 }
 
 
@@ -164,6 +192,49 @@ void DFSTraverseDraw(Control * root, SDL_Surface * screen)
 		}
 	}
 }
+
+void DFSNotifyRelevantControl (SDL_Event * e, Control * root)
+{
+	//halt condition
+	if (!root)
+	{
+		return;
+	}
+
+	//check that event falls in boundaries of the control's rect
+	//(if exists)
+	if (root->rect)
+	{
+		SDL_Rect * rect = root->rect;
+
+		if ((e->button.x > rect->x) && (e->button.x < rect->x + rect->w)
+				&& (e->button.y > rect->y) && (e->button.y < rect->y+rect->h))
+		{
+
+			//if the control has a handler, invoke it.
+			if (root->HandleEvents)
+			{
+				root->HandleEvents(e);
+			}
+		}
+	}
+
+	//traverse all children (if exist) in DFS,
+	//and notify them recursively.
+	if (root->children)
+	{
+		ListNode * pChild = root->children;
+		for ( ; pChild !=NULL; pChild = pChild->next )
+		{
+			//get the data from child.
+			Control * childControl = (Control *) pChild->data;
+			//call recursively for child control (may be null).
+			DFSNotifyRelevantControl (e, childControl);
+		}
+	}
+}
+
+
 
 //Window
 Control * WindowCreate(char * filename, SDL_Rect * rect)
@@ -217,3 +288,42 @@ void ButtonDraw (Control * button, SDL_Surface * screen)
 }
 
 
+
+void HandleEventsLoop(Control * window)
+{
+
+	while (!_QuitCurrentWindow)
+	{
+		/* Poll for keyboard & mouse events*/
+		SDL_Event e;
+		while (SDL_PollEvent(&e) != 0)
+		{
+			switch (e.type)
+			{
+				case (SDL_QUIT):
+					_QuitCurrentWindow = 1;
+					_QuitProgram = 1;
+					break;
+				case (SDL_KEYUP):
+					if (e.key.keysym.sym == SDLK_ESCAPE)
+					{
+						//TODO handle -quit window? program?
+					}
+					break;
+				case (SDL_MOUSEBUTTONUP):
+					//send the event to the relevant control.
+					DFSNotifyRelevantControl (&e, window);
+					break;
+				default:
+					break;
+			}
+		}
+
+		/* Wait a little before redrawing*/
+		SDL_Delay(200);
+	}
+
+	//reset quit window indication.
+	_QuitCurrentWindow = 0;
+	//go back to caller.
+}
