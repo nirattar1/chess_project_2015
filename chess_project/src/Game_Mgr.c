@@ -2,6 +2,7 @@
 #include "Game.h"
 #include "Memory.h"
 #include "Console_ui.h"
+#include "Gui.h"
 #include "Minimax.h"
 #include <string.h>
 #include <sys/stat.h>
@@ -66,7 +67,7 @@ int main (int argc, char * argv[])
 	if (is_gui)
 	{
 		//start GUI
-		Test_Gui_framework();
+		Gui_Main ();
 	}
 	else
 	{

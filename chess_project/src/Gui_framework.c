@@ -6,6 +6,7 @@
  */
 #include "Gui_framework.h"
 #include "Memory.h"
+#include "SDL.h"
 
 //general functions
 
@@ -83,6 +84,13 @@ void bmp_display(SDL_Surface * src, SDL_Rect * dstrect, SDL_Surface * screen)
 Control * ControlCreate(char * filename, SDL_Rect * rect)
 {
 	Control * ctl = mymalloc (sizeof (Control));
+	//handle memory failure.
+	//TODO make global function/macro.
+	if (!ctl)
+	{
+		return NULL;
+	};
+
 	ctl->surface = NULL;
 	ctl->rect = rect;
 	ctl->children = NULL;
@@ -92,7 +100,7 @@ Control * ControlCreate(char * filename, SDL_Rect * rect)
 	ctl->HandleEvents = NULL;
 
 	//load the image into ctl's surface
-	bmp_load(filename, &ctl->surface);
+	bmp_load(filename, &(ctl->surface));
 
 	return ctl;
 }
@@ -101,7 +109,7 @@ void ControlFree (Control * ctl)
 {
 	if (ctl)
 	{
-		//free attached surface
+		//free attached surface (if not deleted yet)
 		if (ctl->surface)
 		{
 			SDL_FreeSurface(ctl->surface);
@@ -161,6 +169,13 @@ void DFSTraverseDraw(Control * root, SDL_Surface * screen)
 Control * WindowCreate(char * filename, SDL_Rect * rect)
 {
 	Control * window = ControlCreate(filename, rect);
+
+	//avoid null pointer
+	if (!window)
+	{
+		return NULL;
+	}
+
 	window->Draw = WindowDraw;
 
 	return window;
@@ -172,6 +187,8 @@ void WindowDraw(Control * window, SDL_Surface * screen)
 	//update SDL surface .
 	bmp_display(window->surface, NULL, screen);
 
+	//the surface was freed, reset pointer.
+	window->surface = NULL;
 }
 
 
@@ -195,6 +212,8 @@ void ButtonDraw (Control * button, SDL_Surface * screen)
 	//draw button inside it's rect.
 	bmp_display(button->surface, button->rect, screen);
 
+	//the surface was freed, reset pointer.
+	button->surface = NULL;
 }
 
 

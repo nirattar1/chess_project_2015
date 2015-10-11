@@ -5,7 +5,7 @@ XML_CFLAGS=`xml2-config --cflags`
 SDL_CFLAGS=`sdl-config --cflags`
 LIBS=`xml2-config --libs` `sdl-config --libs`
 
-O_FILES=Game_Mgr.o Game.o ListNode.o Memory.o Minimax.o Console_ui.o Files.o Gui_framework.o
+O_FILES=Game_Mgr.o Game.o ListNode.o Memory.o Minimax.o Console_ui.o Files.o Gui_framework.o Gui.o
 TEST_O_FILES=Test_Main.o Test_GameBasic.o Test_Files.o Test_Gui_framework.o
 
 clean:
@@ -38,6 +38,8 @@ Files.o: Files.h Files.c
 Gui_framework.o: Gui_framework.h Gui_framework.c
 	gcc -c $(CFLAGS) $*.c $(SDL_CFLAGS)
 
+Gui.o: Gui.h Gui.c
+	gcc -c $(CFLAGS) $*.c $(SDL_CFLAGS)
 
 
 #TODO makefile - from here only for testing - not needed

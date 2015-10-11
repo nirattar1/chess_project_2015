@@ -43,9 +43,9 @@ void Test_Main ()
 
 	//Test_GameWithMinimax();
 
-	Test_Files();
+	//Test_Files();
 
-	//Test_Gui_framework();
+	Test_Gui_framework();
 
 	memory_print();
 
