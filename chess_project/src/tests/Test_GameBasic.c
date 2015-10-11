@@ -434,7 +434,7 @@ void DoMoveTest_1(game_state_t * game)
 	move_t * move1 = (move_t *) mymalloc(sizeof (move_t));
 	move1->src = pos;
 	move1->num_captures = 0;
-	move1->dest[0] = Position('a',5);
+	move1->dest = Position('a',5);
 
 	//do 1 move.
 	DoMove(move1, game);
@@ -669,7 +669,7 @@ void Test_MoveRevealingKing (game_state_t * game)
 	//create move . see if it's reveals king.
 	move_t move ;
 	move.src = Position('g', 2);
-	move.dest[0] = Position('h',3);
+	move.dest = Position('h',3);
 	move.num_captures = 0;
 	move.promote_to_identity = 0;
 	printf("try perform move:");
@@ -678,7 +678,7 @@ void Test_MoveRevealingKing (game_state_t * game)
 
 	//create move that doesn't reveal king.
 	move.src = Position('h', 1);
-	move.dest[0] = Position('g', 1);
+	move.dest = Position('g', 1);
 	move.num_captures = 0;
 	move.promote_to_identity = 0;
 	printf("try perform move:");
@@ -687,7 +687,7 @@ void Test_MoveRevealingKing (game_state_t * game)
 
 	//create move that reveals black's king.
 	move.src = Position('f', 5);
-	move.dest[0] = Position('f', 6);
+	move.dest = Position('f', 6);
 	move.num_captures = 0;
 	move.promote_to_identity = 0;
 	printf("try perform move:");

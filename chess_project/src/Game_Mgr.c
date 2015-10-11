@@ -81,21 +81,23 @@ int main (int argc, char * argv[])
 
 
 
-//int original_main()
-//{
-//	char board[BOARD_SIZE][BOARD_SIZE];
-//	init_board(board);
-//	print_board(board);
-//	print_message(WRONG_MINIMAX_DEPTH);
-//	perror_message("TEST");
-//	return 0;
-//}
-
 int DoesFileExist(const char *filename)
 {
     struct stat st;
     int result = stat(filename, &st);
     return (result == 0);
+}
+
+int FileCanOpenForWriting (const char * filename)
+{
+	FILE * pFile;
+	pFile = fopen (filename,"w");
+	if (pFile!=NULL)
+	{
+		fclose (pFile);
+		return 1;
+	}
+	return 0;
 }
 
 void print_line(){
@@ -364,7 +366,7 @@ void CPUTurn (game_state_t * game)
 		//"Computer: move <x,y> to <i,j>[<k,l>...]\n".
 		//TODO print right message on promotion, castling.
 		printf("Computer: move <%c,%d> to <%c,%d>",
-				move->src.x, move->src.y, move->dest[0].x, move->dest[0].y);
+				move->src.x, move->src.y, move->dest.x, move->dest.y);
 		printf("\n");
 
 	}
@@ -492,13 +494,18 @@ void MovesListPrint( LINK head )
 //will print the move
 void MovePrint (move_t * move)
 {
+	//avoiding null
+	if (!move)
+	{
+		return;
+	}
+
 	//print move src.
 	printf ("<%c,%d>", move->src.x, move->src.y);
 
-	position_t * dest = move->dest;
 	printf (" to ");
 	//print move destination.
-	printf ("<%c,%d>", dest[0].x, dest[0].y);
+	printf ("<%c,%d>", move->dest.x, move->dest.y);
 
 	if (move->promote_to_identity != 0)
 	{

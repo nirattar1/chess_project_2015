@@ -799,21 +799,18 @@ void DoMove (move_t * move, game_state_t * game)
 
 	//get original identity and destinations
 	char identity = GetPiece (move->src, game);
-	position_t * destinations = move->dest;
 
 	//clear source
 	SetPiece(move->src, EMPTY, game);
-
-	//get destination
-	position_t final = destinations[0];
 
 	//if promotion, get updated identity
 	if (move->promote_to_identity!=0)
 	{
 		identity = move->promote_to_identity;
 	}
-	//fill destination
-	SetPiece(final, identity, game);
+
+	//fill destination with identity
+	SetPiece(move->dest, identity, game);
 
 }
 
@@ -834,7 +831,7 @@ move_t * MoveCreateWithOptions (position_t src, position_t dest,
 	//add the source.
 	newmove->src = src;
 	//add the destination.
-	newmove->dest[0] = dest;
+	newmove->dest = dest;
 	//update if it's a capture (0 or 1)
 	newmove->num_captures = is_capture;
 	//add the identity to promote to (if it's a promotion).
@@ -924,7 +921,6 @@ static void MoveAddWithPossiblePromotion (game_state_t * game, ListNode ** listp
 	}
 }
 
-//free memory of 1 move.
 void MoveFree( void * data )
 {
 	move_t * p = (move_t * ) data;
@@ -934,34 +930,39 @@ void MoveFree( void * data )
 	myfree (p);
 }
 
-//returns 1 if mymove is in list, 0 otherwise
-//TODO fix this. compare move based on everything..
-int FindMoveInList (ListNode * moves, move_t * mymove)
+void MoveCopy( move_t * m2, move_t * m1 )
+{
+	memcpy((void *) m2, (void *) m1, sizeof(move_t));
+}
+
+
+int FindMoveInList 	(ListNode * moves, position_t src, position_t dest,
+		char promotion_identity, move_t * move_return)
 {
 
+	//iterate through moves list.
 	for ( ; moves !=NULL; moves = moves->next )
 	{
 		move_t * move = (move_t *) moves->data;
-		if (move)
+		//avoid null.
+		if (!move)
 		{
-			if (move->src.x==mymove->src.x && move->src.y==mymove->src.y)
-			{
-				if (move->dest[0].x==mymove->dest[0].x && move->dest[0].y==mymove->dest[0].y)
-				{
-					//TODO check all destinations are same
-					//copy all destinations from original move
-					for (int i=0; i<MAX_CAPTURES_MOVE; i++)
-					{
-						mymove->dest[i] = move->dest[i];
-					}
-					//update number of captures.
-					mymove->num_captures = move->num_captures;
-					return 1;
-				}
-			}
+			continue;
 		}
+
+		//compare the move based on given arguments.
+		if (move->src.x==src.x && move->src.y==src.y
+				&& move->dest.x==dest.x && move->dest.y==dest.y)
+		{
+			//TODO promotion + default
+			//found the move. return it through argument.
+			MoveCopy(move_return, move);
+			return 1;
+		}
+
 	}
 
+	//not found the move.
 	return 0;
 }
 

@@ -23,8 +23,14 @@
 #define CHESS_XML_NODE_ROW_FORMAT 	"row_%d"
 #define CHESS_XML_NODE_ROW_EMPTY_PIECE '_'
 
+//load the game stored in file "filename", into game struct.
+//returns: 1 on success, 0 on failure.
 int LoadGame(game_state_t * game,char * filename);
-void SaveGame(const game_state_t * game,char * FileName);
+
+//save the game in game struct, into file "filename".
+//returns: 1 on success, 0 on failure.
+int SaveGame(const game_state_t * game,char * FileName);
+
 static void BoardRowToString (const game_state_t * game, int row_index, char * row_content_chars);
 static void BoardRowFromString (game_state_t * game, int row_index, const char * row_content_chars);
 #endif /* SRC_FILES_H_ */

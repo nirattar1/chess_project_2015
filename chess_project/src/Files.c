@@ -297,6 +297,7 @@ static int XML_GameNodeDataSave(const game_state_t * game, xmlDocPtr doc)
 	return 1;
 }
 
+
 int LoadGame(game_state_t * game,char * filename)
 {
     xmlDoc *doc = NULL;
@@ -337,7 +338,7 @@ int LoadGame(game_state_t * game,char * filename)
 }
 
 
-void SaveGame(const game_state_t * game,char * FileName)
+int SaveGame(const game_state_t * game,char * FileName)
 {
 
 	xmlDocPtr doc = NULL;       /* document pointer */
@@ -351,12 +352,12 @@ void SaveGame(const game_state_t * game,char * FileName)
 	//update doc with game data.
 	XML_GameNodeDataSave(game, doc);
 
-
-
 	/*
 	 * Dumping document to stdio or file
 	 */
-	xmlSaveFormatFileEnc(FileName, doc, "UTF-8", 1);
+	//go and save.
+	//in case of failure will return -1. (on success- number of bytes)
+	int result = xmlSaveFormatFileEnc(FileName, doc, "UTF-8", 1);
 
 	/*free the document */
 	xmlFreeDoc(doc);
@@ -372,7 +373,15 @@ void SaveGame(const game_state_t * game,char * FileName)
 	 */
 	xmlMemoryDump();
 
-	//TODO error codes
+	//giving result code 1 on success, 0 on failure.
+	if (result==-1)
+	{
+		return 0;
+	}
+	else
+	{
+		return 1;
+	}
 
 }
 

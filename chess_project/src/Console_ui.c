@@ -128,6 +128,9 @@ static void Menu_Settings_PrintError(user_command_errorcode_t cmd_status)
 		case SETTING_COMMAND_STATUS_ILLEGAL_COMMAND:
 			printf (ILLEGAL_COMMAND);
 			break;
+		case SETTING_COMMAND_STATUS_ILLEGAL_MOVE_FOR_PLAYER:
+			printf (ILLEGAL_MOVE);
+			break;
 		default:
 			printf (ILLEGAL_COMMAND);
 			break;
@@ -354,79 +357,157 @@ static user_command_errorcode_t Menu_ReadSetting_SetPiece (char * line, int star
 
 }
 
+//will read moves from the user.
+//if legal,
 static user_command_errorcode_t Menu_ReadCommand_Move
-(char * line, int start_at_char, game_state_t * game, color_t current_player)
+(char * line, int start_at_char, game_state_t * game, color_t current_player, move_t * selected_move)
 {
 
-		//determine source and destination positions from user line.
-		//assuming always 1 digit (board size less than 10)
-		char 	src_x, dest_x;
-		int 	src_y, dest_y;
-		sscanf (line+start_at_char, "<%c,%d> to <%c,%d>",
-				&src_x, &src_y, &dest_x, &dest_y);
+	//avoid null
+	if (!selected_move)
+	{
+		DEBUG_PRINT (("Null pointer on move.\n"));
+		return SETTING_COMMAND_STATUS_ILLEGAL_COMMAND;
+	}
 
-		//build positions.
-		position_t src 	= Position(src_x, src_y);
-		position_t dest = Position(dest_x, dest_y);
+	//determine source and destination positions from user line.
+	//assuming always 1 digit (board size less than 10)
+	char 	src_x, dest_x;
+	int 	src_y, dest_y;
+	sscanf (line+start_at_char, "<%c,%d> to <%c,%d>",
+			&src_x, &src_y, &dest_x, &dest_y);
 
-		//check both positions are in bounds
-		if (!PositionInBounds(src) || !PositionInBounds(dest))
-		{
-			return SETTING_COMMAND_STATUS_WRONG_POSITION;
-		}
+	//build positions.
+	position_t src 	= Position(src_x, src_y);
+	position_t dest = Position(dest_x, dest_y);
 
-		//check that position contains user's piece
-		if (GetColor(GetPiece(src, game)) != current_player)
-		{
-			return SETTING_COMMAND_STATUS_PIECE_NOT_OF_PLAYER;
-		}
+	//check both positions are in bounds
+	if (!PositionInBounds(src) || !PositionInBounds(dest))
+	{
+		return SETTING_COMMAND_STATUS_WRONG_POSITION;
+	}
 
-
-		//move on to read promotion identity (if exists)
-		start_at_char += 15; // skip this pattern length: <a,1>_to_<b,2>_
-		char identity = GetIdentityByString (line+start_at_char);
-
-		//check validity of piece type
-		if (identity==0)
-		{
-			//
-		}
+	//check that position contains user's piece
+	if (GetColor(GetPiece(src, game)) != current_player)
+	{
+		return SETTING_COMMAND_STATUS_PIECE_NOT_OF_PLAYER;
+	}
 
 
-		//check that move is indeed in user's allowed moves list.
+	//move on to read promotion identity (if exists)
+	start_at_char += 15; // skip this pattern length: <a,1>_to_<b,2>_
+	//TODO just the type not color
+	char promotion_identity = GetIdentityByString (line+start_at_char);
 
-		//get moves list.
-		ListNode * moves = GetMovesForPlayer(game, current_player); //free later
+	//check validity of piece type
+	if (promotion_identity==0)
+	{
+		//
+	}
 
-		//build a proposed move.
-		move_t proposed_move;
-		//TODO always validate fields.
-		proposed_move.src = src;
-		proposed_move.dest[0] = dest;
-		proposed_move.num_captures = 0;
-		proposed_move.promote_to_identity = 0;
+	//check that move is indeed in user's allowed moves list.
 
+	//get moves list.
+	ListNode * moves = GetMovesForPlayer(game, current_player); //always free later
 
-		//find the move in allowed moves list (will update it's captures)
-		if (FindMoveInList(moves, &proposed_move))
-		{
+	//find move in allowed moves list, (if found, will update move in argument).
+	int valid = FindMoveInList(moves, src, dest, promotion_identity, selected_move);
 
-			//mark as valid
-			valid = 1;
+	//free moves list
+	ListFreeElements(moves, MoveFree);
 
-		}
-		else
-		{
-			//print
-			printf(ILLEGAL_MOVE);
-		}
+	//return based on result.
+	if (valid)
+	{
+		return SETTING_COMMAND_STATUS_OK;
+	}
+	else
+	{
+		//move is not in list.
+		return SETTING_COMMAND_STATUS_ILLEGAL_MOVE_FOR_PLAYER;
+	}
+
+}
+
+//prints the moves list of a given piece.
+//the piece location is given at char buffer.
+static user_command_errorcode_t Menu_ReadCommand_GetMovesPiece
+(char * line, int start_at_char, game_state_t * game, color_t current_player)
+{
+	//determine source position from user line.
+	//assuming always 1 digit (board size less than 10)
+	char 	src_x;
+	int 	src_y;
+	sscanf (line+start_at_char, "<%c,%d>",	&src_x, &src_y);
+
+	//build position.
+	position_t src 	= Position(src_x, src_y);
+
+	//check position is in bounds
+	if (!PositionInBounds(src))
+	{
+		return SETTING_COMMAND_STATUS_WRONG_POSITION;
+	}
+
+	//check that position contains user's piece
+	char identity = GetPiece(src, game);
+	if (GetColor(identity) != current_player)
+	{
+		return SETTING_COMMAND_STATUS_PIECE_NOT_OF_PLAYER;
+	}
+
+	//piece is ok.
+	//build a list of moves and print it.
+	piece_t piece;
+	piece.identity = identity;
+	piece.position = src;
+	ListNode * moves = GetMovesForPiece(game, piece); //always free later
+
+	if (moves)	//can be null list.
+	{
+		//print moves.
+		MovesListPrint(moves);
 
 		//free moves list
 		ListFreeElements(moves, MoveFree);
+	}
 
-		return proposed_move;
+
+	return SETTING_COMMAND_STATUS_OK;
+}
+
+//save a game.
+static user_command_errorcode_t Menu_ReadCommand_SaveGame
+(char * line, int start_at_char, game_state_t * game)
+{
+
+	//get file name from line and store it.
+	//file name can be as long as maximum command length
+	char file_name [MAX_COMMAND_LENGTH];
+	strncpy(file_name, line+start_at_char, MAX_COMMAND_LENGTH);
+	//TODO possible buffer error? also on load.
+
+	//check file can be written at location.
+	if (!FileCanOpenForWriting(file_name))
+	{
+		return SETTING_COMMAND_STATUS_WRONG_FILE_NAME;
+	}
+
+	//file is ok.
+	//trying to save it with libxml2
+	if (!SaveGame((const game_state_t *) game, file_name))
+	{
+		//TODO specific libxml2 errors? currently giving only 1 error code for all problems.
+		return SETTING_COMMAND_STATUS_WRONG_FILE_NAME;
+	}
+	else
+	{
+		//save succeeded
+		return SETTING_COMMAND_STATUS_OK;
+	}
 
 }
+
 
 int Menu_Settings(game_state_t * game, char ** board)
 {
@@ -570,12 +651,12 @@ move_t Menu_PlayUser(game_state_t * game)
 
 	//determine player
 	color_t current_player = Settings_NextPlayer_Get();
+	move_t selected_move; //will be updated to user's selection, if legal.
 
-	int valid = 0;
-
-	//repeat until valid turn
-	while (!valid)
+	//repeat until valid move had been chosen, or chose to quit.
+	while (1)
 	{
+		//status of current command
 		user_command_errorcode_t cmd_status = SETTING_COMMAND_STATUS_ILLEGAL_COMMAND;
 
 		//print prompt message based on player.
@@ -591,20 +672,40 @@ move_t Menu_PlayUser(game_state_t * game)
 		//read into buffer
 		readline(line);
 
-		//"move" command
+		//move command
 		if(strncmp(line, "move", 4)==0)
 		{
-			cmd_status = Menu_ReadCommand_Move(line, 5, game, current_player);
+			cmd_status = Menu_ReadCommand_Move(line, 5, game, current_player, &selected_move);
+			//if legal move , we want to exit the function.
+			if (cmd_status==SETTING_COMMAND_STATUS_OK)
+			{
+				return selected_move;
+			}
+			//failure handled later.
 		}
 
-		//if asked for get moves, print the moves.
+		//get moves command.
+		//format: get_moves <x,y>
 		else if (strncmp(line, "get_moves", 9)==0)
 		{
-			MovesListPrint(moves);
+			cmd_status = Menu_ReadCommand_GetMovesPiece(line, 10, game, current_player);
 		}
 
+		//TODO get_best_moves d
+
+		//TODO get_score d m
+
+		//save
+		//format: save filename
+		else if (strncmp(line, "save", 4)==0)
+		{
+			cmd_status = Menu_ReadCommand_SaveGame(line, 5, game);
+		}
+
+		//quit
 		else if (strncmp(line, "quit", 4)==0)
 		{
+			cmd_status = SETTING_COMMAND_STATUS_OK;
 			exit (1);
 		}
 

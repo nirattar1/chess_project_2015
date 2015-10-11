@@ -284,10 +284,9 @@ typedef struct
 {
 	//source piece on board.
 	position_t 	src;
-	//series of destination positions (1 on normal move, more on successive captures).
-	position_t 	dest [MAX_CAPTURES_MOVE];
-	//TODO dest is only 1 now.
-	//the number of captures in this move
+	//destination positions .
+	position_t 	dest;
+	//the number of captures in this move (can be 0 or 1)
 	int 		num_captures;
 	//if this move deserves promotion, this saves the ideneity to promote to.
 	//0 default (no promotion)
@@ -304,6 +303,9 @@ move_t * MoveCreate (position_t src, position_t dest);
 //frees a move
 void MoveFree( void * data );
 
+//copy contents on move "m1", to move "m2".
+//currently - just shallow copy (move struct doesn't have any pointers).
+void MoveCopy( move_t * m2, move_t * m1 );
 
 //get all the pieces of certain color
 void GetAllPieces (game_state_t * game, color_t color, piece_t * array, int * cnt_pieces);
@@ -343,8 +345,12 @@ static int IsPromotionMove (piece_t piece, position_t dest);
 //2. promoting to king
 void DoMove (move_t * move, game_state_t * game);
 
-//find the move in allowed moves list (will update it's captures)
-int FindMoveInList (ListNode * moves, move_t * mymove);
+//find a move in given moves list, based on:
+//source and destination positions, promotion identity.
+//if found the move, returns 1 and updates move_return.
+//otherwise returns 0.
+int FindMoveInList 	(ListNode * moves, position_t src, position_t dest,
+		char promotion_identity, move_t * move_return);
 
 //updates the position of color's king on board (by reference).
 //if king is not found returns 0.
