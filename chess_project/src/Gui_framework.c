@@ -67,23 +67,6 @@ int bmp_load(char *file_name, SDL_Surface ** image)
 
 }
 
-void bmp_display(SDL_Surface * src, SDL_Rect * dstrect, SDL_Surface * screen)
-{
-    /* Blit onto the screen surface */
-    if(SDL_BlitSurface(src, NULL, screen, dstrect) < 0)
-    {
-        fprintf(stderr, "BlitSurface error: %s\n", SDL_GetError());
-    }
-
-    //SDL_UpdateRect(dest, 0, 0, src->w, src->h);
-    //flip instead of update
-    SDL_Flip(screen);
-
-    /* Free the allocated BMP surface. */
-    SDL_FreeSurface(src);
-}
-
-
 
 
 //generic constructing function for Control.
@@ -105,9 +88,11 @@ Control * ControlCreate(char * filename, SDL_Rect * rect)
 	//by default a control does nothing.
 	ctl->HandleEvents = NULL;
 
-	//load the image into ctl's surface
-	bmp_load(filename, &(ctl->surface));
-
+	//load the image (if exists) into ctl's surface
+	if (filename)
+	{
+		bmp_load(filename, &(ctl->surface));
+	}
 	return ctl;
 }
 
@@ -234,7 +219,44 @@ void DFSNotifyRelevantControl (SDL_Event * e, Control * root)
 	}
 }
 
+//Panel
+Control * PanelCreate(char * filename, SDL_Rect * rect)
+{
+	Control * panel = ControlCreate(filename, rect);
 
+	//avoid null pointer
+	if (!panel)
+	{
+		return NULL;
+	}
+
+	panel->Draw = PanelDraw;
+
+	return panel;
+}
+
+void PanelDraw (Control * panel, SDL_Surface * screen)
+{
+
+   /* Blit onto the screen surface */
+	//note: width and height are ignored in dstrect!
+	if(SDL_BlitSurface(panel->surface, NULL, screen, panel->rect) < 0)
+	{
+		fprintf(stderr, "BlitSurface error: %s\n", SDL_GetError());
+	}
+
+	//SDL_UpdateRect(dest, 0, 0, src->w, src->h);
+	//flip instead of update
+	SDL_Flip(screen);
+
+	/* Free the allocated BMP surface. */
+	SDL_FreeSurface(panel->surface);
+
+	//the surface was freed, reset pointer.
+	panel->surface = NULL;
+
+
+}
 
 //Window
 Control * WindowCreate(char * filename, SDL_Rect * rect)
@@ -255,8 +277,19 @@ Control * WindowCreate(char * filename, SDL_Rect * rect)
 void WindowDraw(Control * window, SDL_Surface * screen)
 {
 
-	//update SDL surface .
-	bmp_display(window->surface, NULL, screen);
+    /* Blit onto the screen surface */
+	//note: width and height are ignored in dstrect!
+    if(SDL_BlitSurface(window->surface, NULL, screen, NULL) < 0)
+    {
+        fprintf(stderr, "BlitSurface error: %s\n", SDL_GetError());
+    }
+
+    //SDL_UpdateRect(dest, 0, 0, src->w, src->h);
+    //flip instead of update
+    SDL_Flip(screen);
+
+    /* Free the allocated BMP surface. */
+    SDL_FreeSurface(window->surface);
 
 	//the surface was freed, reset pointer.
 	window->surface = NULL;
@@ -280,11 +313,35 @@ void ButtonDraw (Control * button, SDL_Surface * screen)
 {
 
 	//update SDL surface .
-	//draw button inside it's rect.
-	bmp_display(button->surface, button->rect, screen);
+	//draw button inside it's rect
+	//and also inside it's parent's (panel) rect.
+
+    /* Blit onto the screen surface */
+	//note: width and height are ignored in dstrect!
+
+	//update clipping information.
+	//draw button inside it's parent's boundaries.
+	if (button->parent && button->parent->rect)
+	{
+		SDL_SetClipRect(screen, button->parent->rect);
+	}
+	//draw
+    if(SDL_BlitSurface(button->surface, NULL, screen, button->rect) < 0)
+    {
+        fprintf(stderr, "BlitSurface error: %s\n", SDL_GetError());
+    }
+    //reset clip
+    SDL_SetClipRect (screen, NULL);
+
+    //SDL_UpdateRect(dest, 0, 0, src->w, src->h);
+    //flip instead of update
+    SDL_Flip(screen);
+
+    /* Free the allocated BMP surface. */
+    //SDL_FreeSurface(button->surface);
 
 	//the surface was freed, reset pointer.
-	button->surface = NULL;
+	//button->surface = NULL;
 }
 
 

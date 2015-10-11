@@ -29,10 +29,6 @@ SDL_Surface * init_screen (const char *);
 //will take image and load it into surface buffer;
 int bmp_load(char *file_name, SDL_Surface ** image);
 
-//a wrapper around SDL Blit function.
-//will display the source surface onto destination (screen).
-//will also free source surface !
-void bmp_display(SDL_Surface * src, SDL_Rect * dstrect, SDL_Surface * dest);
 
 
 
@@ -78,6 +74,12 @@ void DFSNotifyRelevantControl (SDL_Event * e, Control * window);
 //Note: THERE'S ALWAYS ONLY ONE WINDOW, which is also the tree root.
 Control * 	WindowCreate(char * filename, SDL_Rect * rect);
 void		WindowDraw(Control * window, SDL_Surface * screen);
+
+//Panel
+Control * PanelCreate(char * filename, SDL_Rect * rect);
+void PanelDraw (Control * panel, SDL_Surface * screen);
+
+
 
 //Button
 Control * 	ButtonCreate (char * filename, SDL_Rect * rect,

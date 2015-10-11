@@ -12,7 +12,7 @@
 
 
 gui_window_t _NextWindow = GUI_WINDOW_MAIN_MENU; //start with main menu.
-
+game_state_t * _CurrentGame = NULL;
 
 
 //TODO remove
@@ -42,15 +42,24 @@ void Handler_Quit()
 void Handler_PlayerVsCpu()
 {
 	DEBUG_PRINT (("player vs. cpu\n"));
-//	_QuitCurrentWindow = 1;
-//	_NextWindow = 1;
+
+	//configure game mode
+	Settings_GameMode_Set(GAME_MODE_PLAYER_VS_CPU);
+
+	_QuitCurrentWindow = 1;
+	_NextWindow = GUI_WINDOW_GAME; //TODO pass in settings
 }
 
 void Handler_PlayerVsPlayer()
 {
 	DEBUG_PRINT (("player vs. player\n"));
-//	_QuitCurrentWindow = 1;
-//	_NextWindow = 1;
+
+	//configure game mode
+	Settings_GameMode_Set(GAME_MODE_PLAYER_VS_PLAYER);
+
+	//
+	_QuitCurrentWindow = 1;
+	_NextWindow = GUI_WINDOW_GAME; //TODO pass in settings
 }
 
 void Handler_Cancel()
@@ -58,6 +67,15 @@ void Handler_Cancel()
 	DEBUG_PRINT (("cancel\n"));
 	_QuitCurrentWindow = 1;
 	_NextWindow = GUI_WINDOW_MAIN_MENU;	//go back to main menu.
+
+}
+
+void Handler_SaveGame()
+{
+	//TODO implement
+	DEBUG_PRINT (("save game\n"));
+	//_QuitCurrentWindow = 1;
+	//_NextWindow = GUI_WINDOW_MAIN_MENU;	//go back to main menu.
 
 }
 
@@ -145,6 +163,107 @@ Control * Menu_PlayerSelection_Create()
 	return window;
 }
 
+
+static void UpdateBoard(game_state_t * game, Control * panel_GameBoard)
+{
+
+	//build board.
+	int x_off = 0;
+	int y_off = 0;
+	const int board_piece_width = 65;
+	const int board_piece_height = 65;
+	//create board squares, add them to board panel
+	for (int j=BOARD_SIZE; j>0; j--)
+	{
+
+		//start from beginning of row
+		x_off = 0;
+
+		//iterate on columns
+		for (int i=0; i<BOARD_SIZE; i++)
+		{
+			//create button with image
+			SDL_Rect * button_BoardPiece_rect = (SDL_Rect *) mymalloc(sizeof(SDL_Rect));
+			button_BoardPiece_rect->x = x_off;
+			button_BoardPiece_rect->y = y_off;
+
+			//build position from loop
+			position_t pos = Position ('a'+i, j);
+			DEBUG_PRINT(("building button for position <%c,%d>\n", pos.x, pos.y));
+			color_t square_color = ((i%2==0 && j%2==0)||(i%2!=0 &&j%2!=0)) ? COLOR_BLACK : COLOR_WHITE;
+
+
+			char * filename = (square_color==COLOR_BLACK) ? "imgs/empty_blck.bmp":"imgs/empty_wht.bmp" ;
+			Control * button_BoardPiece = ButtonCreate( filename, button_BoardPiece_rect, Handler_Quit);
+
+			//progress to next column
+			x_off += board_piece_width;
+
+			//link button to panel
+			ControlAddChild(panel_GameBoard, button_BoardPiece);
+		}
+
+		//finished with row, progress to next row.
+		y_off += board_piece_height;
+
+	}
+}
+
+
+Control * Menu_GameWindow_Create()
+{
+	//2 panels:
+	//* game options panel
+	//* game board
+
+	//window (has no rect).
+	Control * window = WindowCreate("imgs/background.bmp", NULL);
+	//handle error in creation of window.
+	if (!window)
+	{
+		return NULL;
+	}
+
+	//game options panel
+	SDL_Rect * panel_GameOptions_rect = (SDL_Rect *) mymalloc(sizeof(SDL_Rect));
+	panel_GameOptions_rect->x = 600; panel_GameOptions_rect->y = 0;
+	panel_GameOptions_rect->w = 0; panel_GameOptions_rect->h = 0;
+	Control * panel_GameOptions = PanelCreate("imgs/background.bmp", panel_GameOptions_rect);
+
+	//buttons inside game options.
+	SDL_Rect * button_SaveGame_rect = (SDL_Rect *) mymalloc(sizeof(SDL_Rect));
+	button_SaveGame_rect->x = 600; button_SaveGame_rect->y = 0;
+	button_SaveGame_rect->w = 0; button_SaveGame_rect->h = 0;
+	Control * button_SaveGame = ButtonCreate("imgs/Save_Game.bmp", button_SaveGame_rect, Handler_SaveGame);
+	//TODO more buttons
+
+	//game board panel
+	SDL_Rect * panel_GameBoard_rect = (SDL_Rect *) mymalloc(sizeof(SDL_Rect));
+	panel_GameBoard_rect->x = 0; panel_GameBoard_rect->y = 0;
+	panel_GameBoard_rect->w = 0; panel_GameBoard_rect->h = 0;
+	Control * panel_GameBoard = PanelCreate("imgs/background.bmp", panel_GameBoard_rect);
+
+	//link panels to window
+	ControlAddChild(window, panel_GameBoard);
+	ControlAddChild(window, panel_GameOptions);
+	//link buttons to game options panel
+	ControlAddChild(panel_GameOptions, button_SaveGame);
+
+
+	//get current game.
+	game_state_t * game = _CurrentGame;
+	if (!game)
+	{
+		DEBUG_PRINT(("Error: game window with no active."));
+		return NULL;
+	}
+
+	//print board based on game.
+	UpdateBoard(game, panel_GameBoard);
+	return window;
+}
+
+
 Control * Gui_GetNextWindow(gui_window_t window)
 {
 	switch (window)
@@ -155,6 +274,9 @@ Control * Gui_GetNextWindow(gui_window_t window)
 		case GUI_WINDOW_PLAYER_SELECTION:
 			return Menu_PlayerSelection_Create();
 			break;
+		case GUI_WINDOW_GAME:
+			return Menu_GameWindow_Create();
+			break;
 	}
 
 	//default
@@ -162,8 +284,15 @@ Control * Gui_GetNextWindow(gui_window_t window)
 }
 
 
-void Gui_Main()
+void Gui_Main(game_state_t * game)
 {
+
+	if (!game)
+	{
+		exit(1);
+	}
+	//update global game
+	_CurrentGame = game;
 
 	//init SDL
 	if (init_sdl() != 0)

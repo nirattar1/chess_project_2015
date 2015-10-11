@@ -11,5 +11,5 @@
 void Test_Gui_framework ();
 void window_buttons_tree();
 void window_2_buttons_stupid();
-
+void test_panels();
 #endif /* SRC_TESTS_TEST_GUI_FRAMEWORK_H_ */

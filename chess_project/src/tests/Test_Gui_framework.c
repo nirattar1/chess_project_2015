@@ -23,6 +23,7 @@ void Test_Gui_framework ()
 
 	window_buttons_tree();
 
+	//test_panels();
 }
 
 void testfunction1()
@@ -115,7 +116,12 @@ void window_buttons_tree()
 	SDL_Rect b6Rect = {200, 200, 20, 30};
 	Control * b6 = ButtonCreate("imgs/load_g.bmp", &b6Rect, testfunction2);
 
-
+	//button with clipping rect
+	SDL_Rect b7Rect = {200, 300, 20, 30};
+	Control * b7 = ButtonCreate("imgs/load_g.bmp", &b7Rect, testfunction2);
+//	//set clipping rect for button
+//	SDL_Rect b7ClipRect = {200, 300, 15, 15};
+//	SDL_SetClipRect(screen, &b7ClipRect);
 
 	//link the objects
 	ControlAddChild(w1, b1);
@@ -124,6 +130,7 @@ void window_buttons_tree()
 	ControlAddChild(b1, b4);
 	ControlAddChild(b2, b5);
 	ControlAddChild(b2, b6);
+	ControlAddChild(b2, b7);
 
 	//draw the objects.
 	//(DFS traverse)
@@ -135,14 +142,78 @@ void window_buttons_tree()
 
 	//clear controls resources
 	ControlFree(w1);
-	ControlFree(b1);
-	ControlFree(b2);
-	ControlFree(b3);
-	ControlFree(b4);
-	ControlFree(b5);
-	ControlFree(b6);
+
 }
 
+void test_panels ()
+{
+	//create 2 panels with buttons inside them.
+	//init SDL
+	if (init_sdl() != 0)
+	{
+		exit (1);
+	}
+
+	//init screen
+	//(screen is a global surface).
+	//(will be freed by SDL_Quit).
+	SDL_Surface * screen = init_screen("Chess");
+
+	//create objects (not attached to each other).
+	//(window has no rect).
+	Control * w1 = WindowCreate("imgs/background.bmp", NULL);
+
+	SDL_Rect p1Rect = {20, 100, 0, 0};
+	Control * p1 = PanelCreate("imgs/misgarat.bmp", &p1Rect);
+
+	SDL_Rect b1Rect = {20, 140, 0, 0};
+	Control * b1 = ButtonCreate("imgs/new_g.bmp", &b1Rect, testfunction2);
+
+	SDL_Rect b2Rect = {20, 220, 0, 0};
+	Control * b2 = ButtonCreate("imgs/load_g.bmp", &b2Rect, testfunction1);
+
+
+	//link them together
+	ControlAddChild(w1, p1);
+	//buttons are children of panel
+	ControlAddChild(p1, b1);
+	ControlAddChild(p1, b2);
+
+	//draw the objects.
+	//(DFS traverse)
+	//DFSTraverseDraw (w1, screen);
+
+	//draw window
+	w1->Draw(w1, screen);
+
+	//draw panel
+	p1->Draw(p1, screen);
+
+	//draw buttons inside their panel.
+	b1->Draw(b1, screen);
+	b2->Draw(b2, screen);
+
+//
+//	//draw button inside panel's rect.
+//    /* Blit onto the screen surface */
+//	SDL_SetClipRect(screen, &p1Rect);
+//    if(SDL_BlitSurface(b1->surface, NULL, screen, b1->rect) < 0)
+//    {
+//        fprintf(stderr, "BlitSurface error: %s\n", SDL_GetError());
+//    }
+//    SDL_SetClipRect(screen, NULL);
+//    //SDL_UpdateRect(dest, 0, 0, src->w, src->h);
+//    //flip instead of update
+//    SDL_Flip(screen);
+
+
+	//handle events
+	HandleEventsLoop(w1);
+
+	//get rid of everything.
+	//ControlFree((void *) w1);
+
+}
 
 //find and notify relevant control of event.
 //simple test version

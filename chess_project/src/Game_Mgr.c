@@ -67,7 +67,7 @@ int main (int argc, char * argv[])
 	if (is_gui)
 	{
 		//start GUI
-		Gui_Main ();
+		Gui_Main (&game);
 	}
 	else
 	{

@@ -15,7 +15,7 @@ chessprog: $(O_FILES) $(TEST_O_FILES)
 	gcc $(CFLAGS) -o $@ $^ $(LIBS)
 
 Game_Mgr.o: Game_Mgr.h Game_Mgr.c
-	gcc -c $(CFLAGS) $*.c
+	gcc -c $(CFLAGS) $*.c $(SDL_CFLAGS)
 
 Game.o: Game.h Game.c
 	gcc -c $(CFLAGS) $*.c
