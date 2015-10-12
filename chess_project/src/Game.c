@@ -669,6 +669,12 @@ int IsValidCaptureMoreChecks(game_state_t * game, position_t src, position_t des
 ListNode * GetMovesForPiece (game_state_t * game, piece_t piece)
 {
 
+	if (piece.identity == EMPTY)
+	{
+		DEBUG_PRINT(("Error: asked for GetMoves for empty piece."));
+		return NULL;
+	}
+
 	//prepare list .
 	ListNode * list = NULL;
 

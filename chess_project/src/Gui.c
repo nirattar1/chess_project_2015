@@ -13,6 +13,9 @@
 
 gui_window_t _NextWindow = GUI_WINDOW_MAIN_MENU; //start with main menu.
 game_state_t * _CurrentGame = NULL; //a pointer to current game.
+
+SDL_Surface * _CurrentScreen = NULL; //TODO remove
+
 //TODO make enum
 //0==none is selected.
 //1==selected and display move.
@@ -104,16 +107,24 @@ void Handler_BoardPieceClick(Control * control, SDL_Event * event)
 	{
 		//none is currently selected.
 
-		//check if invalid piece
-
-		//mark as selected
-		_BoardPieceSelection = 1;
-		_BoardPieceMoveSrc = control->pos;
-
-		//get the moves of piece, highlight them.
+		//find if there is a piece
 		piece_t piece;
 		piece.position = control->pos;
 		piece.identity = GetPiece (control->pos, game);
+
+		//check if invalid piece
+		//TODO more cases
+		if (piece.identity==EMPTY)
+		{
+			return;
+		}
+
+
+		//piece is valid, mark as selected
+		_BoardPieceSelection = 1;
+		_BoardPieceMoveSrc = control->pos;
+
+		//get pieces moves, highlight them
 		ListNode * moves = GetMovesForPiece(game, piece); //free later
 
 		//TODO highlight moves
@@ -151,6 +162,14 @@ void Handler_BoardPieceClick(Control * control, SDL_Event * event)
 			DEBUG_PRINT(("legal move\n"));
 			//TODO do / return the move.
 
+			//do the move
+			DoMove(&selected_move, game);
+
+			//TODO redraw only source and position.
+			//redraw board.
+			DFSTraverseDraw(control->parent, _CurrentScreen);
+
+
 			//reset selection
 			_BoardPieceSelection=0;
 		}
@@ -165,8 +184,6 @@ void Handler_BoardPieceClick(Control * control, SDL_Event * event)
 
 
 	}
-	//_QuitCurrentWindow = 1;
-	//_NextWindow = GUI_WINDOW_MAIN_MENU;	//go back to main menu.
 
 }
 
@@ -396,9 +413,7 @@ static void BuildBoard(game_state_t * game, Control * panel_GameBoard)
 			position_t pos = Position ('a'+i, j);
 
 			//real draw is later.
-			color_t square_color = ((i%2==0 && j%2==0)||(i%2!=0 &&j%2!=0)) ? COLOR_BLACK : COLOR_WHITE;
-			char * filename = (square_color==COLOR_BLACK) ? "imgs/empty_blck.bmp":"imgs/empty_wht.bmp" ;
-			Control * button_BoardPiece = ButtonCreate( filename, button_BoardPiece_rect, Handler_Quit);
+			Control * button_BoardPiece = ButtonCreate( NULL, button_BoardPiece_rect, Handler_Quit);
 
 			//save position info on button.
 			button_BoardPiece->pos = pos;
@@ -505,6 +520,7 @@ void Gui_Main(game_state_t * game)
 	//update global game
 	_CurrentGame = game;
 
+
 	//init SDL
 	if (init_sdl() != 0)
 	{
@@ -516,6 +532,8 @@ void Gui_Main(game_state_t * game)
 	//(screen is a global surface).
 	//(will be freed by SDL_Quit).
 	SDL_Surface * screen = init_screen(WINDOW_TITLE);
+
+	_CurrentScreen = screen; //TODO remove
 
 	//a loop that will switch between windows.
 	//will maintain a reference to the active window.
@@ -529,13 +547,15 @@ void Gui_Main(game_state_t * game)
 			DEBUG_PRINT(("Error: program continues but no next window."));
 		}
 
-		//game window has different flow.
+		//if game window, do separate flow.
 		if (_NextWindow==GUI_WINDOW_GAME)
 		{
 			Gui_Main_Game(game, window, screen);
 		}
 		else
 		{
+			//all other windows flow.
+
 			//draw the objects to screen. (with DFS traverse)
 			DFSTraverseDraw (window, screen);
 
@@ -556,6 +576,7 @@ void Gui_Main(game_state_t * game)
 void Gui_Main_Game (game_state_t * game, Control * window, SDL_Surface * screen)
 {
 	//game window is ready.
+	//(board was already built)
 
 	//TODO DoGame with adjustments.
 

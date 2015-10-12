@@ -238,6 +238,13 @@ Control * PanelCreate(char * filename, SDL_Rect * rect)
 void PanelDraw (Control * panel, SDL_Surface * screen)
 {
 
+	//avoid null ptrs
+	//or case when surface buffer is empty.
+	if (!panel || !panel->surface)
+	{
+		return;
+	}
+
    /* Blit onto the screen surface */
 	//note: width and height are ignored in dstrect!
 	if(SDL_BlitSurface(panel->surface, NULL, screen, panel->rect) < 0)
@@ -277,6 +284,13 @@ Control * WindowCreate(char * filename, SDL_Rect * rect)
 void WindowDraw(Control * window, SDL_Surface * screen)
 {
 
+	//avoid null ptrs
+	//or case when surface buffer is empty.
+	if (!window || !window->surface)
+	{
+		return;
+	}
+
     /* Blit onto the screen surface */
 	//note: width and height are ignored in dstrect!
     if(SDL_BlitSurface(window->surface, NULL, screen, NULL) < 0)
@@ -311,6 +325,13 @@ Control * ButtonCreate (char * filename, SDL_Rect * rect,
 
 void ButtonDraw (Control * button, SDL_Surface * screen)
 {
+
+	//avoid null ptrs
+	//or case when surface buffer is empty.
+	if (!button || !button->surface)
+	{
+		return;
+	}
 
 	//update SDL surface .
 	//draw button inside it's rect
