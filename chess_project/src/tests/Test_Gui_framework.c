@@ -243,7 +243,7 @@ Control * TestNotifyRelevantControl (SDL_Event * e,
 	//call the function of control ( if exists ).
 	if (found)
 	{
-		found->HandleEvents(e);
+		found->HandleEvents(found, e);
 	}
 	return found;
 }

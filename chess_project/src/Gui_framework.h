@@ -3,6 +3,7 @@
 
 
 #include "ListNode.h"
+#include "Game.h"
 #include <SDL.h>
 #include <SDL_video.h>
 
@@ -46,7 +47,10 @@ typedef struct Control
 
 	//functionality callbacks.
 	void (*Draw)(struct Control * controlname, SDL_Surface * screen);
-	void (*HandleEvents)(SDL_Event * event);
+	void (*HandleEvents)(struct Control * control , SDL_Event * event);
+
+	//TODO make dynamic and void *
+	position_t pos;
 
 } Control;
 
@@ -82,8 +86,9 @@ void PanelDraw (Control * panel, SDL_Surface * screen);
 
 
 //Button
-Control * 	ButtonCreate (char * filename, SDL_Rect * rect,
-		void (*ButtonHandleEvents)(SDL_Event *));
+Control * ButtonCreate (char * filename, SDL_Rect * rect,
+		void (*ButtonHandleEvents) (Control * control, SDL_Event *));
+
 void 		ButtonDraw (Control * button, SDL_Surface * screen);
 
 //Label

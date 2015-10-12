@@ -199,7 +199,7 @@ void DFSNotifyRelevantControl (SDL_Event * e, Control * root)
 			//if the control has a handler, invoke it.
 			if (root->HandleEvents)
 			{
-				root->HandleEvents(e);
+				root->HandleEvents(root, e);
 			}
 		}
 	}
@@ -300,7 +300,7 @@ void WindowDraw(Control * window, SDL_Surface * screen)
 
 //Button
 Control * ButtonCreate (char * filename, SDL_Rect * rect,
-		void (*ButtonHandleEvents) (SDL_Event *))
+		void (*ButtonHandleEvents) (Control * control, SDL_Event *))
 {
 	Control * button = ControlCreate(filename, rect);
 	button->Draw = ButtonDraw;
@@ -337,6 +337,7 @@ void ButtonDraw (Control * button, SDL_Surface * screen)
     //flip instead of update
     SDL_Flip(screen);
 
+    //TODO can always free ?
     /* Free the allocated BMP surface. */
     //SDL_FreeSurface(button->surface);
 

@@ -31,6 +31,7 @@ extern gui_window_t _NextWindow; //start with main menu.
 //responsible for creating menus, and handling events.
 void Gui_Main ();
 
+void Gui_Main_Game (game_state_t * game, Control * window, SDL_Surface * screen);
 
 
 //will get the appropriate window object, based on requested window.
@@ -39,5 +40,7 @@ Control * Gui_GetNextWindow(gui_window_t window);
 //"constructing" functions for all windows
 Control * Menu_MainMenu_Create();
 Control * Menu_PlayerSelection_Create();
+
+void BoardPieceDraw (Control * button, SDL_Surface * screen);
 
 #endif /* SRC_GUI_H_ */
