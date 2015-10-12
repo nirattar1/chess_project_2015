@@ -899,8 +899,14 @@ static void MoveAddWithPossiblePromotion (game_state_t * game, ListNode ** listp
 			//TODO maybe more conditions ?
 			if (!IsMoveRevealingKing(game, GetColor(piece.identity), newmove))
 			{
-				//add the new move
+				//move is legal, add it to the list (becomes owner of move)
 				ListPushBackElement (listp, (void *) newmove, sizeof (move_t));
+			}
+			else
+			{
+				//move is illegal.
+				//free the move.
+				MoveFree((void *) newmove);
 			}
 		}
 	}
@@ -915,8 +921,13 @@ static void MoveAddWithPossiblePromotion (game_state_t * game, ListNode ** listp
 		//TODO maybe more conditions ?
 		if (!IsMoveRevealingKing(game, GetColor(piece.identity), newmove))
 		{
-			//add move to the list.
+			//move is legal, add it to list (list becomes owner of move).
 			ListPushBackElement (listp, (void *) newmove, sizeof (move_t));
+		}
+		else
+		{
+			//move is illegal, free it.
+			MoveFree((void *) newmove);
 		}
 	}
 }
@@ -1082,9 +1093,15 @@ play_status_t GetPlayStatus (game_state_t * game, color_t current_player)
 {
 
 	color_t opponent_player = GetOppositeColor(current_player);
+
 	//get the moves for both players.
-	ListNode * moves_player = GetMovesForPlayer(game, current_player);
-	ListNode * moves_opponent = GetMovesForPlayer(game, opponent_player);
+	//(only interested if there are moves or not, freeing the lists themselves)
+	ListNode * list_moves_player = GetMovesForPlayer(game, current_player); //free later
+	ListNode * list_moves_opponent = GetMovesForPlayer(game, opponent_player); //free later
+	int moves_player = (list_moves_player!=NULL);
+	int moves_opponent = (list_moves_opponent!=NULL);
+	ListFreeElements(list_moves_player, MoveFree);
+	ListFreeElements(list_moves_opponent, MoveFree);
 
 	//check if there is "check" state on either side.
 	int is_player_in_check = IsCheckState(game, current_player);
