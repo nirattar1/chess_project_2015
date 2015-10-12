@@ -11,15 +11,16 @@
 #include "Memory.h"
 
 
-gui_window_t _NextWindow = GUI_WINDOW_MAIN_MENU; //start with main menu.
-game_state_t * _CurrentGame = NULL; //a pointer to current game.
-
-SDL_Surface * _CurrentScreen = NULL; //TODO remove
+gui_window_t 	_NextWindow = GUI_WINDOW_MAIN_MENU; //start with main menu.
+game_state_t * 	_CurrentGame = NULL; //a pointer to current game.
+Control * 		_CurrentWindow = NULL;
+SDL_Surface * 	_CurrentScreen = NULL; //TODO remove
+move_t 			_BoardPieceNextMove;
 
 //TODO make enum
 //0==none is selected.
 //1==selected and display move.
-//2==selected and illegal.
+//2==selected and legal move (ready to perform).
 int _BoardPieceSelection = 0;
 position_t _BoardPieceMoveSrc;
 
@@ -162,16 +163,9 @@ void Handler_BoardPieceClick(Control * control, SDL_Event * event)
 			DEBUG_PRINT(("legal move\n"));
 			//TODO do / return the move.
 
-			//do the move
-			DoMove(&selected_move, game);
-
-			//TODO redraw only source and position.
-			//redraw board.
-			DFSTraverseDraw(control->parent, _CurrentScreen);
-
-
 			//reset selection
-			_BoardPieceSelection=0;
+			_BoardPieceSelection=2;	//valid move was selected
+			_BoardPieceNextMove = selected_move;
 		}
 		else
 		{
@@ -490,6 +484,17 @@ Control * Menu_GameWindow_Create()
 }
 
 
+//will be called by game, to update GUI's board.
+void Gui_UpdateBoard()
+{
+
+	//TODO redraw only source and position ?
+	//redraw board.
+	DFSTraverseDraw(_CurrentWindow, _CurrentScreen);
+
+
+}
+
 Control * Gui_GetNextWindow(gui_window_t window)
 {
 	switch (window)
@@ -546,6 +551,8 @@ void Gui_Main(game_state_t * game)
 		{
 			DEBUG_PRINT(("Error: program continues but no next window."));
 		}
+		//save window on global (for game manager).
+		_CurrentWindow = window;
 
 		//if game window, do separate flow.
 		if (_NextWindow==GUI_WINDOW_GAME)
@@ -578,17 +585,58 @@ void Gui_Main_Game (game_state_t * game, Control * window, SDL_Surface * screen)
 	//game window is ready.
 	//(board was already built)
 
-	//TODO DoGame with adjustments.
-
-	//update board based on game state.
+	//draw window for the first time
 	DFSTraverseDraw(window, screen);
 
-	//handle events in loop, until exit.
-	HandleEventsLoop(window);
+	//start game.
+	//game is handled by DoGame function.
+	//it will be call GUI for getting user input and displaying game state.
+	DoGame(game);
 
-	//loop was done (window exited).
+
+	//game was done .
 	//clear it (will free all children objects)
 	ControlFree((void *) window);
 }
 
+
+move_t Gui_SelectUserMove()
+{
+	//handle events in loop, until exit.
+	while (_BoardPieceSelection!=2)
+	{
+		/* Poll for keyboard & mouse events*/
+		SDL_Event e;
+		while (SDL_PollEvent(&e) != 0)
+		{
+			switch (e.type)
+			{
+				case (SDL_QUIT):
+					_QuitCurrentWindow = 1;
+					_QuitProgram = 1;
+					break;
+				case (SDL_KEYUP):
+					if (e.key.keysym.sym == SDLK_ESCAPE)
+					{
+						//TODO handle -quit window? program?
+					}
+					break;
+				case (SDL_MOUSEBUTTONUP):
+					//send the event to the relevant control.
+					DFSNotifyRelevantControl (&e, _CurrentWindow);
+					break;
+				default:
+					break;
+			}
+		}
+
+		/* Wait a little before redrawing*/
+		SDL_Delay(200);
+	}
+
+	//reset mode select indication
+	_BoardPieceSelection=0;
+
+	return _BoardPieceNextMove;
+}
 

@@ -20,7 +20,7 @@ int			SETTINGS_GAME_MODE		= DEFAULT_GAME_MODE;
 color_t 	SETTINGS_USER_COLOR 	= DEFAULT_USER_COLOR;
 color_t		SETTINGS_NEXT_PLAYER 	= DEFAULT_NEXT_PLAYER;
 int 		SETTINGS_MAX_DEPTH 		= DEFAULT_MAX_DEPTH;
-
+int 		_RunModeIsGui 			= 0; //default=console
 
 
 
@@ -37,7 +37,7 @@ int main (int argc, char * argv[])
 	RulesInit();
 
 	//initialize game state.
-	//(empty layout)
+	//board is saved on stack at top level.
 	game_state_t game;
 	char board [BOARD_SIZE][BOARD_SIZE];
 
@@ -46,16 +46,16 @@ int main (int argc, char * argv[])
 	GameDefaultLayout(&game);
 
 	//determine wanted run mode from argument
-	int is_gui = 0; //default=console
+
 	if (argc==2)
 	{
 		if (strcmp(argv[1], "gui")==0)
 		{
-			is_gui = 1;
+			_RunModeIsGui = 1;
 		}
 		else if (strcmp(argv[1], "console")==0)
 		{
-			is_gui = 0;
+			_RunModeIsGui = 0;
 		}
 		else
 		{
@@ -64,7 +64,7 @@ int main (int argc, char * argv[])
 	}
 
 	//start game in correct ui
-	if (is_gui)
+	if (_RunModeIsGui)
 	{
 		//start GUI
 		Gui_Main (&game);
@@ -381,18 +381,23 @@ void CPUTurn (game_state_t * game)
 void UserTurn (game_state_t * game)
 {
 
-	//use the UI to select a move from the user.
-	move_t userMove = Menu_PlayUser(game);
-
+	move_t selectedMove;
+	//use the appropriate UI to select a move from the user.
+	if (_RunModeIsGui)
+	{
+		selectedMove = Gui_SelectUserMove ();
+	}
+	else
+	{
+		selectedMove = Menu_PlayUser(game);
+	}
 	//do the selected move.
-	DoMove(&userMove, game);
+	DoMove(&selectedMove, game);
 }
+
 
 void DoGame(game_state_t * game)
 {
-
-	//print board first time
-	PrintBoard(game);
 
 	//TODO can start a game when 1 side loses/tie.
 
@@ -420,8 +425,16 @@ void DoGame(game_state_t * game)
 			UserTurn (game);
 		}
 
-		//print board after turn
-		PrintBoard(game);
+
+		//display updated board after turn
+		if (_RunModeIsGui)
+		{
+			Gui_UpdateBoard();
+		}
+		else
+		{
+			PrintBoard(game);
+		}
 
 		//switch player (also save on global)
 		next_player = GetOppositeColor(next_player);
@@ -432,10 +445,12 @@ void DoGame(game_state_t * game)
 
 		//handle "check" state for new player (if it is).
 		//will not print on checkmate.
+		//TODO add GUI handler
 		GameHandleCheck(play_status, next_player);
 	}
 
 	//handle end game.
+	//TODO add GUI handler
 	GameHandleEnd(game, play_status, next_player);
 
 }

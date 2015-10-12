@@ -37,11 +37,12 @@
 #include "Game.h"
 
 
-//settings + defaults
+//global settings + defaults
 extern int			SETTINGS_GAME_MODE;
 extern color_t 		SETTINGS_USER_COLOR;
 extern	color_t		SETTINGS_NEXT_PLAYER;
 extern int 		SETTINGS_MAX_DEPTH;
+extern int 		_RunModeIsGui;
 
 #define GAME_MODE_PLAYER_VS_PLAYER 	1
 #define GAME_MODE_PLAYER_VS_CPU 	2

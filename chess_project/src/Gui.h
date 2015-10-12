@@ -26,13 +26,17 @@ typedef enum
 } gui_window_t;
 
 //gui globals
-extern gui_window_t _NextWindow; //start with main menu.
+extern gui_window_t 	_NextWindow; //start with main menu.
+extern Control * 		_CurrentWindow;
 
 //responsible for creating menus, and handling events.
 void Gui_Main ();
 
 void Gui_Main_Game (game_state_t * game, Control * window, SDL_Surface * screen);
 
+void Gui_UpdateBoard();
+
+move_t Gui_SelectUserMove();
 
 //will get the appropriate window object, based on requested window.
 Control * Gui_GetNextWindow(gui_window_t window);
