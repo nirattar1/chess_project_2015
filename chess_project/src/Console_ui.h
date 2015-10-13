@@ -10,7 +10,15 @@
 
 
 int Menu_Settings(game_state_t * game, char ** board);
-move_t Menu_PlayUser(game_state_t * game);
+int Menu_PlayUser(game_state_t * game, move_t * move);
+
+//handles end of game. will print all the appropriate messages.
+void ConsoleUI_GameHandleEnd
+	(game_state_t * game, play_status_t play_status, color_t next_player);
+
+//prints a message if there is a check (only) for next player.
+void ConsoleUI_GameHandleCheck (play_status_t play_status, color_t next_player);
+
 
 //get string representing identity (such "white knight").
 //return the appropriate char representation.

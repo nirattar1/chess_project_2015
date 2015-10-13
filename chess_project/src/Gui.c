@@ -451,10 +451,27 @@ Control * Menu_GameWindow_Create()
 	Control * panel_GameOptions = PanelCreate("imgs/background.bmp", panel_GameOptions_rect);
 
 	//buttons inside game options.
+	//save game
 	SDL_Rect * button_SaveGame_rect = (SDL_Rect *) mymalloc(sizeof(SDL_Rect));
 	button_SaveGame_rect->x = 600; button_SaveGame_rect->y = 0;
 	button_SaveGame_rect->w = 0; button_SaveGame_rect->h = 0;
 	Control * button_SaveGame = ButtonCreate("imgs/Save_Game.bmp", button_SaveGame_rect, Handler_SaveGame);
+
+	//main menu
+	SDL_Rect * button_MainMenu_rect = (SDL_Rect *) mymalloc(sizeof(SDL_Rect));
+	button_MainMenu_rect->x = 600; button_MainMenu_rect->y = 100;
+	button_MainMenu_rect->w = 0; button_MainMenu_rect->h = 0;
+	Control * button_MainMenu = ButtonCreate("imgs/Main_Menu.bmp", button_MainMenu_rect, Handler_Cancel);
+	//TODO specific handler for main menu?
+
+
+	//quit program
+	SDL_Rect * button_Quit_rect = (SDL_Rect *) mymalloc(sizeof(SDL_Rect));
+	button_Quit_rect->x = 600; button_Quit_rect->y = 450;
+	button_Quit_rect->w = 0; button_Quit_rect->h = 0;
+	Control * button_Quit = ButtonCreate("imgs/Exit_Game.bmp", button_Quit_rect, Handler_Quit);
+
+
 	//TODO more buttons
 
 	//game board panel
@@ -468,7 +485,8 @@ Control * Menu_GameWindow_Create()
 	ControlAddChild(window, panel_GameOptions);
 	//link buttons to game options panel
 	ControlAddChild(panel_GameOptions, button_SaveGame);
-
+	ControlAddChild(panel_GameOptions, button_MainMenu);
+	ControlAddChild(panel_GameOptions, button_Quit);
 
 	//get current game.
 	game_state_t * game = _CurrentGame;
@@ -484,16 +502,102 @@ Control * Menu_GameWindow_Create()
 }
 
 
-//will be called by game, to update GUI's board.
-void Gui_UpdateBoard()
+//handler for game mgr. will update GUI's board.
+void Gui_UpdateBoard(game_state_t * game)
 {
-
 	//TODO redraw only source and position ?
 	//redraw board.
 	DFSTraverseDraw(_CurrentWindow, _CurrentScreen);
+}
 
+//handler for game mgr.
+void Gui_HandleCheck (play_status_t play_status, color_t next_player)
+{
+	//display a label on right panel saying check.
+
+
+	if (play_status==STATUS_PLAYER_IN_CHECK)
+	{
+		char * filename= NULL;
+		if (next_player==COLOR_WHITE)
+		{
+			filename="imgs/wht_plr_chs.bmp";
+		}
+		else if (next_player==COLOR_BLACK)
+		{
+			filename="imgs/blck_plr_chs.bmp";
+		}
+
+		if (filename)
+		{
+			//TODO properly, create label
+			//add under right panel. no handler.
+			SDL_Rect * label_Check_rect = (SDL_Rect *) mymalloc(sizeof(SDL_Rect));
+			label_Check_rect->x = 310; label_Check_rect->y = 150;
+			label_Check_rect->w = 20; label_Check_rect->h = 30;
+
+
+			//add and draw child.
+			Control * label_Check = ButtonCreate(filename, label_Check_rect, NULL );
+			ControlAddChild(_CurrentWindow, label_Check);
+			label_Check->Draw(label_Check, _CurrentScreen);
+		}
+	}
+
+	else if (play_status==STATUS_OPPONENT_IN_CHECK)
+	{
+		//not supposed to happen
+	}
 
 }
+
+
+void Gui_HandleEnd
+	(game_state_t * game, play_status_t play_status, color_t next_player)
+{
+
+	//check filename to display message
+	char * filename = NULL;
+
+	if (play_status==STATUS_TIE)
+	{
+		filename = "imgs/tie.bmp";
+	}
+	//if next player is in checkmate - end game.
+	else if (play_status==STATUS_PLAYER_IN_CHECKMATE)
+	{
+		if (next_player==COLOR_WHITE)
+		{
+			//white lost (black wins)
+			filename = "imgs/blck_plr_wns.bmp";
+		}
+		else if (next_player==COLOR_BLACK)
+		{
+			//black lost (white wins)
+			filename = "imgs/wht_plr_wns.bmp";
+		}
+	}
+	else
+	{
+		//not supposed to happen
+	}
+
+	//there is a message to display
+	if (filename)
+	{
+		//TODO properly, create label
+		//add under right panel. no handler.
+		SDL_Rect * label_Endgame_rect = (SDL_Rect *) mymalloc(sizeof(SDL_Rect));
+		label_Endgame_rect->x = 310; label_Endgame_rect->y = 150;
+		label_Endgame_rect->w = 20; label_Endgame_rect->h = 30;
+
+		//add and draw child.
+		Control * label_Endgame = ButtonCreate(filename, label_Endgame_rect, NULL );
+		ControlAddChild(_CurrentWindow, label_Endgame);
+		label_Endgame->Draw(label_Endgame, _CurrentScreen);
+	}
+}
+
 
 Control * Gui_GetNextWindow(gui_window_t window)
 {
@@ -593,17 +697,23 @@ void Gui_Main_Game (game_state_t * game, Control * window, SDL_Surface * screen)
 	//it will be call GUI for getting user input and displaying game state.
 	DoGame(game);
 
+	//still have the controls open
+	//TODO disable all handlers.
+	Gui_SelectUserMove(game, NULL);
 
 	//game was done .
 	//clear it (will free all children objects)
 	ControlFree((void *) window);
+
+	//go back to caller.
 }
 
 
-move_t Gui_SelectUserMove()
+int Gui_SelectUserMove(game_state_t * game, move_t * selected_move)
 {
+
 	//handle events in loop, until exit.
-	while (_BoardPieceSelection!=2)
+	while (_BoardPieceSelection!=2 && !_QuitCurrentWindow)
 	{
 		/* Poll for keyboard & mouse events*/
 		SDL_Event e;
@@ -634,9 +744,17 @@ move_t Gui_SelectUserMove()
 		SDL_Delay(200);
 	}
 
-	//reset mode select indication
-	_BoardPieceSelection=0;
+	//if we have a selected move
+	if (_BoardPieceSelection==2 && selected_move) //avoid null ptr.
+	{
+		//reset move select indication
+		_BoardPieceSelection=0;
 
-	return _BoardPieceNextMove;
+		//update return argument to selecte move.
+		*selected_move = _BoardPieceNextMove;
+		return 1;
+	}
+	//TODO handle error?
+	return 0;
 }
 

@@ -46,7 +46,7 @@ typedef struct Control
 	SDL_Rect * rect;
 
 	//functionality callbacks.
-	void (*Draw)(struct Control * controlname, SDL_Surface * screen);
+	void (*Draw)(struct Control * control, SDL_Surface * screen);
 	void (*HandleEvents)(struct Control * control , SDL_Event * event);
 
 	//TODO make dynamic and void *

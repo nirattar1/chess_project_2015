@@ -34,9 +34,14 @@ void Gui_Main ();
 
 void Gui_Main_Game (game_state_t * game, Control * window, SDL_Surface * screen);
 
-void Gui_UpdateBoard();
+void Gui_UpdateBoard(game_state_t * game);
 
-move_t Gui_SelectUserMove();
+int Gui_SelectUserMove(game_state_t * game, move_t * selected_move);
+
+void Gui_HandleCheck (play_status_t play_status, color_t next_player);
+
+void Gui_HandleEnd
+	(game_state_t * game, play_status_t play_status, color_t next_player);
 
 //will get the appropriate window object, based on requested window.
 Control * Gui_GetNextWindow(gui_window_t window);

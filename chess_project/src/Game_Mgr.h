@@ -93,7 +93,21 @@ typedef enum
 user_command_errorcode_t;
 
 
+//function pointers for interaction with the user.
+//there will be one such for GUI and one for console UI.
+typedef struct {
+	void 	(*DisplayUpdatedBoardFunc) 	(game_state_t * game);
+	int 	(*SelectUserMoveFunc) 		(game_state_t * game, move_t * selected_move);
+	void 	(*HandleCheck) 	(play_status_t play_status, color_t next_player);
+	void 	(*HandleEnd) 	(game_state_t * game, play_status_t play_status, color_t next_player);
+
+
+} game_mgr_handlers_t;
+
+
 //functions
+
+game_mgr_handlers_t GetGameMgrHandlers (int runModeIsGui);
 
 //program's main.
 //launches the game in console/graphic UI.
@@ -138,17 +152,11 @@ void PrintBoard(game_state_t * game);
 void CPUTurn (game_state_t * game);
 
 //one turn of the user.
-void UserTurn (game_state_t * game);
+int UserTurn (game_state_t * game);
 
 //manages game
 void DoGame(game_state_t * game);
 
-//handles end of game. will print all the appropriate messages.
-void GameHandleEnd
-	(game_state_t * game, play_status_t play_status, color_t next_player);
-
-//prints a message if there is a check (only) for next player.
-void GameHandleCheck (play_status_t play_status, color_t next_player);
 
 //print a list of moves in good format
 void MovesListPrint( LINK head);

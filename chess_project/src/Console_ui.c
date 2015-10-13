@@ -641,8 +641,8 @@ int Menu_Settings(game_state_t * game, char ** board)
 }
 
 
-
-move_t Menu_PlayUser(game_state_t * game)
+//selected_move- return argument, will be updated to user's selection, if legal.
+int Menu_PlayUser(game_state_t * game, move_t * selected_move)
 {
 
 	//buffer to store commands
@@ -651,7 +651,6 @@ move_t Menu_PlayUser(game_state_t * game)
 
 	//determine player
 	color_t current_player = Settings_NextPlayer_Get();
-	move_t selected_move; //will be updated to user's selection, if legal.
 
 	//repeat until valid move had been chosen, or chose to quit.
 	while (1)
@@ -675,11 +674,11 @@ move_t Menu_PlayUser(game_state_t * game)
 		//move command
 		if(strncmp(line, "move", 4)==0)
 		{
-			cmd_status = Menu_ReadCommand_Move(line, 5, game, current_player, &selected_move);
-			//if legal move , we want to exit the function.
+			cmd_status = Menu_ReadCommand_Move(line, 5, game, current_player, selected_move);
+			//if legal move, we want to return success.
 			if (cmd_status==SETTING_COMMAND_STATUS_OK)
 			{
-				return selected_move;
+				return 1;
 			}
 			//failure handled later.
 		}
@@ -718,7 +717,49 @@ move_t Menu_PlayUser(game_state_t * game)
 
 	}
 
-	//TODO remove this
-	move_t zero;
-	return zero;
+	//not supposed to reach here
+	return 0;
 }
+
+
+
+
+void ConsoleUI_GameHandleEnd
+	(game_state_t * game, play_status_t play_status, color_t next_player)
+{
+	if (play_status==STATUS_TIE)
+	{
+		printf(TIE);
+	}
+	//if next player is in checkmate - end game.
+	else if (play_status==STATUS_PLAYER_IN_CHECKMATE)
+	{
+		if (next_player==COLOR_WHITE)
+		{
+			//white lost (black wins)
+			printf("Mate! Black player wins the game\n");
+		}
+		else if (next_player==COLOR_BLACK)
+		{
+			//black lost (white wins)
+			printf("Mate! White player wins the game\n");
+		}
+	}
+	else
+	{
+		//not supposed to happen
+	}
+}
+
+void ConsoleUI_GameHandleCheck (play_status_t play_status, color_t next_player)
+{
+	if (play_status==STATUS_PLAYER_IN_CHECK)
+	{
+		printf("Check!\n");
+	}
+	else if (play_status==STATUS_OPPONENT_IN_CHECK)
+	{
+		//not supposed to happen
+	}
+}
+

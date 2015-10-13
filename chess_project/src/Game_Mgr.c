@@ -21,7 +21,36 @@ color_t 	SETTINGS_USER_COLOR 	= DEFAULT_USER_COLOR;
 color_t		SETTINGS_NEXT_PLAYER 	= DEFAULT_NEXT_PLAYER;
 int 		SETTINGS_MAX_DEPTH 		= DEFAULT_MAX_DEPTH;
 int 		_RunModeIsGui 			= 0; //default=console
+game_mgr_handlers_t _GameMgrHandlers;
 
+
+
+game_mgr_handlers_t GetGameMgrHandlers (int runModeIsGui)
+{
+	game_mgr_handlers_t handlers;
+
+	//TODO all handlers should be not null gui handlers.
+	//TODO all calls to handlers should check they're not null.
+
+	if (runModeIsGui)
+	{
+		handlers.DisplayUpdatedBoardFunc = Gui_UpdateBoard;
+		handlers.SelectUserMoveFunc = Gui_SelectUserMove;
+		handlers.HandleCheck = Gui_HandleCheck;
+		handlers.HandleEnd = Gui_HandleEnd;
+	}
+
+	else
+	{
+		//default - console UI.
+		handlers.DisplayUpdatedBoardFunc = PrintBoard;
+		handlers.SelectUserMoveFunc = Menu_PlayUser;
+		handlers.HandleCheck = ConsoleUI_GameHandleCheck;
+		handlers.HandleEnd = ConsoleUI_GameHandleEnd;
+	}
+
+	return handlers;
+}
 
 
 int main (int argc, char * argv[])
@@ -62,6 +91,10 @@ int main (int argc, char * argv[])
 			//invalid run mode
 		}
 	}
+
+	//register handlers based on game mode.
+	_GameMgrHandlers = GetGameMgrHandlers (_RunModeIsGui);
+
 
 	//start game in correct ui
 	if (_RunModeIsGui)
@@ -348,6 +381,7 @@ void CPUTurn (game_state_t * game)
 	DEBUG_PRINT( ("index %d was chosen. will lead to score of %d\n", childIndex, childScore));
 
 	//do the relevant move
+	//TODO use function for that- find move in list
 	int i=0;
 	//find index in list
 	ListNode * pChild = RootChildren;
@@ -378,21 +412,30 @@ void CPUTurn (game_state_t * game)
 }
 
 
-void UserTurn (game_state_t * game)
+int UserTurn (game_state_t * game)
 {
 
 	move_t selectedMove;
 	//use the appropriate UI to select a move from the user.
-	if (_RunModeIsGui)
+	int move_ready = 0;
+	if (_GameMgrHandlers.SelectUserMoveFunc)
 	{
-		selectedMove = Gui_SelectUserMove ();
+		move_ready = _GameMgrHandlers.SelectUserMoveFunc(game, &selectedMove);
+		//there are cases we exit this function without a move.
+	}
+
+
+	//if there is a move, do it.
+	if (move_ready)
+	{
+		DoMove(&selectedMove, game);
+		return 1;
 	}
 	else
 	{
-		selectedMove = Menu_PlayUser(game);
+		//quit scenario
+		return 0;
 	}
-	//do the selected move.
-	DoMove(&selectedMove, game);
 }
 
 
@@ -422,19 +465,20 @@ void DoGame(game_state_t * game)
 		else
 		{
 			//in any other case, it is user turn.
-			UserTurn (game);
+			//this function waits for IO (GUI / console).
+			if (!UserTurn (game))
+			{
+				return; //allow user to quit
+			}
 		}
 
 
 		//display updated board after turn
-		if (_RunModeIsGui)
+		if (_GameMgrHandlers.DisplayUpdatedBoardFunc)
 		{
-			Gui_UpdateBoard();
+			_GameMgrHandlers.DisplayUpdatedBoardFunc(game);
 		}
-		else
-		{
-			PrintBoard(game);
-		}
+
 
 		//switch player (also save on global)
 		next_player = GetOppositeColor(next_player);
@@ -445,53 +489,20 @@ void DoGame(game_state_t * game)
 
 		//handle "check" state for new player (if it is).
 		//will not print on checkmate.
-		//TODO add GUI handler
-		GameHandleCheck(play_status, next_player);
+		if (_GameMgrHandlers.HandleCheck)
+		{
+			_GameMgrHandlers.HandleCheck(play_status, next_player);
+		}
 	}
 
 	//handle end game.
-	//TODO add GUI handler
-	GameHandleEnd(game, play_status, next_player);
+	if (_GameMgrHandlers.HandleEnd)
+	{
+		_GameMgrHandlers.HandleEnd(game, play_status, next_player);
+	}
 
-}
+	//go back to caller
 
-void GameHandleEnd
-	(game_state_t * game, play_status_t play_status, color_t next_player)
-{
-	if (play_status==STATUS_TIE)
-	{
-		printf(TIE);
-	}
-	//if next player is in checkmate - end game.
-	else if (play_status==STATUS_PLAYER_IN_CHECKMATE)
-	{
-		if (next_player==COLOR_WHITE)
-		{
-			//white lost (black wins)
-			printf("Mate! Black player wins the game\n");
-		}
-		else if (next_player==COLOR_BLACK)
-		{
-			//black lost (white wins)
-			printf("Mate! White player wins the game\n");
-		}
-	}
-	else
-	{
-		//not supposed to happen
-	}
-}
-
-void GameHandleCheck (play_status_t play_status, color_t next_player)
-{
-	if (play_status==STATUS_PLAYER_IN_CHECK)
-	{
-		printf("Check!\n");
-	}
-	else if (play_status==STATUS_OPPONENT_IN_CHECK)
-	{
-		//not supposed to happen
-	}
 }
 
 //prints moves one after the other, according to format.
