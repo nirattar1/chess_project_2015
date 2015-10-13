@@ -12,7 +12,23 @@
 #include <string.h>
 #include "Memory.h"
 
+//static functions declarations
+//will add the move by piece , to it's destination - to the list by listp.
+//the move may be a normal /capture move.
+//if the move follows promotion rules,
+//then 4 possibilities of the promotion, will be added to the list.
+static void MoveAddWithPossiblePromotion (game_state_t * game, ListNode ** listp, piece_t piece, position_t dest, int is_capture);
+
+//returns whether the hop from piece to dest, is worth promotion.
+static int IsPromotionMove (piece_t piece, position_t dest);
+
+
+
+
+
 direction_t * all_allowed_directions [MAX_IDENTITIES];
+
+
 
 //allowed directions.
 //for all pieces except pawn,
@@ -871,6 +887,7 @@ static int IsPromotionMove (piece_t piece, position_t dest)
 	}
 
 }
+
 
 //will add the move by piece , to it's destination - to the list by listp.
 //the move may be a normal /capture move.

@@ -10,6 +10,7 @@
 #include <string.h>
 #include "Files.h"
 #include "Game_Mgr.h"
+#include "Minimax.h"
 
 void ClearCharBuffer (char * buffer, int buflen)
 {
@@ -475,6 +476,42 @@ static user_command_errorcode_t Menu_ReadCommand_GetMovesPiece
 	return SETTING_COMMAND_STATUS_OK;
 }
 
+
+//get best moves
+//format : get_best_moves d
+//computes best moves for user with minimax at depth d.
+static user_command_errorcode_t Menu_ReadCommand_GetBestMoves
+(char * line, int start_at_char, game_state_t * game, color_t current_player)
+{
+	if (strncmp(line+start_at_char, "best", 4)==0)
+	{
+		//TODO best depth
+		return SETTING_COMMAND_STATUS_OK;
+	}
+
+	else //user defined a constant depth
+	{
+		//parse and process
+		char d [2];
+		strncpy(d, line+start_at_char, 1);
+		d[1] = '\0';
+		int depth = atoi(d);
+		//assuming depth is legal
+
+		//call minimax main with depth.
+		ListNode * bestMoves = MinimaxMain(game, depth, current_player
+				, BasicScoringFunction, GetMovesForPlayer); //free later!
+
+		//print out the moves
+		MovesListPrint(bestMoves);
+
+		//free the moves
+		ListFreeElements(bestMoves, MoveFree);
+		return SETTING_COMMAND_STATUS_OK;
+
+	}
+}
+
 //save a game.
 static user_command_errorcode_t Menu_ReadCommand_SaveGame
 (char * line, int start_at_char, game_state_t * game)
@@ -689,8 +726,13 @@ int Menu_PlayUser(game_state_t * game, move_t * selected_move)
 			cmd_status = Menu_ReadCommand_GetMovesPiece(line, 10, game, current_player);
 		}
 
-		//TODO get_best_moves d
+		//get_best_moves d
 
+		else if (strncmp(line, "get_best_moves", 14)==0)
+		{
+			cmd_status = Menu_ReadCommand_GetBestMoves(line, 15, game, current_player);
+
+		}
 		//TODO get_score d m
 
 		//save

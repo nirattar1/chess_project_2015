@@ -41,4 +41,13 @@ void MinimaxChoose (
 		ListNode * (*ChildGenerateFunction)(STATE_TYPE *, color_t),
 		int * chosenSon, int * chosenValue); //by reference, will update these for caller.
 
+
+//is responsible for choosing step to do the on the first level.
+//then going on to selecting the best value out of the children.
+ListNode * MinimaxMain (
+		STATE_TYPE * state,
+		int max_depth,
+		color_t maximizing_player,
+		int (*ScoringFunction)(STATE_TYPE *, color_t, color_t),
+		ListNode * (*ChildGenerateFunction)(STATE_TYPE *, color_t));
 #endif /* MINIMAX_H_ */

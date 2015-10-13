@@ -11,7 +11,7 @@
 //
 
 //debug
-//#define DEBUG
+#define DEBUG
 
 #ifdef DEBUG
 	#define IS_DEBUG 1

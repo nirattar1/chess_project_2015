@@ -364,34 +364,40 @@ void CPUTurn (game_state_t * game)
 	//get max depth based on settings
 	int max_depth = Settings_MaxDepth_Get();
 
-	//get initial children list from given state.
-	//(allowed moves for CPU.)
-	ListNode * RootChildren = GetMovesForPlayer(game, color);
+//	//get initial children list from given state.
+//	//(allowed moves for CPU.)
+//	ListNode * RootChildren = GetMovesForPlayer(game, color);
+//
+//	//child with best score will decide what move to do .
+//	int childIndex;
+//	int childScore;
 
-	//child with best score will decide what move to do .
-	int childIndex;
-	int childScore;
+//	MinimaxChoose (game,  RootChildren, 0, max_depth,
+//				1, MIN_SCORE, MAX_SCORE,	//pruning=true
+//				color,1,					//define CPU color as maximizing, start as maximizer
+//				BasicScoringFunction, GetMovesForPlayer,
+//				&childIndex, &childScore);
 
-	MinimaxChoose (game,  RootChildren, 0, max_depth,
-				1, MIN_SCORE, MAX_SCORE,	//pruning=true
-				color,1,					//define CPU color as maximizing, start as maximizer
-				BasicScoringFunction, GetMovesForPlayer,
-				&childIndex, &childScore);
+	//get list of best moves.
+	ListNode * bestMoves = MinimaxMain(game, max_depth, color,
+			BasicScoringFunction, GetMovesForPlayer);
 
-	DEBUG_PRINT( ("index %d was chosen. will lead to score of %d\n", childIndex, childScore));
+	ListNode * pChild = bestMoves;
 
-	//do the relevant move
-	//TODO use function for that- find move in list
-	int i=0;
-	//find index in list
-	ListNode * pChild = RootChildren;
-	while (i<childIndex && pChild!=NULL )
-	{
-		pChild = pChild->next;
-		i++;
-	}
+	//DEBUG_PRINT( ("index %d was chosen. will lead to score of %d\n", childIndex, childScore));
+//
+//	//do the relevant move
+//	//TODO use function for that- find move in list
+//	int i=0;
+//	//find index in list
+//	ListNode * pChild = RootChildren;
+//	while (i<childIndex && pChild!=NULL )
+//	{
+//		pChild = pChild->next;
+//		i++;
+//	}
 
-	//do the move
+	//do the first move in list
 	if (pChild)
 	{
 		move_t * move = (move_t *) (pChild->data);
@@ -407,7 +413,7 @@ void CPUTurn (game_state_t * game)
 	}
 
 	//free moves list
-	ListFreeElements(RootChildren, MoveFree);
+	ListFreeElements(bestMoves, MoveFree);
 
 }
 

@@ -19,6 +19,11 @@
  */
 
 
+//static func. declarations
+static void BoardRowToString (const game_state_t * game, int row_index, char * row_content_chars);
+static void BoardRowFromString (game_state_t * game, int row_index, const char * row_content_chars);
+
+
 //will load data into game. from open xml object.
 static int XML_GameNodeDataLoad(game_state_t * game, xmlDoc * doc)
 {
@@ -301,7 +306,6 @@ static int XML_GameNodeDataSave(const game_state_t * game, xmlDocPtr doc)
 int LoadGame(game_state_t * game,char * filename)
 {
     xmlDoc *doc = NULL;
-    xmlNode *root_element = NULL;
 
     /*
      * this initialize the library and check potential ABI mismatches
@@ -342,8 +346,6 @@ int SaveGame(const game_state_t * game,char * FileName)
 {
 
 	xmlDocPtr doc = NULL;       /* document pointer */
-	char buff[256];
-	int i, j;
 
 	LIBXML_TEST_VERSION;
 
