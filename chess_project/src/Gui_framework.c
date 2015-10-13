@@ -84,7 +84,7 @@ Control * ControlCreate(char * filename, SDL_Rect * rect)
 	ctl->rect = rect;
 	ctl->children = NULL;
 	ctl->parent = NULL;
-
+	ctl->extra_data = NULL;
 	//by default a control does nothing.
 	ctl->HandleEvents = NULL;
 
@@ -125,6 +125,12 @@ void ControlFree (void * ctl_p)
 	if (ctl->children)
 	{
 		ListFreeElements(ctl->children, ControlFree);
+	}
+
+	//free the extra data that is attached to control
+	if (ctl->extra_data)
+	{
+		myfree(ctl->extra_data);
 	}
 
 	//free the struct itself (with all static data).
@@ -360,10 +366,10 @@ void ButtonDraw (Control * button, SDL_Surface * screen)
 
     //TODO can always free ?
     /* Free the allocated BMP surface. */
-    //SDL_FreeSurface(button->surface);
+    SDL_FreeSurface(button->surface);
 
 	//the surface was freed, reset pointer.
-	//button->surface = NULL;
+	button->surface = NULL;
 }
 
 

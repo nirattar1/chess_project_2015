@@ -9,7 +9,7 @@
 #include "Gui.h"
 #include "Gui_framework.h"
 #include "Memory.h"
-
+#include "Files.h"
 
 gui_window_t 	_NextWindow = GUI_WINDOW_MAIN_MENU; //start with main menu.
 game_state_t * 	_CurrentGame = NULL; //a pointer to current game.
@@ -28,15 +28,28 @@ position_t _BoardPieceMoveSrc;
 void Handler_New()
 {
 	DEBUG_PRINT (("new\n"));
+	//restart game
+	game_state_t * game = _CurrentGame;
+
+	//avoid null ptr
+	if (!game)
+	{
+		DEBUG_PRINT(("Error: no game ptr on new game.\n"));
+	}
+
+	//clear board, put default layout
+	GameInit(game, (char **) game->pieces);
+	GameDefaultLayout(game);
+
 	_QuitCurrentWindow = 1;
 	_NextWindow = GUI_WINDOW_PLAYER_SELECTION;
 }
 
-void Handler_Load()
+void Handler_GoToLoadGame()
 {
 	DEBUG_PRINT (("load\n"));
 	_QuitCurrentWindow = 1;
-	_NextWindow = GUI_WINDOW_SAVE_LOAD;
+	_NextWindow = GUI_WINDOW_LOAD;
 
 }
 
@@ -79,12 +92,94 @@ void Handler_Cancel()
 
 }
 
-void Handler_SaveGame()
+void Handler_GoToSaveGame()
 {
 	//TODO implement
 	DEBUG_PRINT (("save game\n"));
-	//_QuitCurrentWindow = 1;
-	//_NextWindow = GUI_WINDOW_MAIN_MENU;	//go back to main menu.
+	_QuitCurrentWindow = 1;
+	_NextWindow = GUI_WINDOW_SAVE;	//go to save/load
+
+}
+
+static void Gui_SlotTryLoad(char * file_name)
+{
+
+	//find out first if file exists.
+	if (!DoesFileExist(file_name))
+	{
+		//TODO handle error graphically.
+	}
+
+	//trying to open with libxml2
+	game_state_t * game = _CurrentGame;
+	if (!LoadGame(game, file_name))
+	{
+		//TODO specific libxml2 errors? currently giving only 1 error code for all problems.
+		//TODO handle error graphically.
+	}
+	else
+	{
+		//reading succeeded
+
+		_QuitCurrentWindow = 1;
+		//progress to next window
+		_NextWindow = GUI_WINDOW_PLAYER_SELECTION;
+	}
+}
+
+static void Gui_SlotTrySave(char * file_name)
+{
+
+	//check file can be written at location.
+	if (!FileCanOpenForWriting(file_name))
+	{
+		//TODO handle error graphically.
+	}
+
+	//file is ok.
+	//trying to save it with libxml2
+	game_state_t * game = _CurrentGame;
+	if (!SaveGame((const game_state_t *) game, file_name))
+	{
+		//TODO specific libxml2 errors? currently giving only 1 error code for all problems.
+		//TODO handle error graphically.
+	}
+	else
+	{
+		//save succeeded
+		//go back to game.
+		_QuitCurrentWindow = 1;
+		_NextWindow = GUI_WINDOW_GAME;
+	}
+
+
+}
+
+void Handler_SaveLoadSlotDo(Control * control, SDL_Event * event )
+{
+
+	//avoid null ptr
+	if  (!control || !control->extra_data)
+	{
+		return;
+	}
+
+	//get slot index from button's extra data.
+	int slotIndex = *((int *) control->extra_data);
+
+	//build file name from slot index.
+	char file_name[MAX_FILE_NAME_LENGTH];
+	sprintf(file_name, SLOTS_XML_FILE_FORMAT, slotIndex);
+
+	//do save or load according to active window type
+	if (_NextWindow==GUI_WINDOW_LOAD)
+	{
+		Gui_SlotTryLoad(file_name);
+	}
+	else if (_NextWindow==GUI_WINDOW_SAVE)
+	{
+		Gui_SlotTrySave(file_name);
+	}
 
 }
 
@@ -92,8 +187,8 @@ void Handler_BoardPieceClick(Control * control, SDL_Event * event)
 {
 
 	//avoid null ptr
-	//TODO special check pos if have pointer
-	if (!control)
+	//extra_data may also be null
+	if (!control || !control->extra_data)
 	{
 		DEBUG_PRINT(("Error: clicked a piece with no position\n"));
 		return;
@@ -101,17 +196,20 @@ void Handler_BoardPieceClick(Control * control, SDL_Event * event)
 
 	game_state_t * game = _CurrentGame;
 
-	DEBUG_PRINT (("clicked position: <%c,%d>\n", control->pos.x, control->pos.y));
+	//find if there is a piece
+	//retrieve piece from control.
+	position_t pos = *((position_t *) control->extra_data);
+
+	DEBUG_PRINT (("clicked position: <%c,%d>\n", pos.x, pos.y));
 
 	//act based on previous selection
 	if (_BoardPieceSelection==0)
 	{
 		//none is currently selected.
 
-		//find if there is a piece
 		piece_t piece;
-		piece.position = control->pos;
-		piece.identity = GetPiece (control->pos, game);
+		piece.position = pos;
+		piece.identity = GetPiece (pos, game);
 
 		//check if invalid piece
 		//TODO more cases
@@ -123,7 +221,7 @@ void Handler_BoardPieceClick(Control * control, SDL_Event * event)
 
 		//piece is valid, mark as selected
 		_BoardPieceSelection = 1;
-		_BoardPieceMoveSrc = control->pos;
+		_BoardPieceMoveSrc = pos;
 
 		//get pieces moves, highlight them
 		ListNode * moves = GetMovesForPiece(game, piece); //free later
@@ -151,7 +249,7 @@ void Handler_BoardPieceClick(Control * control, SDL_Event * event)
 
 		//find move inside moves list.
 		//find move in allowed moves list, (if found, will update move in argument).
-		int valid = FindMoveInList(moves, _BoardPieceMoveSrc, control->pos,
+		int valid = FindMoveInList(moves, _BoardPieceMoveSrc, pos,
 				promotion_identity, &selected_move);
 
 		//free moves list
@@ -206,7 +304,7 @@ Control * Menu_MainMenu_Create()
 	SDL_Rect * button_LoadGame_rect = (SDL_Rect *) mymalloc(sizeof(SDL_Rect));
 	button_LoadGame_rect->x = 310; button_LoadGame_rect->y = 250;
 	button_LoadGame_rect->w = 20; button_LoadGame_rect->h = 30;
-	Control * button_LoadGame = ButtonCreate("imgs/load_g.bmp", button_LoadGame_rect, Handler_Load);
+	Control * button_LoadGame = ButtonCreate("imgs/load_g.bmp", button_LoadGame_rect, Handler_GoToLoadGame);
 
 	//quit button
 	SDL_Rect * button_Quit_rect = (SDL_Rect *) mymalloc(sizeof(SDL_Rect));
@@ -260,6 +358,64 @@ Control * Menu_PlayerSelection_Create()
 	//link the objects to window
 	ControlAddChild(window, button_PlayerVsCpu);
 	ControlAddChild(window, button_PlayerVsPlayer);
+	ControlAddChild(window, button_Cancel);
+
+	return window;
+}
+
+
+Control * Menu_SaveLoad_Create()
+{
+
+	//window (has no rect).
+	Control * window = WindowCreate("imgs/background.bmp", NULL);
+	//handle error in creation of window.
+	if (!window)
+	{
+		return NULL;
+	}
+
+	//buttons under window
+	//TODO load / save label
+
+	//save slots
+	int x_off = 300;
+	int y_off = 20;
+	for (int i=1; i<=NUM_SAVE_SLOTS; i++)
+	{
+
+		//build slot button and link it to window.
+		SDL_Rect * button_slot_rect = (SDL_Rect *) mymalloc(sizeof(SDL_Rect));
+		button_slot_rect->x = x_off; button_slot_rect->y = y_off;
+		button_slot_rect->w = 0; button_slot_rect->h = 0;
+
+		//build file name from index and format.
+		char slot_filename[MAX_FILE_NAME_LENGTH];
+		sprintf(slot_filename, SLOTS_IMG_FILE_FORMAT, i);
+		Control * button_Slot = ButtonCreate(slot_filename, button_slot_rect, Handler_SaveLoadSlotDo);
+
+		//save on control's extra data - the number of slot.
+		button_Slot->extra_data = mymalloc(sizeof(int));
+		if (button_Slot->extra_data)
+		{
+			*((int *) button_Slot->extra_data) = i;
+		}
+
+		//link to window
+		ControlAddChild(window, button_Slot);
+
+		//progress downwards
+		y_off+= 50;
+	}
+
+	//cancel button
+	//TODO needed here?
+	SDL_Rect * button_Cancel_rect = (SDL_Rect *) mymalloc(sizeof(SDL_Rect));
+	button_Cancel_rect->x = 20; button_Cancel_rect->y = 350;
+	button_Cancel_rect->w = 20; button_Cancel_rect->h = 30;
+	Control * button_Cancel = ButtonCreate("imgs/Cancel.bmp", button_Cancel_rect, Handler_Cancel);
+
+	//link the objects to window
 	ControlAddChild(window, button_Cancel);
 
 	return window;
@@ -332,15 +488,23 @@ static void BoardPieceFindPictureByIdentity(position_t pos, char identity, char 
 void BoardPieceDraw (Control * button, SDL_Surface * screen)
 {
 
+	//avoid bull ptr on control and it's extra data.
+	if (!button || !button->extra_data)
+	{
+		return;
+	}
 	//get current game state, find identity inside position.
 	game_state_t * game = _CurrentGame;
+	//get position of piece
+	position_t pos = *((position_t *) button->extra_data);
+
 	//decide what is in the piece
-	char identity = GetPiece (button->pos, game);
+	char identity = GetPiece (pos, game);
 
 	//TODO pre-load images.
 	//find the correct image based on the piece and position
 	char filename[50];
-	BoardPieceFindPictureByIdentity(button->pos, identity, filename);
+	BoardPieceFindPictureByIdentity(pos, identity, filename);
 	//TODO handle errors
 
 	//load image
@@ -410,7 +574,9 @@ static void BuildBoard(game_state_t * game, Control * panel_GameBoard)
 			Control * button_BoardPiece = ButtonCreate( NULL, button_BoardPiece_rect, Handler_Quit);
 
 			//save position info on button.
-			button_BoardPiece->pos = pos;
+			button_BoardPiece->extra_data = mymalloc (sizeof(position_t));
+			//TODO check malloc
+			*((position_t *) button_BoardPiece->extra_data) = pos;
 
 			//give draw and handle events handlers.
 			button_BoardPiece->Draw = BoardPieceDraw;
@@ -455,7 +621,7 @@ Control * Menu_GameWindow_Create()
 	SDL_Rect * button_SaveGame_rect = (SDL_Rect *) mymalloc(sizeof(SDL_Rect));
 	button_SaveGame_rect->x = 600; button_SaveGame_rect->y = 0;
 	button_SaveGame_rect->w = 0; button_SaveGame_rect->h = 0;
-	Control * button_SaveGame = ButtonCreate("imgs/Save_Game.bmp", button_SaveGame_rect, Handler_SaveGame);
+	Control * button_SaveGame = ButtonCreate("imgs/Save_Game.bmp", button_SaveGame_rect, Handler_GoToSaveGame);
 
 	//main menu
 	SDL_Rect * button_MainMenu_rect = (SDL_Rect *) mymalloc(sizeof(SDL_Rect));
@@ -609,6 +775,10 @@ Control * Gui_GetNextWindow(gui_window_t window)
 		case GUI_WINDOW_PLAYER_SELECTION:
 			return Menu_PlayerSelection_Create();
 			break;
+		case GUI_WINDOW_SAVE:
+		case GUI_WINDOW_LOAD:
+			return Menu_SaveLoad_Create();	//handles both save/load
+			break;
 		case GUI_WINDOW_GAME:
 			return Menu_GameWindow_Create();
 			break;
@@ -744,8 +914,8 @@ int Gui_SelectUserMove(game_state_t * game, move_t * selected_move)
 		SDL_Delay(200);
 	}
 
-	//if we have a selected move
-	if (_BoardPieceSelection==2 && selected_move) //avoid null ptr.
+	//if clicked on a move + caller asked for a move
+	if (_BoardPieceSelection==2 && selected_move)
 	{
 		//reset move select indication
 		_BoardPieceSelection=0;
@@ -753,6 +923,13 @@ int Gui_SelectUserMove(game_state_t * game, move_t * selected_move)
 		//update return argument to selecte move.
 		*selected_move = _BoardPieceNextMove;
 		return 1;
+	}
+
+	//anyway reset indication
+	if (_BoardPieceSelection==2)
+	{
+		//reset move select indication
+		_BoardPieceSelection=0;
 	}
 	//TODO handle error?
 	return 0;

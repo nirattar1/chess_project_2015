@@ -20,7 +20,6 @@ void ClearCharBuffer (char * buffer, int buflen)
 }
 
 
-#define MAX_COMMAND_LENGTH 51
 
 int readline (char * line)
 {
@@ -246,8 +245,8 @@ static user_command_errorcode_t Menu_ReadSetting_LoadGame (char * line, int star
 
 	//get file name from line and store it.
 	//file name can be as long as maximum command length
-	char file_name [MAX_COMMAND_LENGTH];
-	strncpy(file_name, line+start_at_char, MAX_COMMAND_LENGTH);
+	char file_name [MAX_FILE_NAME_LENGTH];
+	strncpy(file_name, line+start_at_char, MAX_FILE_NAME_LENGTH);
 
 	//find out first if file exists.
 	if (!DoesFileExist(file_name))
@@ -483,8 +482,8 @@ static user_command_errorcode_t Menu_ReadCommand_SaveGame
 
 	//get file name from line and store it.
 	//file name can be as long as maximum command length
-	char file_name [MAX_COMMAND_LENGTH];
-	strncpy(file_name, line+start_at_char, MAX_COMMAND_LENGTH);
+	char file_name [MAX_FILE_NAME_LENGTH];
+	strncpy(file_name, line+start_at_char, MAX_FILE_NAME_LENGTH);
 	//TODO possible buffer error? also on load.
 
 	//check file can be written at location.

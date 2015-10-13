@@ -39,7 +39,7 @@ Gui_framework.o: Gui_framework.h Gui_framework.c
 	gcc -c $(CFLAGS) $*.c $(SDL_CFLAGS)
 
 Gui.o: Gui.h Gui.c
-	gcc -c $(CFLAGS) $*.c $(SDL_CFLAGS)
+	gcc -c $(CFLAGS) $*.c $(SDL_CFLAGS) $(XML_CFLAGS)
 
 
 #TODO makefile - from here only for testing - not needed

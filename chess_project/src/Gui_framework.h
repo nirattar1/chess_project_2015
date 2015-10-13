@@ -49,8 +49,7 @@ typedef struct Control
 	void (*Draw)(struct Control * control, SDL_Surface * screen);
 	void (*HandleEvents)(struct Control * control , SDL_Event * event);
 
-	//TODO make dynamic and void *
-	position_t pos;
+	void * extra_data;
 
 } Control;
 

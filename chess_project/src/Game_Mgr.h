@@ -11,7 +11,7 @@
 //
 
 //debug
-#define DEBUG
+//#define DEBUG
 
 #ifdef DEBUG
 	#define IS_DEBUG 1
@@ -53,6 +53,8 @@ extern int 		_RunModeIsGui;
 #define MAX_DEPTH_MIN_VALUE 	1
 #define MAX_DEPTH_MAX_VALUE 	4
 #define MAX_DEPTH_BEST_VALUE 	5
+#define MAX_COMMAND_LENGTH 		51
+#define MAX_FILE_NAME_LENGTH	MAX_COMMAND_LENGTH
 
 //texts
 #define ENTER_SETTINGS "Enter game settings:\n" 

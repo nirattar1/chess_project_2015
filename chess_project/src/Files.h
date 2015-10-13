@@ -23,6 +23,11 @@
 #define CHESS_XML_NODE_ROW_FORMAT 	"row_%d"
 #define CHESS_XML_NODE_ROW_EMPTY_PIECE '_'
 
+
+#define NUM_SAVE_SLOTS 7
+#define SLOTS_IMG_FILE_FORMAT "imgs/slot_%d.bmp"
+#define SLOTS_XML_FILE_FORMAT "saves/slot_%d.xml"
+
 //load the game stored in file "filename", into game struct.
 //returns: 1 on success, 0 on failure.
 int LoadGame(game_state_t * game,char * filename);
