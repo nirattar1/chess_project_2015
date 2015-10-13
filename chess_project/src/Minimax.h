@@ -50,4 +50,15 @@ ListNode * MinimaxMain (
 		color_t maximizing_player,
 		int (*ScoringFunction)(STATE_TYPE *, color_t, color_t),
 		ListNode * (*ChildGenerateFunction)(STATE_TYPE *, color_t));
+
+
+//will make an array of scores, from a state and a given list of its children
+//will also update argument childMax with the maximum value found.
+//caller is owner of the array.
+int * GetMinimaxScoresArrayFromState(STATE_TYPE * state, ListNode * RootChildren,
+		int max_depth, color_t maximizing_player,
+		int (*ScoringFunction)(STATE_TYPE *, color_t, color_t),
+		ListNode * (*ChildGenerateFunction)(STATE_TYPE *, color_t),
+		int * childScoreMax);
+
 #endif /* MINIMAX_H_ */

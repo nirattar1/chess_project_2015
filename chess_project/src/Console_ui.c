@@ -11,6 +11,7 @@
 #include "Files.h"
 #include "Game_Mgr.h"
 #include "Minimax.h"
+#include "Memory.h"
 
 void ClearCharBuffer (char * buffer, int buflen)
 {
@@ -411,7 +412,7 @@ static user_command_errorcode_t Menu_ReadCommand_Move
 	ListNode * moves = GetMovesForPlayer(game, current_player); //always free later
 
 	//find move in allowed moves list, (if found, will update move in argument).
-	int valid = FindMoveInList(moves, src, dest, promotion_identity, selected_move);
+	int valid = FindMoveInList(moves, src, dest, promotion_identity, selected_move, NULL);
 
 	//free moves list
 	ListFreeElements(moves, MoveFree);
@@ -511,6 +512,112 @@ static user_command_errorcode_t Menu_ReadCommand_GetBestMoves
 
 	}
 }
+
+//get a score for move
+//format : get_score d m
+//outputs the score for the move with minimax running depth d.
+static user_command_errorcode_t Menu_ReadCommand_GetScoreOfMove
+(char * line, int start_at_char, game_state_t * game, color_t current_player)
+{
+
+	//parse and process depth
+	char d [2];
+	strncpy(d, line+start_at_char, 1);
+	d[1] = '\0';
+	int depth = atoi(d);
+	//assuming depth is legal
+	//TODO handle best
+
+	//go on to read the move
+	//doing the same validations as in "move" command
+	start_at_char+=2;
+	//determine source and destination positions from user line.
+	//assuming always 1 digit (board size less than 10)
+	char 	src_x, dest_x;
+	int 	src_y, dest_y;
+	sscanf (line+start_at_char, "move <%c,%d> to <%c,%d>",
+			&src_x, &src_y, &dest_x, &dest_y);
+
+	//build positions.
+	position_t src 	= Position(src_x, src_y);
+	position_t dest = Position(dest_x, dest_y);
+
+	//check both positions are in bounds
+	if (!PositionInBounds(src) || !PositionInBounds(dest))
+	{
+		return SETTING_COMMAND_STATUS_WRONG_POSITION;
+	}
+
+	//check that position contains user's piece
+	if (GetColor(GetPiece(src, game)) != current_player)
+	{
+		return SETTING_COMMAND_STATUS_PIECE_NOT_OF_PLAYER;
+	}
+
+	//move on to read promotion identity (if exists)
+	start_at_char += 20; // skip this pattern length: move_<a,1>_to_<b,2>_
+	//TODO just the type not color
+	char promotion_identity = GetIdentityByString (line+start_at_char);
+
+	//check validity of piece type
+	if (promotion_identity==0)
+	{
+		//
+	}
+
+	//check that move is indeed in user's allowed moves list.
+
+	//get initial children list from given state.
+	//(allowed moves for player.)
+	ListNode * moves = GetMovesForPlayer(game, current_player); //always free later
+
+	//find move in allowed moves list,
+	//(if found, will update move in argument, and update index of move).
+	move_t selected_move;
+	int move_index;
+	int valid = FindMoveInList(moves, src, dest, promotion_identity,
+			&selected_move, &move_index);
+
+	//if move found, get its score.
+	if (valid && move_index!=-1)
+	{
+		//start computing the score
+		//always start from the maximizing
+
+		//compute the children's scores.
+		int childScoreMax = MIN_SCORE;//not used
+		//maintain an array of scores respective to the children.
+		int * arrScores = GetMinimaxScoresArrayFromState(game, moves,
+				depth, current_player, BasicScoringFunction, GetMovesForPlayer,
+				&childScoreMax);	//free later!
+
+		//TODO not safe, check that arr is big enough
+		//get the score from array
+		int score = arrScores[move_index];
+
+		//print the score
+		printf("%d\n", score);
+
+		//free scores array
+		myfree(arrScores);
+		//free moves list
+		ListFreeElements(moves, MoveFree);
+
+		return SETTING_COMMAND_STATUS_OK;
+	}
+	else
+	{
+
+		//free moves list
+		ListFreeElements(moves, MoveFree);
+
+		//move is not in list.
+		return SETTING_COMMAND_STATUS_ILLEGAL_MOVE_FOR_PLAYER;
+	}
+
+
+}
+
 
 //save a game.
 static user_command_errorcode_t Menu_ReadCommand_SaveGame
@@ -727,13 +834,16 @@ int Menu_PlayUser(game_state_t * game, move_t * selected_move)
 		}
 
 		//get_best_moves d
-
 		else if (strncmp(line, "get_best_moves", 14)==0)
 		{
 			cmd_status = Menu_ReadCommand_GetBestMoves(line, 15, game, current_player);
-
 		}
-		//TODO get_score d m
+
+		//get_score d m
+		else if (strncmp(line, "get_score", 9)==0)
+		{
+			cmd_status = Menu_ReadCommand_GetScoreOfMove(line, 10, game, current_player);
+		}
 
 		//save
 		//format: save filename

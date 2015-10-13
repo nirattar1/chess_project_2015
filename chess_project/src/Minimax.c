@@ -207,6 +207,7 @@ void MinimaxChoose (
 	return;
 }
 
+
 //is responsible for choosing step to do the on the first level.
 //then going on to selecting the best value out of the children.
 ListNode * MinimaxMain (
@@ -230,39 +231,11 @@ ListNode * MinimaxMain (
 	int childScoreMax = MIN_SCORE;
 	int iChild = 0;
 	ListNode * pChildren = RootChildren;
+
 	//maintain an array of scores respective to the children.
-	int * arrScores = (int *) mymalloc (sizeof (int));//free later
-
-	for (; pChildren !=NULL; pChildren = pChildren->next )
-	{
-
-		//create static copy of state and update it.
-		STATE_TYPE newState;
-		char newBoard [BOARD_SIZE][BOARD_SIZE];
-		newState.pieces = (board_column *) newBoard;
-		UpdateState(state, &newState, pChildren, iChild);
-
-		//compute the score from this child.
-		//(allocate place for child)
-		arrScores = (int *) realloc(arrScores, (iChild+1)*(sizeof(int)));
-
-		int childIndex;	//just for function call , not really used.
-
-		//computing next turn (opposite color, minimizing player)
-		MinimaxChoose(&newState, NULL, 1, max_depth,	//start from level 1
-		1, MIN_SCORE, MAX_SCORE,	//pruning==true
-		maximizing_player, 0,	//0 == next level is minimizing.
-		ScoringFunction, ChildGenerateFunction, &childIndex, &arrScores[iChild]);
-
-		//update max score found.
-		if (arrScores[iChild] > childScoreMax)
-		{
-			childScoreMax = arrScores[iChild] ;
-		}
-
-		DEBUG_PRINT( ("current depth : 0. score from child %d: %d\n", iChild, arrScores[iChild]));
-		iChild++;
-	}
+	int * arrScores = GetMinimaxScoresArrayFromState(state, RootChildren,
+			max_depth, maximizing_player, BasicScoringFunction, GetMovesForPlayer,
+			&childScoreMax);
 
 	//iterate through the moves, to find 1 (or more) moves that have the maximum score.
 
@@ -292,3 +265,59 @@ ListNode * MinimaxMain (
 	return BestChildren;
 }
 
+
+
+
+
+int * GetMinimaxScoresArrayFromState(STATE_TYPE * state, ListNode * RootChildren,
+		int max_depth, color_t maximizing_player,
+		int (*ScoringFunction)(STATE_TYPE *, color_t, color_t),
+		ListNode * (*ChildGenerateFunction)(STATE_TYPE *, color_t),
+		int * childScoreMax)
+{
+
+	//avoid null ptr
+	if (childScoreMax)
+	{
+		*childScoreMax = MIN_SCORE;
+	}
+
+	//maintain an array of scores respective to the children.
+	int * arrScores = (int *) mymalloc (sizeof (int));//free later
+
+	int iChild = 0;
+	ListNode * pChildren = RootChildren;
+	for (; pChildren !=NULL; pChildren = pChildren->next )
+	{
+
+		//create static copy of state and update it.
+		STATE_TYPE newState;
+		char newBoard [BOARD_SIZE][BOARD_SIZE];
+		newState.pieces = (board_column *) newBoard;
+		UpdateState(state, &newState, pChildren, iChild);
+
+		//compute the score from this child.
+		//(allocate place for child)
+		arrScores = (int *) realloc(arrScores, (iChild+1)*(sizeof(int)));
+
+		int childIndex;	//just for function call , not really used.
+
+		//computing next turn (opposite color, minimizing player)
+		MinimaxChoose(&newState, NULL, 1, max_depth,	//start from level 1
+		1, MIN_SCORE, MAX_SCORE,	//pruning==true
+		maximizing_player, 0,	//0 == next level is minimizing.
+		ScoringFunction, ChildGenerateFunction, &childIndex, &arrScores[iChild]);
+
+		//update max score found.
+		//avoid null ptr
+		if (childScoreMax && (arrScores[iChild] > *childScoreMax))
+		{
+			*childScoreMax = arrScores[iChild] ;
+		}
+
+		DEBUG_PRINT( ("current depth : 0. score from child %d: %d\n", iChild, arrScores[iChild]));
+		iChild++;
+	}
+
+	return arrScores; //caller is responsible to free
+}

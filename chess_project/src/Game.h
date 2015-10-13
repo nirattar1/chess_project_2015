@@ -341,7 +341,7 @@ void DoMove (move_t * move, game_state_t * game);
 //if found the move, returns 1 and updates move_return.
 //otherwise returns 0.
 int FindMoveInList 	(ListNode * moves, position_t src, position_t dest,
-		char promotion_identity, move_t * move_return);
+		char promotion_identity, move_t * move_return, int * move_index);
 
 //updates the position of color's king on board (by reference).
 //if king is not found returns 0.

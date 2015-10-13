@@ -971,29 +971,42 @@ void MoveCopy( move_t * m2, move_t * m1 )
 
 
 int FindMoveInList 	(ListNode * moves, position_t src, position_t dest,
-		char promotion_identity, move_t * move_return)
+		char promotion_identity, move_t * move_return, int * move_index)
 {
 
+	//avoid null ptr, give default value (not found)
+	if (move_index)
+	{
+		*move_index = -1;
+	}
+
 	//iterate through moves list.
+	int i = 0;
 	for ( ; moves !=NULL; moves = moves->next )
 	{
 		move_t * move = (move_t *) moves->data;
-		//avoid null.
-		if (!move)
-		{
-			continue;
-		}
 
-		//compare the move based on given arguments.
-		if (move->src.x==src.x && move->src.y==src.y
-				&& move->dest.x==dest.x && move->dest.y==dest.y)
+		//avoid null move.
+		if (move)
 		{
-			//TODO promotion + default
-			//found the move. return it through argument.
-			MoveCopy(move_return, move);
-			return 1;
+			//compare the move based on given arguments.
+			if (move->src.x==src.x && move->src.y==src.y
+					&& move->dest.x==dest.x && move->dest.y==dest.y)
+			{
+				//TODO promotion + default
+				//found the move. return it through argument.
+				//TODO handle null move_return
+				MoveCopy(move_return, move);
+				//also update the index inside list.
+				if (move_index)
+				{
+					*move_index = i;
+				}
+				return 1;
+			}
 		}
-
+		//increment index.
+		i++;
 	}
 
 	//not found the move.

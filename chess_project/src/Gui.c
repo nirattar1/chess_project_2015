@@ -250,7 +250,7 @@ void Handler_BoardPieceClick(Control * control, SDL_Event * event)
 		//find move inside moves list.
 		//find move in allowed moves list, (if found, will update move in argument).
 		int valid = FindMoveInList(moves, _BoardPieceMoveSrc, pos,
-				promotion_identity, &selected_move);
+				promotion_identity, &selected_move, NULL);
 
 		//free moves list
 		ListFreeElements(moves, MoveFree);
