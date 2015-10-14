@@ -137,7 +137,7 @@ int FileCanOpenForWriting (const char * filename)
 
 void print_line(){
 	int i;
-	printf("  |");
+	printf(" |");
 	for (i = 1; i < BOARD_SIZE*4; i++){
 		printf("-");
 	}
@@ -152,14 +152,14 @@ void PrintBoard(game_state_t * game)
 	print_line();
 	for (j = BOARD_SIZE-1; j >= 0 ; j--)
 	{
-		printf((j < 9 ? " %d" : "%d"), j+1);
+		printf((j < 9 ? "%d" : "%d"), j+1);
 		for (i = 0; i < BOARD_SIZE; i++){
 			printf("| %c ", game->pieces[i][j]);
 		}
 		printf("|\n");
 		print_line();
 	}
-	printf("   ");
+	printf("  ");
 	for (j = 0; j < BOARD_SIZE; j++){
 		printf(" %c  ", (char)('a' + j));
 	}

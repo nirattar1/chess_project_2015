@@ -14,10 +14,10 @@
 gui_window_t 	_NextWindow = GUI_WINDOW_MAIN_MENU; //start with main menu.
 game_state_t * 	_CurrentGame = NULL; //a pointer to current game.
 Control * 		_CurrentWindow = NULL;
-SDL_Surface * 	_CurrentScreen = NULL; //TODO remove
+SDL_Surface * 	_CurrentScreen = NULL;
 move_t 			_BoardPieceNextMove;
+int 			_CurrentGameHasEnded = 0;
 
-//TODO make enum
 //0==none is selected.
 //1==selected and display move.
 //2==selected and legal move (ready to perform).
@@ -28,7 +28,8 @@ position_t _BoardPieceMoveSrc;
 //static function declarations
 static void BoardPieceFindPictureByIdentity(position_t pos, char identity, char * filename);
 static void BuildBoard(game_state_t * game, Control * panel_GameBoard);
-
+static void Gui_SlotTryLoad(char * file_name);
+static void Gui_SlotTrySave(char * file_name);
 
 
 void Handler_NewGame()
@@ -194,60 +195,6 @@ void Handler_GoToSaveGame()
 
 }
 
-static void Gui_SlotTryLoad(char * file_name)
-{
-
-	//find out first if file exists.
-	if (!DoesFileExist(file_name))
-	{
-		//TODO handle error graphically.
-	}
-
-	//trying to open with libxml2
-	game_state_t * game = _CurrentGame;
-	if (!LoadGame(game, file_name))
-	{
-		//TODO specific libxml2 errors? currently giving only 1 error code for all problems.
-		//TODO handle error graphically.
-	}
-	else
-	{
-		//reading succeeded
-
-		_QuitCurrentWindow = 1;
-		//progress to next window
-		_NextWindow = GUI_WINDOW_PLAYER_SELECTION;
-	}
-}
-
-static void Gui_SlotTrySave(char * file_name)
-{
-
-	//check file can be written at location.
-	if (!FileCanOpenForWriting(file_name))
-	{
-		//TODO handle error graphically.
-	}
-
-	//file is ok.
-	//trying to save it with libxml2
-	game_state_t * game = _CurrentGame;
-	if (!SaveGame((const game_state_t *) game, file_name))
-	{
-		//TODO specific libxml2 errors? currently giving only 1 error code for all problems.
-		//TODO handle error graphically.
-	}
-	else
-	{
-		//save succeeded
-		//go back to game.
-		_QuitCurrentWindow = 1;
-		_NextWindow = GUI_WINDOW_GAME;
-	}
-
-
-}
-
 void Handler_SaveLoadSlotDo(Control * control, SDL_Event * event )
 {
 
@@ -279,6 +226,12 @@ void Handler_SaveLoadSlotDo(Control * control, SDL_Event * event )
 void Handler_BoardPieceClick(Control * control, SDL_Event * event)
 {
 
+	//check if game has ended. if so, do no action.
+	if (_CurrentGameHasEnded)
+	{
+		return;
+	}
+
 	//avoid null ptr
 	//extra_data may also be null
 	if (!control || !control->extra_data)
@@ -287,7 +240,9 @@ void Handler_BoardPieceClick(Control * control, SDL_Event * event)
 		return;
 	}
 
+	//get game and user's color from global settings
 	game_state_t * game = _CurrentGame;
+	color_t current_player = Settings_NextPlayer_Get();
 
 	//find if there is a piece
 	//retrieve piece from control.
@@ -306,9 +261,9 @@ void Handler_BoardPieceClick(Control * control, SDL_Event * event)
 
 		//check if invalid piece
 		//TODO more cases
-		if (piece.identity==EMPTY)
+		if (GetColor(piece.identity) != current_player || piece.identity==EMPTY)
 		{
-			return;
+			return ;
 		}
 
 
@@ -620,7 +575,6 @@ Control * Menu_AISettings_Create()
 	button_BestDepth_rect->x = 450; button_BestDepth_rect->y = 330;
 	button_BestDepth_rect->w = 20; button_BestDepth_rect->h = 30;
 	//build file name from number
-	char file_name [MAX_FILE_NAME_LENGTH];
 	Control * button_BestDepth = ButtonCreate("imgs/best.bmp", button_BestDepth_rect, Handler_DepthSelect);
 
 	//special draw behavior
@@ -1077,8 +1031,7 @@ void Draw_DepthButton (Control * button, SDL_Surface * screen)
 		//determine filename based on depth.
 		if (depth==MAX_DEPTH_BEST_VALUE)
 		{
-			char * format = "imgs/best_selected.bmp";
-			sprintf(filename, format);
+			sprintf(filename, "imgs/best_selected.bmp");
 		}
 		else
 		{
@@ -1092,8 +1045,7 @@ void Draw_DepthButton (Control * button, SDL_Surface * screen)
 		//determine filename based on depth.
 		if (depth==MAX_DEPTH_BEST_VALUE)
 		{
-			char * format = "imgs/best.bmp";
-			sprintf(filename, format);
+			sprintf(filename, "imgs/best.bmp");
 		}
 		else
 		{
@@ -1112,10 +1064,63 @@ void Draw_DepthButton (Control * button, SDL_Surface * screen)
 }
 
 
+static void Gui_SlotTryLoad(char * file_name)
+{
+
+	//find out first if file exists.
+	if (!DoesFileExist(file_name))
+	{
+		//TODO handle error graphically.
+	}
+
+	//trying to open with libxml2
+	game_state_t * game = _CurrentGame;
+	if (!LoadGame(game, file_name))
+	{
+		//TODO specific libxml2 errors? currently giving only 1 error code for all problems.
+		//TODO handle error graphically.
+	}
+	else
+	{
+		//reading succeeded
+
+		_QuitCurrentWindow = 1;
+		//progress to next window
+		_NextWindow = GUI_WINDOW_PLAYER_SELECTION;
+	}
+}
+
+static void Gui_SlotTrySave(char * file_name)
+{
+
+	//check file can be written at location.
+	if (!FileCanOpenForWriting(file_name))
+	{
+		//TODO handle error graphically.
+	}
+
+	//file is ok.
+	//trying to save it with libxml2
+	game_state_t * game = _CurrentGame;
+	if (!SaveGame((const game_state_t *) game, file_name))
+	{
+		//TODO specific libxml2 errors? currently giving only 1 error code for all problems.
+		//TODO handle error graphically.
+	}
+	else
+	{
+		//save succeeded
+		//go back to game.
+		_QuitCurrentWindow = 1;
+		_NextWindow = GUI_WINDOW_GAME;
+	}
+
+
+}
+
 //handler for game mgr. will update GUI's board.
 void Gui_UpdateBoard(game_state_t * game)
 {
-	//TODO redraw only source and position ?
 	//redraw board.
 	DFSTraverseDraw(_CurrentWindow, _CurrentScreen);
 }
@@ -1140,17 +1145,17 @@ void Gui_HandleCheck (play_status_t play_status, color_t next_player)
 
 		if (filename)
 		{
-			//TODO properly, create label
 			//add under right panel. no handler.
 			SDL_Rect * label_Check_rect = (SDL_Rect *) mymalloc(sizeof(SDL_Rect));
-			label_Check_rect->x = 310; label_Check_rect->y = 150;
+			label_Check_rect->x = 600; label_Check_rect->y = 150;
 			label_Check_rect->w = 20; label_Check_rect->h = 30;
 
 
 			//add and draw child.
-			Control * label_Check = ButtonCreate(filename, label_Check_rect, NULL );
-			ControlAddChild(_CurrentWindow, label_Check);
+			//dispose of element immediately (will be drawn on top of, at next turn)
+			Control * label_Check = LabelCreate(filename, label_Check_rect);
 			label_Check->Draw(label_Check, _CurrentScreen);
+			ControlFree(label_Check);
 		}
 	}
 
@@ -1165,6 +1170,9 @@ void Gui_HandleCheck (play_status_t play_status, color_t next_player)
 void Gui_HandleEnd
 	(game_state_t * game, play_status_t play_status, color_t next_player)
 {
+
+	//mark global that game has ended (relevant to handlers)
+	_CurrentGameHasEnded = 1;
 
 	//check filename to display message
 	char * filename = NULL;
@@ -1195,14 +1203,13 @@ void Gui_HandleEnd
 	//there is a message to display
 	if (filename)
 	{
-		//TODO properly, create label
 		//add under right panel. no handler.
 		SDL_Rect * label_Endgame_rect = (SDL_Rect *) mymalloc(sizeof(SDL_Rect));
-		label_Endgame_rect->x = 310; label_Endgame_rect->y = 150;
+		label_Endgame_rect->x = 600; label_Endgame_rect->y = 150;
 		label_Endgame_rect->w = 20; label_Endgame_rect->h = 30;
 
 		//add and draw child.
-		Control * label_Endgame = ButtonCreate(filename, label_Endgame_rect, NULL );
+		Control * label_Endgame = LabelCreate(filename, label_Endgame_rect);
 		ControlAddChild(_CurrentWindow, label_Endgame);
 		label_Endgame->Draw(label_Endgame, _CurrentScreen);
 	}
@@ -1229,6 +1236,8 @@ Control * Gui_GetNextWindow(gui_window_t window)
 		case GUI_WINDOW_GAME:
 			return Menu_GameWindow_Create();
 			break;
+		default:
+			return NULL;
 	}
 
 	//default
@@ -1309,13 +1318,15 @@ void Gui_Main_Game (game_state_t * game, Control * window, SDL_Surface * screen)
 	//draw window for the first time
 	DFSTraverseDraw(window, screen);
 
+	//update global that game has started
+	_CurrentGameHasEnded = 0;
+
 	//start game.
 	//game is handled by DoGame function.
 	//it will be call GUI for getting user input and displaying game state.
 	DoGame(game);
 
 	//still have the controls open
-	//TODO disable all handlers.
 	Gui_SelectUserMove(game, NULL);
 
 	//game was done .
@@ -1378,7 +1389,9 @@ int Gui_SelectUserMove(game_state_t * game, move_t * selected_move)
 		//reset move select indication
 		_BoardPieceSelection=0;
 	}
-	//TODO handle error?
+
+	//return from here if user clicked one of the exit buttons.
+	//(selected move argument is null)
 	return 0;
 }
 

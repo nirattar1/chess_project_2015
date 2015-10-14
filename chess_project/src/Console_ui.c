@@ -772,7 +772,13 @@ int Menu_Settings(game_state_t * game, char ** board)
 		//prompt user to enter input
 		printf(ENTER_SETTINGS);
 
-		readline(line);
+		//read line from user
+		if (!readline(line))
+		{
+			//if readline failed, then input has closed.
+			//quitting.
+			exit (1);
+		}
 
 		user_command_errorcode_t cmd_status = SETTING_COMMAND_STATUS_ILLEGAL_COMMAND;
 		//game mode
@@ -912,8 +918,13 @@ int Menu_PlayUser(game_state_t * game, move_t * selected_move)
 			printf("Black player - enter your move:\n");
 		}
 
-		//read into buffer
-		readline(line);
+		//read line from user
+		if (!readline(line))
+		{
+			//if readline failed, then input has closed.
+			//quitting.
+			exit (1);
+		}
 
 		//move command
 		if(strncmp(line, "move", 4)==0)
