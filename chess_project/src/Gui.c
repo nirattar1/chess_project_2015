@@ -31,8 +31,7 @@ static void BuildBoard(game_state_t * game, Control * panel_GameBoard);
 
 
 
-//TODO remove
-void Handler_New()
+void Handler_NewGame()
 {
 	DEBUG_PRINT (("new\n"));
 	//restart game
@@ -47,6 +46,8 @@ void Handler_New()
 	//clear board, put default layout
 	GameInit(game, (char **) game->pieces);
 	GameDefaultLayout(game);
+	//put default settings
+	Settings_ResetDefaults();
 
 	_QuitCurrentWindow = 1;
 	_NextWindow = GUI_WINDOW_PLAYER_SELECTION;
@@ -113,6 +114,29 @@ void Handler_UserColorSelect(Control * control, SDL_Event * event )
 
 }
 
+void Handler_DepthSelect(Control * control, SDL_Event * event )
+{
+
+	//avoid null ptr
+	if  (!control || !control->extra_data)
+	{
+		return;
+	}
+
+	//get button's depth from button's extra data.
+	int depth = *((int *) control->extra_data);
+
+	//set the global setting
+	Settings_MaxDepth_Set(depth);	//can be also "best".
+
+	//redraw window (to update selections)
+	DFSTraverseDraw (_CurrentWindow, _CurrentScreen);
+
+
+	DEBUG_PRINT (("selected max depth %d\n", depth));
+
+}
+
 void Handler_GoToSetBoard()
 {
 	DEBUG_PRINT (("set board\n"));
@@ -131,7 +155,7 @@ void Handler_PlayerVsCpu()
 	Settings_GameMode_Set(GAME_MODE_PLAYER_VS_CPU);
 
 	_QuitCurrentWindow = 1;
-	_NextWindow = GUI_WINDOW_AI_SETTINGS;
+	_NextWindow = GUI_WINDOW_AI_SETTINGS;	//go to settings menu
 }
 
 void Handler_PlayerVsPlayer()
@@ -143,7 +167,14 @@ void Handler_PlayerVsPlayer()
 
 	//
 	_QuitCurrentWindow = 1;
-	_NextWindow = GUI_WINDOW_GAME; //TODO pass in settings
+	_NextWindow = GUI_WINDOW_GAME;		//go straight to game
+}
+
+//from AI settings to game
+void Handler_GoToGame ()
+{
+	_QuitCurrentWindow = 1;
+	_NextWindow = GUI_WINDOW_GAME;
 }
 
 void Handler_Cancel()
@@ -360,7 +391,7 @@ Control * Menu_MainMenu_Create()
 	SDL_Rect * button_NewGame_rect = (SDL_Rect *) mymalloc(sizeof(SDL_Rect));
 	button_NewGame_rect->x = 310; button_NewGame_rect->y = 150;
 	button_NewGame_rect->w = 20; button_NewGame_rect->h = 30;
-	Control * button_NewGame = ButtonCreate("imgs/new_g.bmp", button_NewGame_rect, Handler_New);
+	Control * button_NewGame = ButtonCreate("imgs/new_g.bmp", button_NewGame_rect, Handler_NewGame);
 
 	//load game button
 	SDL_Rect * button_LoadGame_rect = (SDL_Rect *) mymalloc(sizeof(SDL_Rect));
@@ -550,12 +581,84 @@ Control * Menu_AISettings_Create()
 	label_Difficulty_rect->w = 20; label_Difficulty_rect->h = 30;
 	Control * label_Difficulty = LabelCreate("imgs/lbl_difficulty.bmp", label_Difficulty_rect);
 
+	//difficulty buttons
+	int y_off = 250;
+	int x_off = 450;
+	for (int i=1; i<=MAX_DEPTH_MAX_VALUE; i++)
+	{
+		//build button
+		SDL_Rect * button_ConstantDepth_rect = (SDL_Rect *) mymalloc(sizeof(SDL_Rect));
+		button_ConstantDepth_rect->x = x_off; button_ConstantDepth_rect->y = y_off;
+		button_ConstantDepth_rect->w = 20; button_ConstantDepth_rect->h = 30;
+		//build file name from number
+		char file_name [MAX_FILE_NAME_LENGTH];
+		sprintf(file_name, "imgs/%d.bmp", i);
+		Control * button_ConstantDepth = ButtonCreate(file_name, button_ConstantDepth_rect, Handler_DepthSelect);
 
-	//link the objects to window
+		//special draw behavior
+		button_ConstantDepth->Draw = Draw_DepthButton;
+		button_ConstantDepth->extra_data = mymalloc (sizeof(int));
+		//add the depth value to the button's extra data
+		if (button_ConstantDepth->extra_data)
+		{
+			*((int *) button_ConstantDepth->extra_data) = i;
+		}
+		else
+		{
+			//TODO handle
+		}
+
+		//link it to window
+		ControlAddChild(window, button_ConstantDepth);
+
+		//progress to the right
+		x_off += 80 ;
+	}
+
+	//"best" difficulty button
+	SDL_Rect * button_BestDepth_rect = (SDL_Rect *) mymalloc(sizeof(SDL_Rect));
+	button_BestDepth_rect->x = 450; button_BestDepth_rect->y = 330;
+	button_BestDepth_rect->w = 20; button_BestDepth_rect->h = 30;
+	//build file name from number
+	char file_name [MAX_FILE_NAME_LENGTH];
+	Control * button_BestDepth = ButtonCreate("imgs/best.bmp", button_BestDepth_rect, Handler_DepthSelect);
+
+	//special draw behavior
+	button_BestDepth->Draw = Draw_DepthButton;
+	button_BestDepth->extra_data = mymalloc (sizeof(int));
+	//add the depth value to the button's extra data
+	if (button_BestDepth->extra_data)
+	{
+		*((int *) button_BestDepth->extra_data) = MAX_DEPTH_BEST_VALUE;
+	}
+	else
+	{
+		//TODO handle
+	}
+
+	//cancel
+	SDL_Rect * button_Cancel_rect = (SDL_Rect *) mymalloc(sizeof(SDL_Rect));
+	button_Cancel_rect->x = 100; button_Cancel_rect->y = 420;
+	button_Cancel_rect->w = 20; button_Cancel_rect->h = 30;
+	Control * button_Cancel = ButtonCreate("imgs/Cancel.bmp", button_Cancel_rect, Handler_Cancel);
+
+	//done (go to game)
+	SDL_Rect * button_Done_rect = (SDL_Rect *) mymalloc(sizeof(SDL_Rect));
+	button_Done_rect->x = 500; button_Done_rect->y = 420;
+	button_Done_rect->w = 20; button_Done_rect->h = 30;
+	Control * button_Done = ButtonCreate("imgs/Done.bmp", button_Done_rect, Handler_GoToGame);
+
+
+
+	//link all other objects to window
+	ControlAddChild(window, button_BestDepth);
 	ControlAddChild(window, label_UserColor);
 	ControlAddChild(window, button_White);
 	ControlAddChild(window, button_Black);
 	ControlAddChild(window, label_Difficulty);
+	ControlAddChild(window, button_Cancel);
+	ControlAddChild(window, button_Done);
+
 
 
 	return window;
@@ -947,6 +1050,67 @@ void Draw_UserColorButton (Control * button, SDL_Surface * screen)
 	ButtonDraw(button, screen);
 
 }
+
+
+void Draw_DepthButton (Control * button, SDL_Surface * screen)
+{
+	//on null ptrs, no way to draw button.
+	if (!button || !button->extra_data)
+	{
+		return;
+	}
+
+	//free previous surface if exists
+	if (button->surface)
+	{
+		SDL_FreeSurface(button->surface);
+		button->surface = NULL;
+	}
+
+	//get button's depth from its extra data,
+	//see if depth matches settings
+	int depth = *((int *)button->extra_data);
+	char filename [MAX_FILE_NAME_LENGTH];
+	if (Settings_MaxDepth_Get()==depth)
+	{
+		//button should be in selected version
+		//determine filename based on depth.
+		if (depth==MAX_DEPTH_BEST_VALUE)
+		{
+			char * format = "imgs/best_selected.bmp";
+			sprintf(filename, format);
+		}
+		else
+		{
+			char * format = "imgs/%d_selected.bmp";
+			sprintf(filename, format, depth);
+		}
+	}
+	else
+	{
+		//button is not selected, load its normal version.
+		//determine filename based on depth.
+		if (depth==MAX_DEPTH_BEST_VALUE)
+		{
+			char * format = "imgs/best.bmp";
+			sprintf(filename, format);
+		}
+		else
+		{
+			char * format = "imgs/%d.bmp";
+			sprintf(filename, format, depth);
+		}
+	}
+
+	//switch data on surface to appropriate version
+	bmp_load(filename, &button->surface);
+
+	//draw normally (will free the surface)
+	ButtonDraw(button, screen);
+
+
+}
+
 
 //handler for game mgr. will update GUI's board.
 void Gui_UpdateBoard(game_state_t * game)

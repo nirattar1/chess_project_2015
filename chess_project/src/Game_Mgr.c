@@ -166,6 +166,16 @@ void PrintBoard(game_state_t * game)
 	printf("\n");
 }
 
+
+void Settings_ResetDefaults()
+{
+	Settings_GameMode_Set(DEFAULT_GAME_MODE);
+	Settings_MaxDepth_Set(DEFAULT_MAX_DEPTH);
+	Settings_NextPlayer_Set(DEFAULT_NEXT_PLAYER);
+	Settings_UserColor_Set(DEFAULT_USER_COLOR);
+}
+
+
 //get/set game mode.
 int Settings_GameMode_Get()
 {

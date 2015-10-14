@@ -55,6 +55,6 @@ Control * Menu_PlayerSelection_Create();
 void Draw_PieceBoard (Control * button, SDL_Surface * screen);
 void Draw_NextPlayerButton (Control * button, SDL_Surface * screen);
 void Draw_UserColorButton (Control * button, SDL_Surface * screen);
-
+void Draw_DepthButton (Control * button, SDL_Surface * screen);
 
 #endif /* SRC_GUI_H_ */

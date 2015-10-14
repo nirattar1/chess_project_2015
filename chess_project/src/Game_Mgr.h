@@ -128,6 +128,9 @@ int FileCanOpenForWriting (const char * filename);
 #define perror_message(func_name) (perror("Error: standard function %s has failed", func_name));
 #define print_message(message) (printf("%s", message));
 
+//function to apply default settings
+void Settings_ResetDefaults();
+
 //getters and setters for all settings
 int Settings_GameMode_Get();
 void Settings_GameMode_Set(int mode);
