@@ -19,8 +19,6 @@
 //then 4 possibilities of the promotion, will be added to the list.
 static void MoveAddWithPossiblePromotion (game_state_t * game, ListNode ** listp, piece_t piece, position_t dest, int is_capture);
 
-//returns whether the hop from piece to dest, is worth promotion.
-static int IsPromotionMove (piece_t piece, position_t dest);
 
 
 
@@ -862,7 +860,7 @@ move_t * MoveCreateWithOptions (position_t src, position_t dest,
 }
 
 
-static int IsPromotionMove (piece_t piece, position_t dest)
+int IsPromotionMove (piece_t piece, position_t dest)
 {
 	//not a pawn - cannot promote.
 	if (!IsMan(piece))
@@ -980,6 +978,12 @@ int FindMoveInList 	(ListNode * moves, position_t src, position_t dest,
 		*move_index = -1;
 	}
 
+	if (!move_return) // handle null move_return
+	{
+		DEBUG_PRINT(("Error: trying to write into move with no allocated memory."));
+		return 0;
+	}
+
 	//iterate through moves list.
 	int i = 0;
 	for ( ; moves !=NULL; moves = moves->next )
@@ -989,13 +993,12 @@ int FindMoveInList 	(ListNode * moves, position_t src, position_t dest,
 		//avoid null move.
 		if (move)
 		{
-			//compare the move based on given arguments.
+			//compare the move based on all arguments.
 			if (move->src.x==src.x && move->src.y==src.y
-					&& move->dest.x==dest.x && move->dest.y==dest.y)
+					&& move->dest.x==dest.x && move->dest.y==dest.y
+					&& move->promote_to_identity == promotion_identity)
 			{
-				//TODO promotion + default
 				//found the move. return it through argument.
-				//TODO handle null move_return
 				MoveCopy(move_return, move);
 				//also update the index inside list.
 				if (move_index)

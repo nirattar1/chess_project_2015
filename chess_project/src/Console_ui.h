@@ -23,5 +23,10 @@ void ConsoleUI_GameHandleCheck (play_status_t play_status, color_t next_player);
 //get string representing identity (such "white knight").
 //return the appropriate char representation.
 char GetIdentityByString (char * line);
+//gets identity of protmotion, returns it's name in string.
+char * GetPromotionIdentityName (char identity);
+//will get name of piece type for promotion, and piece's color,
+//will construct identity from them
+char GetPromotionIdentityFromName (char * name, color_t color);
 
 #endif /* CONSOLE_UI_H_ */

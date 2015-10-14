@@ -47,6 +47,13 @@ int readline (char * line)
 
 char GetIdentityByString (char * line)
 {
+
+	//avoid null
+	if (!line)
+	{
+		return 0;
+	}
+
 	if (0==strcmp(line, "white pawn"))
 	{
 		return WHITE_M;
@@ -100,6 +107,61 @@ char GetIdentityByString (char * line)
 	return 0;
 }
 
+
+
+char * GetPromotionIdentityName (char identity)
+{
+	//TODO another function for set command. - maybe can unify.
+
+	if (identity==WHITE_B || identity==BLACK_B)
+	{
+		return "bishop";
+	}
+	else if (identity==WHITE_N || identity==BLACK_N)
+	{
+		return "knight";
+	}
+	else if (identity==WHITE_R || identity==BLACK_R)
+	{
+		return "rook";
+	}
+	else if (identity==WHITE_Q || identity==BLACK_Q)
+	{
+		return "queen";
+	}
+	return NULL;
+}
+
+//will get name of piece type for promotion, and piece's color,
+//will construct identity from them
+char GetPromotionIdentityFromName (char * line, color_t color)
+{
+	//avoid null
+	if (!line)
+	{
+		return 0;
+	}
+
+	char result = 0;  //default if none will match
+	if (0==strcmp(line, "queen"))
+	{
+		result = (color==COLOR_WHITE) ? WHITE_Q : BLACK_Q;
+	}
+	else if (0==strcmp(line, "bishop"))
+	{
+		result = (color==COLOR_WHITE) ? WHITE_B : BLACK_B;
+	}
+	else if (0==strcmp(line, "rook"))
+	{
+		result = (color==COLOR_WHITE) ? WHITE_R : BLACK_R;
+	}
+	else if (0==strcmp(line, "knight"))
+	{
+		result = (color==COLOR_WHITE) ? WHITE_N : BLACK_N;
+	}
+
+	return result;
+}
 
 static void Menu_Settings_PrintError(user_command_errorcode_t cmd_status)
 {
@@ -358,6 +420,37 @@ static user_command_errorcode_t Menu_ReadSetting_SetPiece (char * line, int star
 
 }
 
+//will read the promotion part of the command , and decide promotion identity,
+//based on the move itself and user input
+static char Menu_ReadPromotionMove (position_t src, char src_identity,
+		position_t dest, color_t current_player, char * line, int start_at_char	)
+{
+
+	//find out if this move is a promotion one
+	piece_t piece; piece.position = src; piece.identity = src_identity;
+	char promotion_identity = 0; //default if not a promotion
+
+	//if it's a promotion, find out what user asked
+	if (IsPromotionMove(piece, dest))
+	{
+		//by default will be promoted to queen.
+		promotion_identity = (current_player==COLOR_WHITE) ? WHITE_Q : BLACK_Q ;
+
+		//move on to read promotion identity (if exists)
+		char user_promotion_identity = GetPromotionIdentityFromName(line+start_at_char, current_player);
+		//may have returned 0
+
+		//replace the identity with what user asked
+		if (user_promotion_identity!=0)
+		{
+			promotion_identity = user_promotion_identity;
+		}
+	}
+
+	return promotion_identity;
+
+}
+
 //will read moves from the user.
 //if legal,
 static user_command_errorcode_t Menu_ReadCommand_Move
@@ -389,22 +482,16 @@ static user_command_errorcode_t Menu_ReadCommand_Move
 	}
 
 	//check that position contains user's piece
-	if (GetColor(GetPiece(src, game)) != current_player)
+	char identity = GetPiece(src, game);
+	if (GetColor(identity) != current_player)
 	{
 		return SETTING_COMMAND_STATUS_PIECE_NOT_OF_PLAYER;
 	}
 
-
-	//move on to read promotion identity (if exists)
+	//get promotion identity for move
 	start_at_char += 15; // skip this pattern length: <a,1>_to_<b,2>_
-	//TODO just the type not color
-	char promotion_identity = GetIdentityByString (line+start_at_char);
-
-	//check validity of piece type
-	if (promotion_identity==0)
-	{
-		//
-	}
+	char promotion_identity = Menu_ReadPromotionMove(src, identity, dest,
+			current_player, line, start_at_char);
 
 	//check that move is indeed in user's allowed moves list.
 
@@ -549,21 +636,16 @@ static user_command_errorcode_t Menu_ReadCommand_GetScoreOfMove
 	}
 
 	//check that position contains user's piece
-	if (GetColor(GetPiece(src, game)) != current_player)
+	char identity = GetPiece(src, game);
+	if (GetColor(identity) != current_player)
 	{
 		return SETTING_COMMAND_STATUS_PIECE_NOT_OF_PLAYER;
 	}
 
 	//move on to read promotion identity (if exists)
 	start_at_char += 20; // skip this pattern length: move_<a,1>_to_<b,2>_
-	//TODO just the type not color
-	char promotion_identity = GetIdentityByString (line+start_at_char);
-
-	//check validity of piece type
-	if (promotion_identity==0)
-	{
-		//
-	}
+	char promotion_identity = Menu_ReadPromotionMove(src, identity, dest,
+			current_player, line, start_at_char);
 
 	//check that move is indeed in user's allowed moves list.
 

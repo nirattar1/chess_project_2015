@@ -11,7 +11,7 @@
 //
 
 //debug
-#define DEBUG
+//#define DEBUG
 
 #ifdef DEBUG
 	#define IS_DEBUG 1
@@ -166,7 +166,6 @@ void MovesListPrint( LINK head);
 //will print the move
 void MovePrint (move_t * move);
 
-//will get an identity and return it's name
-char * GetIdentityName (char identity);
+
 
 #endif  

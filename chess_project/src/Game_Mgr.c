@@ -405,9 +405,8 @@ void CPUTurn (game_state_t * game)
 
 		//print
 		//"Computer: move <x,y> to <i,j>[<k,l>...]\n".
-		//TODO print right message on promotion, castling.
-		printf("Computer: move <%c,%d> to <%c,%d>",
-				move->src.x, move->src.y, move->dest.x, move->dest.y);
+		printf("Computer: move ");
+		MovePrint(move); //print the move according to format
 		printf("\n");
 
 	}
@@ -542,7 +541,7 @@ void MovePrint (move_t * move)
 
 	if (move->promote_to_identity != 0)
 	{
-		printf (" %s", GetIdentityName(move->promote_to_identity));
+		printf (" %s", GetPromotionIdentityName(move->promote_to_identity));
 	}
 
 	if (move->num_captures>0)
@@ -553,25 +552,3 @@ void MovePrint (move_t * move)
 }
 
 
-char * GetIdentityName (char identity)
-{
-	//TODO enter all .
-	//TODO another function for set command. - maybe can unify.
-	if (identity==WHITE_Q || identity==BLACK_Q)
-	{
-		return "queen";
-	}
-	if (identity==WHITE_B || identity==BLACK_B)
-	{
-		return "bishop";
-	}
-	if (identity==WHITE_R || identity==BLACK_R)
-	{
-		return "rook";
-	}
-	if (identity==WHITE_N || identity==BLACK_N)
-	{
-		return "knight";
-	}
-	return NULL;
-}

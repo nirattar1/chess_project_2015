@@ -275,6 +275,10 @@ int IsValidCapture (game_state_t * game, position_t source, position_t newDest);
 //! assumes that there are no pieces in between.
 int IsValidCaptureMoreChecks(game_state_t * game, position_t source, position_t newDest, int distance);
 
+//returns whether the hop from piece to dest, is worth promotion.
+int IsPromotionMove (piece_t piece, position_t dest);
+
+
 //maximum captures in 1 move (if eat all opponents).
 #define MAX_CAPTURES_MOVE 20
 
@@ -337,7 +341,7 @@ ListNode * GetMovesForPlayer (game_state_t * game, color_t color);
 void DoMove (move_t * move, game_state_t * game);
 
 //find a move in given moves list, based on:
-//source and destination positions, promotion identity.
+//source and destination positions, and also promotion identity.
 //if found the move, returns 1 and updates move_return.
 //otherwise returns 0.
 int FindMoveInList 	(ListNode * moves, position_t src, position_t dest,
