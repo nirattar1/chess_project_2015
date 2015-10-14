@@ -401,13 +401,13 @@ Control * Menu_PlayerSelection_Create()
 
 	//next player label
 	SDL_Rect * label_NextPlayer_rect = (SDL_Rect *) mymalloc(sizeof(SDL_Rect));
-	label_NextPlayer_rect->x = 100; label_NextPlayer_rect->y = 150;
+	label_NextPlayer_rect->x = 100; label_NextPlayer_rect->y = 100;
 	label_NextPlayer_rect->w = 20; label_NextPlayer_rect->h = 30;
 	Control * label_NextPlayer = LabelCreate("imgs/lbl_next_player.bmp", label_NextPlayer_rect);
 
 	//buttons for white/black
 	SDL_Rect * button_White_rect = (SDL_Rect *) mymalloc(sizeof(SDL_Rect));
-	button_White_rect->x = 450; button_White_rect->y = 150;
+	button_White_rect->x = 450; button_White_rect->y = 100;
 	button_White_rect->w = 20; button_White_rect->h = 30;
 	Control * button_White = ButtonCreate("imgs/white.bmp", button_White_rect, Handler_NextPlayerSelect);
 	//special draw behavior
@@ -424,7 +424,7 @@ Control * Menu_PlayerSelection_Create()
 	}
 
 	SDL_Rect * button_Black_rect = (SDL_Rect *) mymalloc(sizeof(SDL_Rect));
-	button_Black_rect->x = 550; button_Black_rect->y = 150;
+	button_Black_rect->x = 550; button_Black_rect->y = 100;
 	button_Black_rect->w = 20; button_Black_rect->h = 30;
 	Control * button_Black = ButtonCreate("imgs/black.bmp", button_Black_rect, Handler_NextPlayerSelect);
 	//special draw behavior
@@ -443,32 +443,32 @@ Control * Menu_PlayerSelection_Create()
 
 	//set board button
 	SDL_Rect * button_SetBoard_rect = (SDL_Rect *) mymalloc(sizeof(SDL_Rect));
-	button_SetBoard_rect->x = 100; button_SetBoard_rect->y = 250;
+	button_SetBoard_rect->x = 100; button_SetBoard_rect->y = 200;
 	button_SetBoard_rect->w = 20; button_SetBoard_rect->h = 30;
 	Control * button_SetBoard = ButtonCreate("imgs/btn_set_board.bmp", button_SetBoard_rect, Handler_GoToSetBoard);
 
 
 	//game mode label
 	SDL_Rect * label_GameMode_rect = (SDL_Rect *) mymalloc(sizeof(SDL_Rect));
-	label_GameMode_rect->x = 100; label_GameMode_rect->y = 350;
+	label_GameMode_rect->x = 100; label_GameMode_rect->y = 300;
 	label_GameMode_rect->w = 20; label_GameMode_rect->h = 30;
 	Control * label_GameMode = LabelCreate("imgs/lbl_game_mode.bmp", label_GameMode_rect);
 
 	//player vs. cpu
 	SDL_Rect * button_PlayerVsCpu_rect = (SDL_Rect *) mymalloc(sizeof(SDL_Rect));
-	button_PlayerVsCpu_rect->x = 450; button_PlayerVsCpu_rect->y = 350;
+	button_PlayerVsCpu_rect->x = 450; button_PlayerVsCpu_rect->y = 300;
 	button_PlayerVsCpu_rect->w = 20; button_PlayerVsCpu_rect->h = 30;
 	Control * button_PlayerVsCpu = ButtonCreate("imgs/Player_vs_Computer.bmp", button_PlayerVsCpu_rect, Handler_PlayerVsCpu);
 
 	//player vs. player
 	SDL_Rect * button_PlayerVsPlayer_rect = (SDL_Rect *) mymalloc(sizeof(SDL_Rect));
-	button_PlayerVsPlayer_rect->x = 450; button_PlayerVsPlayer_rect->y = 420;
+	button_PlayerVsPlayer_rect->x = 450; button_PlayerVsPlayer_rect->y = 370;
 	button_PlayerVsPlayer_rect->w = 20; button_PlayerVsPlayer_rect->h = 30;
 	Control * button_PlayerVsPlayer = ButtonCreate("imgs/player_vs_player.bmp", button_PlayerVsPlayer_rect, Handler_PlayerVsPlayer);
 
 	//cancel
 	SDL_Rect * button_Cancel_rect = (SDL_Rect *) mymalloc(sizeof(SDL_Rect));
-	button_Cancel_rect->x = 20; button_Cancel_rect->y = 470;
+	button_Cancel_rect->x = 20; button_Cancel_rect->y = 420;
 	button_Cancel_rect->w = 20; button_Cancel_rect->h = 30;
 	Control * button_Cancel = ButtonCreate("imgs/Cancel.bmp", button_Cancel_rect, Handler_Cancel);
 
@@ -504,13 +504,13 @@ Control * Menu_AISettings_Create()
 
 	//user color label
 	SDL_Rect * label_UserColor_rect = (SDL_Rect *) mymalloc(sizeof(SDL_Rect));
-	label_UserColor_rect->x = 100; label_UserColor_rect->y = 150;
+	label_UserColor_rect->x = 100; label_UserColor_rect->y = 100;
 	label_UserColor_rect->w = 20; label_UserColor_rect->h = 30;
 	Control * label_UserColor = LabelCreate("imgs/lbl_user_color.bmp", label_UserColor_rect);
 
 	//buttons for white/black
 	SDL_Rect * button_White_rect = (SDL_Rect *) mymalloc(sizeof(SDL_Rect));
-	button_White_rect->x = 450; button_White_rect->y = 150;
+	button_White_rect->x = 450; button_White_rect->y = 100;
 	button_White_rect->w = 20; button_White_rect->h = 30;
 	Control * button_White = ButtonCreate("imgs/white.bmp", button_White_rect, Handler_UserColorSelect);
 	//special draw behavior
@@ -527,7 +527,7 @@ Control * Menu_AISettings_Create()
 	}
 
 	SDL_Rect * button_Black_rect = (SDL_Rect *) mymalloc(sizeof(SDL_Rect));
-	button_Black_rect->x = 550; button_Black_rect->y = 150;
+	button_Black_rect->x = 550; button_Black_rect->y = 100;
 	button_Black_rect->w = 20; button_Black_rect->h = 30;
 	Control * button_Black = ButtonCreate("imgs/black.bmp", button_Black_rect, Handler_UserColorSelect);
 	//special draw behavior
@@ -546,7 +546,7 @@ Control * Menu_AISettings_Create()
 
 	//difficulty label
 	SDL_Rect * label_Difficulty_rect = (SDL_Rect *) mymalloc(sizeof(SDL_Rect));
-	label_Difficulty_rect->x = 100; label_Difficulty_rect->y = 350;
+	label_Difficulty_rect->x = 100; label_Difficulty_rect->y = 250;
 	label_Difficulty_rect->w = 20; label_Difficulty_rect->h = 30;
 	Control * label_Difficulty = LabelCreate("imgs/lbl_difficulty.bmp", label_Difficulty_rect);
 

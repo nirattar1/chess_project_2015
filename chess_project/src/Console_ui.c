@@ -571,10 +571,14 @@ static user_command_errorcode_t Menu_ReadCommand_GetMovesPiece
 static user_command_errorcode_t Menu_ReadCommand_GetBestMoves
 (char * line, int start_at_char, game_state_t * game, color_t current_player)
 {
+
+	//determine the depth (constant or best)
+	int depth = DEFAULT_MAX_DEPTH;
+
 	if (strncmp(line+start_at_char, "best", 4)==0)
 	{
-		//TODO best depth
-		return SETTING_COMMAND_STATUS_OK;
+		//compute best depth
+		depth = BestDepthCompute (game, current_player);
 	}
 
 	else //user defined a constant depth
@@ -583,21 +587,22 @@ static user_command_errorcode_t Menu_ReadCommand_GetBestMoves
 		char d [2];
 		strncpy(d, line+start_at_char, 1);
 		d[1] = '\0';
-		int depth = atoi(d);
-		//assuming depth is legal
-
-		//call minimax main with depth.
-		ListNode * bestMoves = MinimaxMain(game, depth, current_player
-				, BasicScoringFunction, GetMovesForPlayer); //free later!
-
-		//print out the moves
-		MovesListPrint(bestMoves);
-
-		//free the moves
-		ListFreeElements(bestMoves, MoveFree);
-		return SETTING_COMMAND_STATUS_OK;
-
+		depth = atoi(d);
+		//assuming user's depth is legal
 	}
+
+	//call minimax main with depth.
+	ListNode * bestMoves = MinimaxMain(game, depth, current_player
+			, BasicScoringFunction, GetMovesForPlayer); //free later!
+
+	//print out the moves
+	MovesListPrint(bestMoves);
+
+	//free the moves
+	ListFreeElements(bestMoves, MoveFree);
+	return SETTING_COMMAND_STATUS_OK;
+
+
 }
 
 //get a score for move
@@ -607,17 +612,31 @@ static user_command_errorcode_t Menu_ReadCommand_GetScoreOfMove
 (char * line, int start_at_char, game_state_t * game, color_t current_player)
 {
 
-	//parse and process depth
-	char d [2];
-	strncpy(d, line+start_at_char, 1);
-	d[1] = '\0';
-	int depth = atoi(d);
-	//assuming depth is legal
-	//TODO handle best
+	//determine the depth (constant or best)
+	int depth = DEFAULT_MAX_DEPTH;
+
+	if (strncmp(line+start_at_char, "best", 4)==0)
+	{
+		//compute best depth
+		depth = BestDepthCompute (game, current_player);
+		start_at_char+=5; //skip pattern: best_
+	}
+
+	else //user defined a constant depth
+	{
+		//parse and process
+		char d [2];
+		strncpy(d, line+start_at_char, 1);
+		d[1] = '\0';
+		depth = atoi(d);
+		//assuming user's depth is legal
+		start_at_char+=2; //skip pattern: d_
+	}
+
 
 	//go on to read the move
 	//doing the same validations as in "move" command
-	start_at_char+=2;
+
 	//determine source and destination positions from user line.
 	//assuming always 1 digit (board size less than 10)
 	char 	src_x, dest_x;

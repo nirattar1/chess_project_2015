@@ -3,7 +3,7 @@ all: chessprog
 CFLAGS=-std=c99 -pedantic-errors -Wall -g -lm 
 XML_CFLAGS=`xml2-config --cflags` 
 SDL_CFLAGS=`sdl-config --cflags`
-LIBS=`xml2-config --libs` `sdl-config --libs`
+LIBS=`xml2-config --libs` `sdl-config --libs` -lm
 
 O_FILES=Game_Mgr.o Game.o ListNode.o Memory.o Minimax.o Console_ui.o Files.o Gui_framework.o Gui.o
 TEST_O_FILES=Test_Main.o Test_GameBasic.o Test_Files.o Test_Gui_framework.o

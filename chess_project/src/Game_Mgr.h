@@ -11,7 +11,7 @@
 //
 
 //debug
-//#define DEBUG
+#define DEBUG
 
 #ifdef DEBUG
 	#define IS_DEBUG 1
@@ -140,6 +140,9 @@ int Settings_MaxDepth_Get();
 void Settings_MaxDepth_Set(int max_depth);
 
 
+//will compute the best depth for minimax running.
+//simple implementation, just returns a value based on the number of pieces.
+int BestDepthCompute (game_state_t * game, color_t current_player);
 
 //scoring function to use with minimax.
 //based on player and game state.

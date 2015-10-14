@@ -21,7 +21,7 @@
 #define LAST_ROW_WHITE BOARD_SIZE
 #define LAST_ROW_BLACK 1
 
-#define MAX_PIECES_PLAYER 20
+#define MAX_PIECES_PLAYER 16
 
 
 //pieces identities

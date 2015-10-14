@@ -5,6 +5,7 @@
 #include "Gui.h"
 #include "Minimax.h"
 #include <string.h>
+#include <math.h>
 #include <sys/stat.h>
 
 //TODO remove this include
@@ -224,6 +225,61 @@ void Settings_MaxDepth_Set(int max_depth)
 }
 
 
+int BestDepthCompute (game_state_t * game, color_t current_player)
+{
+
+	int cntPiecesPlayer;//will count how many pieces player has.
+	piece_t piecesPlayer [MAX_PIECES_PLAYER]; //player can have at most 20 pieces.
+	GetAllPieces (game, current_player, piecesPlayer, &cntPiecesPlayer);
+
+	//get the number of possible moves (upper bound) based on the current player.
+	//this number is the branching factor b for the tree.
+	int possible_moves_per_level = 0;
+	//loop on all pieces, each piece has a constant number of possible moves
+	for (int i=0; i<cntPiecesPlayer; i++)
+	{
+		if (IsMan (piecesPlayer[i]))
+		{
+			//mean value between 3 (pawns moves) and 27 (queen's moves)
+			//assuming that pawn promoted to a queen sometime
+			possible_moves_per_level += 15;
+		}
+		else if (IsKnight (piecesPlayer[i]) )
+		{
+			possible_moves_per_level += 8;
+		}
+		else if (IsBishop (piecesPlayer[i]) )
+		{
+			possible_moves_per_level += 13;
+		}
+		else if (IsRook (piecesPlayer[i]) )
+		{
+			possible_moves_per_level += 14;
+		}
+		else if (IsQueen (piecesPlayer[i]) )
+		{
+			possible_moves_per_level += 27;
+		}
+		else if (IsKing (piecesPlayer[i]) )
+		{
+			possible_moves_per_level += 8;
+		}
+	}
+
+
+	//compute the depth so that the number of leaves is less than 10^6
+	//depth = logarithm of 10^6 base b = log(10^6)/log(b)
+	double depth = (log(pow(10,6)))/(log(possible_moves_per_level));
+
+	//cast the result into int
+	int dInt = (int) floor(depth);
+
+	DEBUG_PRINT(("Computed best depth of : %d \n", dInt));
+
+	return dInt;
+}
+
+
 
 //scoring function to use with minimax.
 //based on maximizing player color and game state.
@@ -237,12 +293,12 @@ int BasicScoringFunction (game_state_t * game, color_t maximizing_player, color_
 
 	//get player's pieces
 	int cntPiecesPlayer;//will count how many pieces player has.
-	piece_t piecesPlayer [MAX_PIECES_PLAYER]; //player can have at most 20 pieces.
+	piece_t piecesPlayer [MAX_PIECES_PLAYER]; //player can have at most 16 pieces.
 	GetAllPieces (game, maximizing_player, piecesPlayer, &cntPiecesPlayer);
 
 	//get opposite color's pieces
 	int cntPiecesOpposite;//will count how many pieces player has.
-	piece_t piecesOpposite [MAX_PIECES_PLAYER]; //player can have at most 20 pieces.
+	piece_t piecesOpposite [MAX_PIECES_PLAYER]; //player can have at most 16 pieces.
 	GetAllPieces (game, GetOppositeColor(maximizing_player), piecesOpposite, &cntPiecesOpposite);
 
 
@@ -361,8 +417,17 @@ void CPUTurn (game_state_t * game)
 
 	//choose the next move based on minimax:
 
-	//get max depth based on settings
+	//determine depth.
+	//get settings for max depth
 	int max_depth = Settings_MaxDepth_Get();
+
+	//if user has configured "best" option, we need to compute the real depth now.
+	if (max_depth == MAX_DEPTH_BEST_VALUE)
+	{
+		max_depth = BestDepthCompute(game, color);
+	}
+	//otherwise stay with the constant value
+
 
 //	//get initial children list from given state.
 //	//(allowed moves for CPU.)
