@@ -329,9 +329,10 @@ Control * ButtonCreate (char * filename, SDL_Rect * rect,
 	return button;
 }
 
+
+
 void ButtonDraw (Control * button, SDL_Surface * screen)
 {
-
 	//avoid null ptrs
 	//or case when surface buffer is empty.
 	if (!button || !button->surface)
@@ -371,6 +372,23 @@ void ButtonDraw (Control * button, SDL_Surface * screen)
 	//the surface was freed, reset pointer.
 	button->surface = NULL;
 }
+
+
+//Label
+Control * LabelCreate 	(char * filename, SDL_Rect * rect)
+{
+	Control * label = ControlCreate(filename, rect);
+	label->Draw = LabelDraw;
+	return label;
+
+}
+
+void LabelDraw (Control * label, SDL_Surface * screen)
+{
+	//just call button draw
+	ButtonDraw(label, screen);
+}
+
 
 
 

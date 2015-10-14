@@ -9,7 +9,7 @@
 
 
 #define WIN_W 800
-#define WIN_H 600
+#define WIN_H 520
 
 
 //gui globals
@@ -87,11 +87,12 @@ void PanelDraw (Control * panel, SDL_Surface * screen);
 //Button
 Control * ButtonCreate (char * filename, SDL_Rect * rect,
 		void (*ButtonHandleEvents) (Control * control, SDL_Event *));
-
 void 		ButtonDraw (Control * button, SDL_Surface * screen);
 
 //Label
-//Panel
+//label is similar to button but does nothing.
+Control * 	LabelCreate 	(char * filename, SDL_Rect * rect);
+void 		LabelDraw 		(Control * label, SDL_Surface * screen);
 
 
 //

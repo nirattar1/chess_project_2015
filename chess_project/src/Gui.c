@@ -24,6 +24,13 @@ move_t 			_BoardPieceNextMove;
 int _BoardPieceSelection = 0;
 position_t _BoardPieceMoveSrc;
 
+
+//static function declarations
+static void BoardPieceFindPictureByIdentity(position_t pos, char identity, char * filename);
+static void BuildBoard(game_state_t * game, Control * panel_GameBoard);
+
+
+
 //TODO remove
 void Handler_New()
 {
@@ -58,6 +65,12 @@ void Handler_Quit()
 	DEBUG_PRINT (("quit\n"));
 	_QuitCurrentWindow = 1;
 	_QuitProgram = 1;
+
+}
+
+void Handler_NextPlayerSelect()
+{
+	DEBUG_PRINT (("select next player\n"));
 
 }
 
@@ -336,26 +349,42 @@ Control * Menu_PlayerSelection_Create()
 	//player vs. cpu, player vs. player, cancel
 	//TODO set board, next player.
 
+
+	//next player label
+	//
+
+	//buttons for white/black
+	SDL_Rect * button_White_rect = (SDL_Rect *) mymalloc(sizeof(SDL_Rect));
+	button_White_rect->x = 350; button_White_rect->y = 150;
+	button_White_rect->w = 20; button_White_rect->h = 30;
+	Control * button_White = ButtonCreate("imgs/white.bmp", button_White_rect, Handler_NextPlayerSelect);
+	SDL_Rect * button_Black_rect = (SDL_Rect *) mymalloc(sizeof(SDL_Rect));
+	button_Black_rect->x = 450; button_Black_rect->y = 150;
+	button_Black_rect->w = 20; button_Black_rect->h = 30;
+	Control * button_Black = ButtonCreate("imgs/black.bmp", button_Black_rect, Handler_NextPlayerSelect);
+
 	//player vs. cpu
 	SDL_Rect * button_PlayerVsCpu_rect = (SDL_Rect *) mymalloc(sizeof(SDL_Rect));
-	button_PlayerVsCpu_rect->x = 270; button_PlayerVsCpu_rect->y = 150;
+	button_PlayerVsCpu_rect->x = 70; button_PlayerVsCpu_rect->y = 400;
 	button_PlayerVsCpu_rect->w = 20; button_PlayerVsCpu_rect->h = 30;
 	Control * button_PlayerVsCpu = ButtonCreate("imgs/Player_vs_Computer.bmp", button_PlayerVsCpu_rect, Handler_PlayerVsCpu);
 
 	//player vs. player
 	SDL_Rect * button_PlayerVsPlayer_rect = (SDL_Rect *) mymalloc(sizeof(SDL_Rect));
-	button_PlayerVsPlayer_rect->x = 270; button_PlayerVsPlayer_rect->y = 250;
+	button_PlayerVsPlayer_rect->x = 470; button_PlayerVsPlayer_rect->y = 400;
 	button_PlayerVsPlayer_rect->w = 20; button_PlayerVsPlayer_rect->h = 30;
 	Control * button_PlayerVsPlayer = ButtonCreate("imgs/player_vs_player.bmp", button_PlayerVsPlayer_rect, Handler_PlayerVsPlayer);
 
 	//cancel
 	SDL_Rect * button_Cancel_rect = (SDL_Rect *) mymalloc(sizeof(SDL_Rect));
-	button_Cancel_rect->x = 20; button_Cancel_rect->y = 350;
+	button_Cancel_rect->x = 20; button_Cancel_rect->y = 470;
 	button_Cancel_rect->w = 20; button_Cancel_rect->h = 30;
 	Control * button_Cancel = ButtonCreate("imgs/Cancel.bmp", button_Cancel_rect, Handler_Cancel);
 
 
 	//link the objects to window
+	ControlAddChild(window, button_White);
+	ControlAddChild(window, button_Black);
 	ControlAddChild(window, button_PlayerVsCpu);
 	ControlAddChild(window, button_PlayerVsPlayer);
 	ControlAddChild(window, button_Cancel);
@@ -418,6 +447,79 @@ Control * Menu_SaveLoad_Create()
 	//link the objects to window
 	ControlAddChild(window, button_Cancel);
 
+	return window;
+}
+
+
+
+Control * Menu_GameWindow_Create()
+{
+	//2 panels:
+	//* game options panel
+	//* game board
+
+	//window (has no rect).
+	Control * window = WindowCreate("imgs/background.bmp", NULL);
+	//handle error in creation of window.
+	if (!window)
+	{
+		return NULL;
+	}
+
+	//game options panel
+	SDL_Rect * panel_GameOptions_rect = (SDL_Rect *) mymalloc(sizeof(SDL_Rect));
+	panel_GameOptions_rect->x = 520; panel_GameOptions_rect->y = 0;
+	panel_GameOptions_rect->w = 0; panel_GameOptions_rect->h = 0;
+	Control * panel_GameOptions = PanelCreate("imgs/background.bmp", panel_GameOptions_rect);
+
+	//buttons inside game options.
+	//save game
+	SDL_Rect * button_SaveGame_rect = (SDL_Rect *) mymalloc(sizeof(SDL_Rect));
+	button_SaveGame_rect->x = 600; button_SaveGame_rect->y = 0;
+	button_SaveGame_rect->w = 0; button_SaveGame_rect->h = 0;
+	Control * button_SaveGame = ButtonCreate("imgs/Save_Game.bmp", button_SaveGame_rect, Handler_GoToSaveGame);
+
+	//main menu
+	SDL_Rect * button_MainMenu_rect = (SDL_Rect *) mymalloc(sizeof(SDL_Rect));
+	button_MainMenu_rect->x = 600; button_MainMenu_rect->y = 100;
+	button_MainMenu_rect->w = 0; button_MainMenu_rect->h = 0;
+	Control * button_MainMenu = ButtonCreate("imgs/Main_Menu.bmp", button_MainMenu_rect, Handler_Cancel);
+	//TODO specific handler for main menu?
+
+
+	//quit program
+	SDL_Rect * button_Quit_rect = (SDL_Rect *) mymalloc(sizeof(SDL_Rect));
+	button_Quit_rect->x = 600; button_Quit_rect->y = 450;
+	button_Quit_rect->w = 0; button_Quit_rect->h = 0;
+	Control * button_Quit = ButtonCreate("imgs/Exit_Game.bmp", button_Quit_rect, Handler_Quit);
+
+
+	//TODO more buttons
+
+	//game board panel
+	SDL_Rect * panel_GameBoard_rect = (SDL_Rect *) mymalloc(sizeof(SDL_Rect));
+	panel_GameBoard_rect->x = 0; panel_GameBoard_rect->y = 0;
+	panel_GameBoard_rect->w = 0; panel_GameBoard_rect->h = 0;
+	Control * panel_GameBoard = PanelCreate("imgs/background.bmp", panel_GameBoard_rect);
+
+	//link panels to window
+	ControlAddChild(window, panel_GameBoard);
+	ControlAddChild(window, panel_GameOptions);
+	//link buttons to game options panel
+	ControlAddChild(panel_GameOptions, button_SaveGame);
+	ControlAddChild(panel_GameOptions, button_MainMenu);
+	ControlAddChild(panel_GameOptions, button_Quit);
+
+	//get current game.
+	game_state_t * game = _CurrentGame;
+	if (!game)
+	{
+		DEBUG_PRINT(("Error: game window with no active."));
+		return NULL;
+	}
+
+	//build a board based on game.
+	BuildBoard(game, panel_GameBoard);
 	return window;
 }
 
@@ -594,79 +696,6 @@ static void BuildBoard(game_state_t * game, Control * panel_GameBoard)
 
 	}
 }
-
-
-Control * Menu_GameWindow_Create()
-{
-	//2 panels:
-	//* game options panel
-	//* game board
-
-	//window (has no rect).
-	Control * window = WindowCreate("imgs/background.bmp", NULL);
-	//handle error in creation of window.
-	if (!window)
-	{
-		return NULL;
-	}
-
-	//game options panel
-	SDL_Rect * panel_GameOptions_rect = (SDL_Rect *) mymalloc(sizeof(SDL_Rect));
-	panel_GameOptions_rect->x = 600; panel_GameOptions_rect->y = 0;
-	panel_GameOptions_rect->w = 0; panel_GameOptions_rect->h = 0;
-	Control * panel_GameOptions = PanelCreate("imgs/background.bmp", panel_GameOptions_rect);
-
-	//buttons inside game options.
-	//save game
-	SDL_Rect * button_SaveGame_rect = (SDL_Rect *) mymalloc(sizeof(SDL_Rect));
-	button_SaveGame_rect->x = 600; button_SaveGame_rect->y = 0;
-	button_SaveGame_rect->w = 0; button_SaveGame_rect->h = 0;
-	Control * button_SaveGame = ButtonCreate("imgs/Save_Game.bmp", button_SaveGame_rect, Handler_GoToSaveGame);
-
-	//main menu
-	SDL_Rect * button_MainMenu_rect = (SDL_Rect *) mymalloc(sizeof(SDL_Rect));
-	button_MainMenu_rect->x = 600; button_MainMenu_rect->y = 100;
-	button_MainMenu_rect->w = 0; button_MainMenu_rect->h = 0;
-	Control * button_MainMenu = ButtonCreate("imgs/Main_Menu.bmp", button_MainMenu_rect, Handler_Cancel);
-	//TODO specific handler for main menu?
-
-
-	//quit program
-	SDL_Rect * button_Quit_rect = (SDL_Rect *) mymalloc(sizeof(SDL_Rect));
-	button_Quit_rect->x = 600; button_Quit_rect->y = 450;
-	button_Quit_rect->w = 0; button_Quit_rect->h = 0;
-	Control * button_Quit = ButtonCreate("imgs/Exit_Game.bmp", button_Quit_rect, Handler_Quit);
-
-
-	//TODO more buttons
-
-	//game board panel
-	SDL_Rect * panel_GameBoard_rect = (SDL_Rect *) mymalloc(sizeof(SDL_Rect));
-	panel_GameBoard_rect->x = 0; panel_GameBoard_rect->y = 0;
-	panel_GameBoard_rect->w = 0; panel_GameBoard_rect->h = 0;
-	Control * panel_GameBoard = PanelCreate("imgs/background.bmp", panel_GameBoard_rect);
-
-	//link panels to window
-	ControlAddChild(window, panel_GameBoard);
-	ControlAddChild(window, panel_GameOptions);
-	//link buttons to game options panel
-	ControlAddChild(panel_GameOptions, button_SaveGame);
-	ControlAddChild(panel_GameOptions, button_MainMenu);
-	ControlAddChild(panel_GameOptions, button_Quit);
-
-	//get current game.
-	game_state_t * game = _CurrentGame;
-	if (!game)
-	{
-		DEBUG_PRINT(("Error: game window with no active."));
-		return NULL;
-	}
-
-	//build a board based on game.
-	BuildBoard(game, panel_GameBoard);
-	return window;
-}
-
 
 //handler for game mgr. will update GUI's board.
 void Gui_UpdateBoard(game_state_t * game)
