@@ -8,8 +8,6 @@
 #include <math.h>
 #include <sys/stat.h>
 
-//TODO remove this include
-#include "tests/Test_Gui_framework.h"
 
 #ifdef TESTING
 	#include "tests/Test_Main.h"

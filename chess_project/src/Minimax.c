@@ -8,7 +8,6 @@
 #include <stdio.h>
 #include <string.h>
 #include "Memory.h"
-#include "tests/Test_Minimax.h"
 #include <math.h>
 
 #include "Game_Mgr.h"
