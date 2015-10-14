@@ -111,7 +111,6 @@ char GetIdentityByString (char * line)
 
 char * GetPromotionIdentityName (char identity)
 {
-	//TODO another function for set command. - maybe can unify.
 
 	if (identity==WHITE_B || identity==BLACK_B)
 	{

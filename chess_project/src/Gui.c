@@ -10,6 +10,7 @@
 #include "Gui_framework.h"
 #include "Memory.h"
 #include "Files.h"
+#include "Minimax.h"
 
 gui_window_t 	_NextWindow = GUI_WINDOW_MAIN_MENU; //start with main menu.
 game_state_t * 	_CurrentGame = NULL; //a pointer to current game.
@@ -17,6 +18,9 @@ Control * 		_CurrentWindow = NULL;
 SDL_Surface * 	_CurrentScreen = NULL;
 move_t 			_BoardPieceNextMove;
 int 			_CurrentGameHasEnded = 0;
+int 			_BestMoveIsShow = 0;
+position_t		_BestMoveSrc;
+position_t		_BestMoveDest;
 
 //0==none is selected.
 //1==selected and display move.
@@ -188,10 +192,58 @@ void Handler_Cancel()
 
 void Handler_GoToSaveGame()
 {
-	//TODO implement
 	DEBUG_PRINT (("save game\n"));
 	_QuitCurrentWindow = 1;
 	_NextWindow = GUI_WINDOW_SAVE;	//go to save/load
+}
+
+void Handler_ShowBestMove()
+{
+
+	//check if game has ended. if so, do no action.
+	if (_CurrentGameHasEnded)
+	{
+		return;
+	}
+
+	DEBUG_PRINT (("show best move\n"));
+
+	//get game and user's color from global settings
+	game_state_t * game = _CurrentGame;
+	color_t current_player = Settings_NextPlayer_Get();
+
+
+	//TODO decide the depth with window
+	int depth = Settings_MaxDepth_Get();
+	if (depth==MAX_DEPTH_BEST_VALUE)
+	{
+		//compute best depth
+		depth = BestDepthCompute (game, current_player);
+	}
+	//otherwise continue with the constant depth
+
+	//get list of best moves.
+	//call minimax main with depth.
+	ListNode * bestMoves = MinimaxMain(game, depth, current_player
+			, BasicScoringFunction, GetMovesForPlayer); //free later!
+
+	//highlight the best move (if exists)
+	if (bestMoves && bestMoves->data)
+	{
+		move_t * move = (move_t *) bestMoves->data;
+		//update data on globals.
+		_BestMoveSrc = move->src;
+		_BestMoveDest = move->dest;
+		_BestMoveIsShow = 1;
+		//call to update board
+		Gui_UpdateBoard(game);
+	}
+
+
+	//free the moves
+	ListFreeElements(bestMoves, MoveFree);
+
+
 
 }
 
@@ -240,6 +292,9 @@ void Handler_BoardPieceClick(Control * control, SDL_Event * event)
 		return;
 	}
 
+	//clear highlighting
+	_BestMoveIsShow = 0;
+
 	//get game and user's color from global settings
 	game_state_t * game = _CurrentGame;
 	color_t current_player = Settings_NextPlayer_Get();
@@ -286,14 +341,20 @@ void Handler_BoardPieceClick(Control * control, SDL_Event * event)
 		//construct a move, from previous selection to current selection.
 		move_t selected_move;
 
-		//TODO promotion window.
-		char promotion_identity = 0;
 
 		//get list of moves starting from source (previously selected).
 		piece_t piece;
 		piece.position = _BoardPieceMoveSrc;
 		piece.identity = GetPiece (_BoardPieceMoveSrc, game);
 		ListNode * moves = GetMovesForPiece(game, piece); //free later
+
+		char promotion_identity = 0;
+		//if it's a promotion, find out what user asked
+		if (IsPromotionMove(piece, pos))
+		{
+			//by default will be promoted to queen.
+			promotion_identity = (current_player==COLOR_WHITE) ? WHITE_Q : BLACK_Q ;
+		}
 
 		//find move inside moves list.
 		//find move in allowed moves list, (if found, will update move in argument).
@@ -307,7 +368,6 @@ void Handler_BoardPieceClick(Control * control, SDL_Event * event)
 		if (valid)
 		{
 			DEBUG_PRINT(("legal move\n"));
-			//TODO do / return the move.
 
 			//reset selection
 			_BoardPieceSelection=2;	//valid move was selected
@@ -684,7 +744,7 @@ Control * Menu_GameWindow_Create()
 	//* game board
 
 	//window (has no rect).
-	Control * window = WindowCreate("imgs/background.bmp", NULL);
+	Control * window = WindowCreate(NULL, NULL);
 	//handle error in creation of window.
 	if (!window)
 	{
@@ -695,7 +755,7 @@ Control * Menu_GameWindow_Create()
 	SDL_Rect * panel_GameOptions_rect = (SDL_Rect *) mymalloc(sizeof(SDL_Rect));
 	panel_GameOptions_rect->x = 520; panel_GameOptions_rect->y = 0;
 	panel_GameOptions_rect->w = 0; panel_GameOptions_rect->h = 0;
-	Control * panel_GameOptions = PanelCreate("imgs/background.bmp", panel_GameOptions_rect);
+	Control * panel_GameOptions = PanelCreate("imgs/background_panel.bmp", panel_GameOptions_rect);
 
 	//buttons inside game options.
 	//save game
@@ -703,6 +763,18 @@ Control * Menu_GameWindow_Create()
 	button_SaveGame_rect->x = 600; button_SaveGame_rect->y = 0;
 	button_SaveGame_rect->w = 0; button_SaveGame_rect->h = 0;
 	Control * button_SaveGame = ButtonCreate("imgs/Save_Game.bmp", button_SaveGame_rect, Handler_GoToSaveGame);
+
+	//best move
+	SDL_Rect * button_BestMove_rect = (SDL_Rect *) mymalloc(sizeof(SDL_Rect));
+	button_BestMove_rect->x = 600; button_BestMove_rect->y = 50;
+	button_BestMove_rect->w = 0; button_BestMove_rect->h = 0;
+	Control * button_BestMove = ButtonCreate("imgs/best_move.bmp", button_BestMove_rect, Handler_ShowBestMove);
+
+	//a box that display check / checkmate status
+	SDL_Rect * label_Check_rect = (SDL_Rect *) mymalloc(sizeof(SDL_Rect));
+	label_Check_rect->x = 600; label_Check_rect->y = 150;
+	label_Check_rect->w = 20; label_Check_rect->h = 30;
+	Control * label_Check = LabelCreate("imgs/blck_misgarat.bmp", label_Check_rect);
 
 	//main menu
 	SDL_Rect * button_MainMenu_rect = (SDL_Rect *) mymalloc(sizeof(SDL_Rect));
@@ -732,7 +804,9 @@ Control * Menu_GameWindow_Create()
 	ControlAddChild(window, panel_GameOptions);
 	//link buttons to game options panel
 	ControlAddChild(panel_GameOptions, button_SaveGame);
+	ControlAddChild(panel_GameOptions, button_BestMove);
 	ControlAddChild(panel_GameOptions, button_MainMenu);
+	ControlAddChild(panel_GameOptions, label_Check);
 	ControlAddChild(panel_GameOptions, button_Quit);
 
 	//get current game.
@@ -816,7 +890,7 @@ void Draw_PieceBoard (Control * button, SDL_Surface * screen)
 {
 
 	//avoid bull ptr on control and it's extra data.
-	if (!button || !button->extra_data)
+	if (!button || !button->extra_data || !button->rect)
 	{
 		return;
 	}
@@ -828,7 +902,6 @@ void Draw_PieceBoard (Control * button, SDL_Surface * screen)
 	//decide what is in the piece
 	char identity = GetPiece (pos, game);
 
-	//TODO pre-load images.
 	//find the correct image based on the piece and position
 	char filename[50];
 	BoardPieceFindPictureByIdentity(pos, identity, filename);
@@ -837,7 +910,6 @@ void Draw_PieceBoard (Control * button, SDL_Surface * screen)
 	//load image
 	//load the image (if exists) into ctl's surface
 	bmp_load(filename, &(button->surface));
-
 
 	//load image to
 	//update clipping information.
@@ -865,6 +937,41 @@ void Draw_PieceBoard (Control * button, SDL_Surface * screen)
 
 	//the surface was freed, reset pointer.
 	button->surface = NULL;
+
+
+	//show highlight on this piece (if highlighted)
+	//highlight as src of best move
+	if (_BestMoveIsShow
+			&& pos.x==_BestMoveSrc.x && pos.y==_BestMoveSrc.y)
+	{
+		//load highlight image as label on piece
+		char * filename = "imgs/grn_dot_wht.bmp";
+		SDL_Rect * label_Highlight_rect = (SDL_Rect *) mymalloc(sizeof(SDL_Rect));
+		label_Highlight_rect->x = button->rect->x; label_Highlight_rect->y = button->rect->y;
+		label_Highlight_rect->w = 0; label_Highlight_rect->h = 0;
+
+		//add and draw element.
+		//dispose of element immediately (will be drawn on top of, at next turn)
+		Control * label_Highlight = LabelCreate(filename, label_Highlight_rect);
+		label_Highlight->Draw(label_Highlight, _CurrentScreen);
+		ControlFree(label_Highlight);
+	}
+	//highlight as destination of best move
+	else if (_BestMoveIsShow
+			&& pos.x==_BestMoveDest.x && pos.y==_BestMoveDest.y)
+	{
+		//load highlight image as label on piece
+		char * filename = "imgs/grn_dot_wht_dest.bmp";
+		SDL_Rect * label_Highlight_rect = (SDL_Rect *) mymalloc(sizeof(SDL_Rect));
+		label_Highlight_rect->x = button->rect->x; label_Highlight_rect->y = button->rect->y;
+		label_Highlight_rect->w = 0; label_Highlight_rect->h = 0;
+
+		//add and draw element.
+		//dispose of element immediately (will be drawn on top of, at next turn)
+		Control * label_Highlight = LabelCreate(filename, label_Highlight_rect);
+		label_Highlight->Draw(label_Highlight, _CurrentScreen);
+		ControlFree(label_Highlight);
+	}
 }
 
 
@@ -963,7 +1070,6 @@ void Draw_NextPlayerButton (Control * button, SDL_Surface * screen)
 
 }
 
-//TODO unify with draw next player
 void Draw_UserColorButton (Control * button, SDL_Surface * screen)
 {
 	//on null ptrs, no way to draw button.
@@ -1159,9 +1265,24 @@ void Gui_HandleCheck (play_status_t play_status, color_t next_player)
 		}
 	}
 
-	else if (play_status==STATUS_OPPONENT_IN_CHECK)
+	else
 	{
-		//not supposed to happen
+		//clear check state
+
+		char * filename="imgs/blck_misgarat.bmp";
+
+		//add under right panel. no handler.
+		SDL_Rect * label_Check_rect = (SDL_Rect *) mymalloc(sizeof(SDL_Rect));
+		label_Check_rect->x = 600; label_Check_rect->y = 150;
+		label_Check_rect->w = 20; label_Check_rect->h = 30;
+
+
+		//add and draw child.
+		//dispose of element immediately (will be drawn on top of, at next turn)
+		Control * label_Check = LabelCreate(filename, label_Check_rect);
+		label_Check->Draw(label_Check, _CurrentScreen);
+		ControlFree(label_Check);
+
 	}
 
 }

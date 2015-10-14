@@ -457,18 +457,6 @@ void CPUTurn (game_state_t * game)
 
 	ListNode * pChild = bestMoves;
 
-	//DEBUG_PRINT( ("index %d was chosen. will lead to score of %d\n", childIndex, childScore));
-//
-//	//do the relevant move
-//	//TODO use function for that- find move in list
-//	int i=0;
-//	//find index in list
-//	ListNode * pChild = RootChildren;
-//	while (i<childIndex && pChild!=NULL )
-//	{
-//		pChild = pChild->next;
-//		i++;
-//	}
 
 	//do the first move in list
 	if (pChild)

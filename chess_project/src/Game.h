@@ -321,7 +321,6 @@ void GetAllPieces (game_state_t * game, color_t color, piece_t * array, int * cn
 //basic algorithm:
 //1. iterate on all pieces of the player in the game.
 //2. for each piece, run GetMovesForPiece and collect the moves.
-//3. TODO - sort moves by number of captures.
 ListNode * GetMovesForPiece (game_state_t * game, piece_t piece);
 
 //get all the possible moves for player in game.
