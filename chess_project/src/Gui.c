@@ -68,10 +68,59 @@ void Handler_Quit()
 
 }
 
-void Handler_NextPlayerSelect()
+void Handler_NextPlayerSelect(Control * control, SDL_Event * event )
 {
-	DEBUG_PRINT (("select next player\n"));
+	//avoid null ptr
+	if  (!control || !control->extra_data)
+	{
+		return;
+	}
 
+	//get button's color from button's extra data.
+	color_t color = *((color_t *) control->extra_data);
+
+	//set the global setting
+	Settings_NextPlayer_Set(color);
+
+	//redraw window
+	DFSTraverseDraw (_CurrentWindow, _CurrentScreen);
+
+
+	DEBUG_PRINT (("selected next player %d\n", color));
+
+}
+
+
+void Handler_UserColorSelect(Control * control, SDL_Event * event )
+{
+	//avoid null ptr
+	if  (!control || !control->extra_data)
+	{
+		return;
+	}
+
+	//get button's color from button's extra data.
+	color_t color = *((color_t *) control->extra_data);
+
+	//set the global setting
+	Settings_UserColor_Set(color);
+
+	//redraw window
+	DFSTraverseDraw (_CurrentWindow, _CurrentScreen);
+
+
+	DEBUG_PRINT (("selected user color %d\n", color));
+
+}
+
+void Handler_GoToSetBoard()
+{
+	DEBUG_PRINT (("set board\n"));
+
+	//
+	_QuitCurrentWindow = 1;
+	_NextWindow = GUI_WINDOW_MAIN_MENU;
+	//_NextWindow = GUI_WINDOW_GAME; //TODO pass to set board
 }
 
 void Handler_PlayerVsCpu()
@@ -82,7 +131,7 @@ void Handler_PlayerVsCpu()
 	Settings_GameMode_Set(GAME_MODE_PLAYER_VS_CPU);
 
 	_QuitCurrentWindow = 1;
-	_NextWindow = GUI_WINDOW_GAME; //TODO pass in settings
+	_NextWindow = GUI_WINDOW_AI_SETTINGS;
 }
 
 void Handler_PlayerVsPlayer()
@@ -346,32 +395,74 @@ Control * Menu_PlayerSelection_Create()
 	}
 
 	//buttons under window
+	//set board, next player.
 	//player vs. cpu, player vs. player, cancel
-	//TODO set board, next player.
 
 
 	//next player label
-	//
+	SDL_Rect * label_NextPlayer_rect = (SDL_Rect *) mymalloc(sizeof(SDL_Rect));
+	label_NextPlayer_rect->x = 100; label_NextPlayer_rect->y = 150;
+	label_NextPlayer_rect->w = 20; label_NextPlayer_rect->h = 30;
+	Control * label_NextPlayer = LabelCreate("imgs/lbl_next_player.bmp", label_NextPlayer_rect);
 
 	//buttons for white/black
 	SDL_Rect * button_White_rect = (SDL_Rect *) mymalloc(sizeof(SDL_Rect));
-	button_White_rect->x = 350; button_White_rect->y = 150;
+	button_White_rect->x = 450; button_White_rect->y = 150;
 	button_White_rect->w = 20; button_White_rect->h = 30;
 	Control * button_White = ButtonCreate("imgs/white.bmp", button_White_rect, Handler_NextPlayerSelect);
+	//special draw behavior
+	button_White->Draw = Draw_NextPlayerButton;
+	button_White->extra_data = mymalloc (sizeof(color_t));
+	//add the color to the button's extra data
+	if (button_White->extra_data)
+	{
+		*((color_t *) button_White->extra_data) = COLOR_WHITE;
+	}
+	else
+	{
+		//TODO handle
+	}
+
 	SDL_Rect * button_Black_rect = (SDL_Rect *) mymalloc(sizeof(SDL_Rect));
-	button_Black_rect->x = 450; button_Black_rect->y = 150;
+	button_Black_rect->x = 550; button_Black_rect->y = 150;
 	button_Black_rect->w = 20; button_Black_rect->h = 30;
 	Control * button_Black = ButtonCreate("imgs/black.bmp", button_Black_rect, Handler_NextPlayerSelect);
+	//special draw behavior
+	button_Black->Draw = Draw_NextPlayerButton;
+	button_Black->extra_data = mymalloc (sizeof(color_t));
+	//add the color to the button's extra data
+	if (button_Black->extra_data)
+	{
+		*((color_t *) button_Black->extra_data) = COLOR_BLACK;
+	}
+	else
+	{
+		//TODO handle
+	}
+
+
+	//set board button
+	SDL_Rect * button_SetBoard_rect = (SDL_Rect *) mymalloc(sizeof(SDL_Rect));
+	button_SetBoard_rect->x = 100; button_SetBoard_rect->y = 250;
+	button_SetBoard_rect->w = 20; button_SetBoard_rect->h = 30;
+	Control * button_SetBoard = ButtonCreate("imgs/btn_set_board.bmp", button_SetBoard_rect, Handler_GoToSetBoard);
+
+
+	//game mode label
+	SDL_Rect * label_GameMode_rect = (SDL_Rect *) mymalloc(sizeof(SDL_Rect));
+	label_GameMode_rect->x = 100; label_GameMode_rect->y = 350;
+	label_GameMode_rect->w = 20; label_GameMode_rect->h = 30;
+	Control * label_GameMode = LabelCreate("imgs/lbl_game_mode.bmp", label_GameMode_rect);
 
 	//player vs. cpu
 	SDL_Rect * button_PlayerVsCpu_rect = (SDL_Rect *) mymalloc(sizeof(SDL_Rect));
-	button_PlayerVsCpu_rect->x = 70; button_PlayerVsCpu_rect->y = 400;
+	button_PlayerVsCpu_rect->x = 450; button_PlayerVsCpu_rect->y = 350;
 	button_PlayerVsCpu_rect->w = 20; button_PlayerVsCpu_rect->h = 30;
 	Control * button_PlayerVsCpu = ButtonCreate("imgs/Player_vs_Computer.bmp", button_PlayerVsCpu_rect, Handler_PlayerVsCpu);
 
 	//player vs. player
 	SDL_Rect * button_PlayerVsPlayer_rect = (SDL_Rect *) mymalloc(sizeof(SDL_Rect));
-	button_PlayerVsPlayer_rect->x = 470; button_PlayerVsPlayer_rect->y = 400;
+	button_PlayerVsPlayer_rect->x = 450; button_PlayerVsPlayer_rect->y = 420;
 	button_PlayerVsPlayer_rect->w = 20; button_PlayerVsPlayer_rect->h = 30;
 	Control * button_PlayerVsPlayer = ButtonCreate("imgs/player_vs_player.bmp", button_PlayerVsPlayer_rect, Handler_PlayerVsPlayer);
 
@@ -383,8 +474,11 @@ Control * Menu_PlayerSelection_Create()
 
 
 	//link the objects to window
+	ControlAddChild(window, label_NextPlayer);
 	ControlAddChild(window, button_White);
 	ControlAddChild(window, button_Black);
+	ControlAddChild(window, button_SetBoard);
+	ControlAddChild(window, label_GameMode);
 	ControlAddChild(window, button_PlayerVsCpu);
 	ControlAddChild(window, button_PlayerVsPlayer);
 	ControlAddChild(window, button_Cancel);
@@ -392,6 +486,80 @@ Control * Menu_PlayerSelection_Create()
 	return window;
 }
 
+
+Control * Menu_AISettings_Create()
+{
+
+	//window (has no rect).
+	Control * window = WindowCreate("imgs/background.bmp", NULL);
+	//handle error in creation of window.
+	if (!window)
+	{
+		return NULL;
+	}
+
+	//buttons under window
+	//user color , difficulty.
+
+
+	//user color label
+	SDL_Rect * label_UserColor_rect = (SDL_Rect *) mymalloc(sizeof(SDL_Rect));
+	label_UserColor_rect->x = 100; label_UserColor_rect->y = 150;
+	label_UserColor_rect->w = 20; label_UserColor_rect->h = 30;
+	Control * label_UserColor = LabelCreate("imgs/lbl_user_color.bmp", label_UserColor_rect);
+
+	//buttons for white/black
+	SDL_Rect * button_White_rect = (SDL_Rect *) mymalloc(sizeof(SDL_Rect));
+	button_White_rect->x = 450; button_White_rect->y = 150;
+	button_White_rect->w = 20; button_White_rect->h = 30;
+	Control * button_White = ButtonCreate("imgs/white.bmp", button_White_rect, Handler_UserColorSelect);
+	//special draw behavior
+	button_White->Draw = Draw_UserColorButton;
+	button_White->extra_data = mymalloc (sizeof(color_t));
+	//add the color to the button's extra data
+	if (button_White->extra_data)
+	{
+		*((color_t *) button_White->extra_data) = COLOR_WHITE;
+	}
+	else
+	{
+		//TODO handle
+	}
+
+	SDL_Rect * button_Black_rect = (SDL_Rect *) mymalloc(sizeof(SDL_Rect));
+	button_Black_rect->x = 550; button_Black_rect->y = 150;
+	button_Black_rect->w = 20; button_Black_rect->h = 30;
+	Control * button_Black = ButtonCreate("imgs/black.bmp", button_Black_rect, Handler_UserColorSelect);
+	//special draw behavior
+	button_Black->Draw = Draw_UserColorButton;
+	button_Black->extra_data = mymalloc (sizeof(color_t));
+	//add the color to the button's extra data
+	if (button_Black->extra_data)
+	{
+		*((color_t *) button_Black->extra_data) = COLOR_BLACK;
+	}
+	else
+	{
+		//TODO handle
+	}
+
+
+	//difficulty label
+	SDL_Rect * label_Difficulty_rect = (SDL_Rect *) mymalloc(sizeof(SDL_Rect));
+	label_Difficulty_rect->x = 100; label_Difficulty_rect->y = 350;
+	label_Difficulty_rect->w = 20; label_Difficulty_rect->h = 30;
+	Control * label_Difficulty = LabelCreate("imgs/lbl_difficulty.bmp", label_Difficulty_rect);
+
+
+	//link the objects to window
+	ControlAddChild(window, label_UserColor);
+	ControlAddChild(window, button_White);
+	ControlAddChild(window, button_Black);
+	ControlAddChild(window, label_Difficulty);
+
+
+	return window;
+}
 
 Control * Menu_SaveLoad_Create()
 {
@@ -587,7 +755,7 @@ static void BoardPieceFindPictureByIdentity(position_t pos, char identity, char 
 }
 
 //a function for drawing board piece.
-void BoardPieceDraw (Control * button, SDL_Surface * screen)
+void Draw_PieceBoard (Control * button, SDL_Surface * screen)
 {
 
 	//avoid bull ptr on control and it's extra data.
@@ -681,7 +849,7 @@ static void BuildBoard(game_state_t * game, Control * panel_GameBoard)
 			*((position_t *) button_BoardPiece->extra_data) = pos;
 
 			//give draw and handle events handlers.
-			button_BoardPiece->Draw = BoardPieceDraw;
+			button_BoardPiece->Draw = Draw_PieceBoard;
 			button_BoardPiece->HandleEvents = Handler_BoardPieceClick;
 
 			//progress to next column
@@ -695,6 +863,89 @@ static void BuildBoard(game_state_t * game, Control * panel_GameBoard)
 		y_off += board_piece_height;
 
 	}
+}
+
+void Draw_NextPlayerButton (Control * button, SDL_Surface * screen)
+{
+	//on null ptrs, no way to draw button.
+	if (!button || !button->extra_data)
+	{
+		return;
+	}
+
+	//free previous surface if exists
+	if (button->surface)
+	{
+		SDL_FreeSurface(button->surface);
+		button->surface = NULL;
+	}
+
+	//get button's color from its extra data,
+	//see if color matches
+	color_t color = *((color_t *)button->extra_data);
+	if (Settings_NextPlayer_Get()==color)
+	{
+		//button should be selected
+
+		//determine filename based on color.
+		char * filename = (color==COLOR_WHITE) ? "imgs/white_selected.bmp": "imgs/black_selected.bmp";
+		//switch data on surface to selected version
+		bmp_load(filename, &button->surface);
+	}
+	else
+	{
+		//button is not selected, load its normal version.
+		//determine filename based on color.
+		char * filename = (color==COLOR_WHITE) ? "imgs/white.bmp": "imgs/black.bmp";
+		//switch data on surface to selected version
+		bmp_load(filename, &button->surface);
+	}
+
+	//draw normally (will free the surface)
+	ButtonDraw(button, screen);
+
+}
+
+//TODO unify with draw next player
+void Draw_UserColorButton (Control * button, SDL_Surface * screen)
+{
+	//on null ptrs, no way to draw button.
+	if (!button || !button->extra_data)
+	{
+		return;
+	}
+
+	//free previous surface if exists
+	if (button->surface)
+	{
+		SDL_FreeSurface(button->surface);
+		button->surface = NULL;
+	}
+
+	//get button's color from its extra data,
+	//see if color matches
+	color_t color = *((color_t *)button->extra_data);
+	if (Settings_UserColor_Get()==color)
+	{
+		//button should be selected
+
+		//determine filename based on color.
+		char * filename = (color==COLOR_WHITE) ? "imgs/white_selected.bmp": "imgs/black_selected.bmp";
+		//switch data on surface to selected version
+		bmp_load(filename, &button->surface);
+	}
+	else
+	{
+		//button is not selected, load its normal version.
+		//determine filename based on color.
+		char * filename = (color==COLOR_WHITE) ? "imgs/white.bmp": "imgs/black.bmp";
+		//switch data on surface to selected version
+		bmp_load(filename, &button->surface);
+	}
+
+	//draw normally (will free the surface)
+	ButtonDraw(button, screen);
+
 }
 
 //handler for game mgr. will update GUI's board.
@@ -803,6 +1054,9 @@ Control * Gui_GetNextWindow(gui_window_t window)
 			break;
 		case GUI_WINDOW_PLAYER_SELECTION:
 			return Menu_PlayerSelection_Create();
+			break;
+		case GUI_WINDOW_AI_SETTINGS:
+			return Menu_AISettings_Create();
 			break;
 		case GUI_WINDOW_SAVE:
 		case GUI_WINDOW_LOAD:

@@ -365,7 +365,6 @@ void ButtonDraw (Control * button, SDL_Surface * screen)
     //flip instead of update
     SDL_Flip(screen);
 
-    //TODO can always free ?
     /* Free the allocated BMP surface. */
     SDL_FreeSurface(button->surface);
 

@@ -51,6 +51,10 @@ Control * Gui_GetNextWindow(gui_window_t window);
 Control * Menu_MainMenu_Create();
 Control * Menu_PlayerSelection_Create();
 
-void BoardPieceDraw (Control * button, SDL_Surface * screen);
+//special "draw" functions
+void Draw_PieceBoard (Control * button, SDL_Surface * screen);
+void Draw_NextPlayerButton (Control * button, SDL_Surface * screen);
+void Draw_UserColorButton (Control * button, SDL_Surface * screen);
+
 
 #endif /* SRC_GUI_H_ */
